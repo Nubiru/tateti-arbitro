@@ -1,0 +1,21 @@
+{
+  "name": "random-bot-player",
+  "version": "1.0.0",
+  "description": "Random strategy bot for Ta-Te-Ti",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "keywords": [
+    "tateti",
+    "bot",
+    "player"
+  ],
+  "author": "UPC Programación Full Stack",
+  "license": "ISC"
+}

@@ -1,0 +1,596 @@
+/**
+ * Fábrica de Aplicación para Inyección de Dependencias
+ * Crea aplicación Express con dependencias inyectadas para pruebas y producción
+ * @lastModified 2025-10-03
+ * @version 1.0.0
+ */
+
+import express from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { join } from 'path';
+
+import logger from './logger.js';
+import eventBus from './event-bus.js';
+import { createHttpAdapter } from '../domain/game/http.adapter.js';
+import { createEventsAdapter } from '../domain/game/events.adapter.js';
+import { ArbitratorCoordinator } from '../domain/game/arbitrator.coordinator.js';
+import { TournamentCoordinator } from '../domain/game/tournament.di.js';
+import {
+  validateMatch,
+  validateTournament,
+  validateTournamentConfig,
+  validateMove,
+  handleValidationErrors,
+  sanitizeInput,
+} from '../middleware/validation.js';
+
+// Obtener directorio actual para archivos estáticos
+// const publicPath = process.cwd(); // Removed unused variable
+
+/**
+ * Crear aplicación Express con dependencias
+ * @param {Object} dependencies - Dependencias opcionales para pruebas
+ * @returns {Object} Aplicación Express y dependencias
+ */
+export function createApp(dependencies = {}) {
+  // Crear dependencias por defecto si no se proporcionan
+  const eventBusInstance = dependencies.eventBus || eventBus;
+  const httpAdapter = dependencies.httpAdapter || createHttpAdapter({ logger });
+  const eventsAdapter =
+    dependencies.eventsAdapter ||
+    createEventsAdapter({ eventBus: eventBusInstance, logger });
+  const arbitrator =
+    dependencies.arbitrator ||
+    new ArbitratorCoordinator({
+      httpAdapter,
+      eventsAdapter,
+      logger,
+      clock: {
+        now: () => Date.now(),
+        toISOString: () => new Date().toISOString(),
+      },
+    });
+  const tournament =
+    dependencies.tournament ||
+    new TournamentCoordinator({
+      arbitrator,
+      eventsAdapter: eventsAdapter,
+      logger,
+      clock: {
+        now: () => Date.now(),
+        toISOString: () => new Date().toISOString(),
+      },
+    });
+
+  // Crear aplicación Express
+  const app = express();
+
+  // Configuración de confianza de proxy (solo para desarrollo local)
+  if (process.env.NODE_ENV === 'development') {
+    app.set('trust proxy', 'loopback');
+  }
+
+  // Middleware de seguridad
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-eval'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:'],
+          connectSrc: ["'self'", 'http://localhost:*', 'ws://localhost:*'],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'none'"],
+        },
+      },
+      crossOriginEmbedderPolicy: false,
+      xssFilter: true,
+      frameguard: { action: 'deny' },
+    })
+  );
+
+  // Configuración CORS
+  app.use(
+    cors({
+      origin:
+        process.env.NODE_ENV === 'production'
+          ? ['https://yourdomain.com']
+          : true,
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'Origin',
+        'X-Requested-With',
+        'Accept',
+      ],
+    })
+  );
+
+  // Limitación de velocidad (deshabilitada en entorno de pruebas y desarrollo)
+  if (
+    process.env.NODE_ENV !== 'test' &&
+    process.env.NODE_ENV !== 'development'
+  ) {
+    app.use(
+      rateLimit({
+        windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutos por defecto
+        max: parseInt(process.env.RATE_LIMIT_MAX) || 100, // límite de 100 solicitudes por IP por ventana por defecto
+        message: 'Demasiadas solicitudes',
+      })
+    );
+  }
+
+  // Middleware de análisis de cuerpo de solicitud
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+  // Middleware de sanitización de entrada
+  app.use(sanitizeInput);
+
+  // Manejar errores de límite de tamaño del cuerpo
+  app.use((error, req, res, next) => {
+    if (error.type === 'entity.too.large') {
+      return res
+        .status(413)
+        .json({ error: 'Entidad de solicitud demasiado grande' });
+    }
+    next(error);
+  });
+
+  // Archivos estáticos y ruta raíz se manejan más abajo
+
+  // Rutas de verificación de salud
+  app.get('/api/health', (req, res) => {
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: process.memoryUsage(),
+      version: process.env.npm_package_version || '1.0.0',
+    });
+  });
+
+  app.get('/api/health/detailed', (req, res) => {
+    const uptime = process.uptime();
+    const memory = process.memoryUsage();
+
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: {
+        seconds: uptime,
+        formatted: `${Math.floor(uptime / 60)}m ${Math.floor(uptime % 60)}s`,
+      },
+      memory: {
+        rss: `${Math.round(memory.rss / 1024 / 1024)} MB`,
+        heapTotal: `${Math.round(memory.heapTotal / 1024 / 1024)} MB`,
+        heapUsed: `${Math.round(memory.heapUsed / 1024 / 1024)} MB`,
+        external: `${Math.round(memory.external / 1024 / 1024)} MB`,
+      },
+      environment: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+      },
+      version: process.env.npm_package_version || '1.0.0',
+    });
+  });
+
+  // Estado del flujo SSE
+  app.get('/api/stream/status', (req, res) => {
+    const metrics = eventBusInstance.getMetrics();
+    res.json({
+      connections: eventBusInstance.getConnectionCount(),
+      eventsSent: metrics.totalEvents,
+      metrics: metrics,
+    });
+  });
+
+  // Rutas de partidas
+  app.post(
+    '/api/match',
+    validateMatch,
+    handleValidationErrors,
+    async (req, res) => {
+      try {
+        console.log('Match endpoint called with body:', req.body);
+        const {
+          player1,
+          player2,
+          timeoutMs = 3000,
+          boardSize = '3x3',
+          noTie = false,
+        } = req.body;
+
+        // Normalizar jugadores para el árbitro
+        // Use Docker service names when running in container, localhost for local dev
+        const getHostForPort = port => {
+          if (process.env.NODE_ENV === 'test' || process.env.DOCKER_ENV) {
+            // Map ports to Docker service names for 8-player support
+            const portToService = {
+              3001: 'random-bot-1',
+              3002: 'random-bot-2',
+              3003: 'random-bot-3',
+              3004: 'random-bot-4',
+              3005: 'algo-bot-1',
+              3006: 'algo-bot-2',
+              3007: 'algo-bot-3',
+              3008: 'algo-bot-4',
+            };
+            return portToService[port] || 'localhost';
+          }
+          return 'localhost';
+        };
+
+        const players = [
+          {
+            name: player1.name,
+            port: player1.port,
+            host: getHostForPort(player1.port),
+            protocol: 'http',
+            isHuman: player1.isHuman || false,
+          },
+          {
+            name: player2.name,
+            port: player2.port,
+            host: getHostForPort(player2.port),
+            protocol: 'http',
+            isHuman: player2.isHuman || false,
+          },
+        ];
+
+        const result = await arbitrator.runMatch(players, {
+          timeoutMs,
+          boardSize: boardSize === '5x5' ? 5 : 3,
+          noTie,
+        });
+
+        console.log('Match result:', result);
+        res.json(result);
+      } catch (error) {
+        logger.error('MATCH', 'ROUTE', 'ERROR', 'Error en ruta de partida', {
+          error: error.message,
+        });
+        res.status(500).json({ error: 'Error interno del servidor' });
+      }
+    }
+  );
+
+  // Ruta para movimientos de jugadores humanos
+  app.post(
+    '/api/match/:matchId/move',
+    validateMove,
+    handleValidationErrors,
+    async (req, res) => {
+      try {
+        const { matchId } = req.params;
+        const { player, position } = req.body;
+
+        const result = await arbitrator.submitHumanMove(
+          matchId,
+          player,
+          position
+        );
+        res.json(result);
+      } catch (error) {
+        logger.error('MOVE', 'ROUTE', 'ERROR', 'Error en ruta de movimiento', {
+          error: error.message,
+        });
+        res.status(400).json({ error: error.message });
+      }
+    }
+  );
+
+  // Rutas de torneos
+  app.post(
+    '/api/tournament',
+    validateTournament,
+    handleValidationErrors,
+    async (req, res) => {
+      try {
+        console.log(
+          '🏆 Tournament endpoint called with body:',
+          JSON.stringify(req.body, null, 2)
+        );
+        console.log('🏆 Tournament validation errors:', req.validationErrors);
+
+        const {
+          players,
+          timeoutMs = 3000,
+          boardSize = '3x3',
+          noTie = false,
+        } = req.body;
+
+        console.log('🏆 Tournament parsed players:', players);
+        console.log('🏆 Tournament players type:', typeof players);
+        console.log('🏆 Tournament players isArray:', Array.isArray(players));
+
+        if (!players || !Array.isArray(players) || players.length < 2) {
+          console.log(
+            '🏆 Tournament validation failed - invalid players array'
+          );
+          return res.status(400).json({
+            error: 'Se requieren al menos 2 jugadores para un torneo',
+          });
+        }
+
+        const result = await tournament.runTournament(players, {
+          timeoutMs,
+          boardSize: boardSize === '5x5' ? 5 : 3,
+          noTie,
+        });
+
+        res.json(result);
+      } catch (error) {
+        logger.error(
+          'TOURNAMENT',
+          'ROUTE',
+          'ERROR',
+          'Error en ruta de torneo',
+          { error: error.message }
+        );
+        res.status(500).json({ error: 'Error interno del servidor' });
+      }
+    }
+  );
+
+  // Ruta de configuración de torneo (nuevo formato)
+  app.post(
+    '/api/tournament/config',
+    validateTournamentConfig,
+    handleValidationErrors,
+    async (req, res) => {
+      try {
+        const {
+          totalPlayers,
+          includeRandom = false,
+          humanName = null,
+          timeoutMs = 3000,
+          boardSize = '3x3',
+          noTie = false,
+        } = req.body;
+
+        // Construir lista de jugadores desde la configuración
+        const players = tournament.buildPlayerList({
+          totalPlayers,
+          includeRandom,
+          humanName,
+        });
+
+        const result = await tournament.runTournament(players, {
+          timeoutMs,
+          boardSize: boardSize === '5x5' ? 5 : 3,
+          noTie,
+        });
+
+        res.json(result);
+      } catch (error) {
+        logger.error(
+          'TOURNAMENT',
+          'CONFIG',
+          'ERROR',
+          'Error en ruta de configuración de torneo',
+          { error: error.message }
+        );
+        res.status(500).json({ error: 'Error interno del servidor' });
+      }
+    }
+  );
+
+  // Bot discovery endpoint
+  app.get('/api/bots/available', async (req, res) => {
+    try {
+      const availableBots = [];
+
+      // Define bot configurations
+      const botConfigs = [
+        {
+          name: 'RandomBot1',
+          port: 3001,
+          type: 'random',
+          capabilities: ['3x3', '5x5'],
+        },
+        {
+          name: 'RandomBot2',
+          port: 3002,
+          type: 'random',
+          capabilities: ['3x3', '5x5'],
+        },
+        {
+          name: 'RandomBot3',
+          port: 3003,
+          type: 'random',
+          capabilities: ['3x3', '5x5'],
+        },
+        {
+          name: 'RandomBot4',
+          port: 3004,
+          type: 'random',
+          capabilities: ['3x3', '5x5'],
+        },
+        {
+          name: 'AlgoBot1',
+          port: 3005,
+          type: 'algorithm',
+          capabilities: ['3x3', '5x5'],
+        },
+        {
+          name: 'AlgoBot2',
+          port: 3006,
+          type: 'algorithm',
+          capabilities: ['3x3', '5x5'],
+        },
+        {
+          name: 'AlgoBot3',
+          port: 3007,
+          type: 'algorithm',
+          capabilities: ['3x3', '5x5'],
+        },
+        {
+          name: 'AlgoBot4',
+          port: 3008,
+          type: 'algorithm',
+          capabilities: ['3x3', '5x5'],
+        },
+      ];
+
+      // Helper function to get host for port
+      const getHostForPort = port => {
+        if (process.env.NODE_ENV === 'test' || process.env.DOCKER_ENV) {
+          // Map ports to Docker service names for 8-player support
+          const portToService = {
+            3001: 'random-bot-1',
+            3002: 'random-bot-2',
+            3003: 'random-bot-3',
+            3004: 'random-bot-4',
+            3005: 'algo-bot-1',
+            3006: 'algo-bot-2',
+            3007: 'algo-bot-3',
+            3008: 'algo-bot-4',
+          };
+          return portToService[port] || 'localhost';
+        }
+        return 'localhost';
+      };
+
+      // Check health of each bot
+      for (const bot of botConfigs) {
+        try {
+          const host = getHostForPort(bot.port);
+          const healthUrl = `http://${host}:${bot.port}/health`;
+
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2000);
+
+          const response = await fetch(healthUrl, {
+            method: 'GET',
+            signal: controller.signal,
+          });
+
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            await response.json(); // Consume response but don't use data
+            availableBots.push({
+              name: bot.name,
+              port: bot.port,
+              type: bot.type,
+              capabilities: bot.capabilities,
+              status: 'healthy',
+              lastSeen: new Date().toISOString(),
+              isHuman: false,
+            });
+          } else {
+            availableBots.push({
+              name: bot.name,
+              port: bot.port,
+              type: bot.type,
+              capabilities: bot.capabilities,
+              status: 'unhealthy',
+              lastSeen: null,
+              isHuman: false,
+            });
+          }
+        } catch (error) {
+          availableBots.push({
+            name: bot.name,
+            port: bot.port,
+            type: bot.type,
+            capabilities: bot.capabilities,
+            status: 'offline',
+            lastSeen: null,
+            isHuman: false,
+          });
+        }
+      }
+
+      res.json({
+        bots: availableBots,
+        total: availableBots.length,
+        healthy: availableBots.filter(b => b.status === 'healthy').length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      logger.error(
+        'BOTS',
+        'DISCOVERY',
+        'ERROR',
+        'Error en descubrimiento de bots',
+        { error: error.message }
+      );
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  });
+
+  // Flujo de eventos del servidor (SSE)
+  app.get('/api/stream', (req, res) => {
+    eventBusInstance.addConnection(res);
+  });
+
+  // Archivos estáticos (debe ir ANTES del 404 handler)
+  app.use(express.static(join(process.cwd(), 'public')));
+
+  // Servir index.html para la ruta raíz
+  app.get('/', (req, res) => {
+    res.sendFile(join(process.cwd(), 'public', 'index.html'));
+  });
+
+  // Manejador 404 (debe ir DESPUÉS de static files)
+  app.use((req, res) => {
+    res.status(404).json({ error: 'Ruta no encontrada' });
+  });
+
+  // Manejador de errores
+  app.use((error, req, res) => {
+    logger.error(
+      'EXPRESS',
+      'ERROR',
+      'HANDLER',
+      'Error en manejador de Express',
+      { error: error.message }
+    );
+    res.status(500).json({ error: 'Error interno del servidor' });
+  });
+
+  return {
+    app,
+    eventBus: eventBusInstance,
+    httpAdapter,
+    eventsAdapter,
+    arbitrator,
+    tournament,
+  };
+}
+
+/**
+ * Adjuntar limitador de velocidad a una aplicación Express existente
+ * @param {Object} app - Instancia de aplicación Express
+ * @param {Object} options - Opciones del limitador de velocidad
+ * @returns {Object} Aplicación Express con limitador de velocidad adjunto
+ */
+export function attachRateLimiter(app, options = {}) {
+  const defaultOptions = {
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // límite de 100 solicitudes por IP por ventana
+    message: 'Demasiadas solicitudes',
+  };
+
+  const rateLimitOptions = { ...defaultOptions, ...options };
+  app.use(rateLimit(rateLimitOptions));
+  return app;
+}
+
+/**
+ * Crear aplicación por defecto con dependencias de producción
+ * @returns {Object} Aplicación Express y dependencias
+ */
+export function createDefaultApp() {
+  return createApp();
+}

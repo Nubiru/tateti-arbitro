@@ -1,0 +1,53 @@
+/* Input Component Styles */
+/* @lastModified 2025-10-03 */
+/* @version 1.0.0 */
+
+.input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border-light, #e2e8f0);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #2d3748);
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--primary-color, #3182ce);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.input::placeholder {
+  color: var(--text-light, #a0aec0);
+}
+
+/* States */
+.error {
+  border-color: var(--danger-color, #e53e3e);
+}
+
+.error:focus {
+  border-color: var(--danger-color, #e53e3e);
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.1);
+}
+
+.disabled {
+  background: var(--bg-disabled, #f7fafc);
+  color: var(--text-disabled, #a0aec0);
+  cursor: not-allowed;
+}
+
+.disabled::placeholder {
+  color: var(--text-disabled, #a0aec0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .input {
+    padding: 14px 16px;
+    font-size: 16px; /* Prevent zoom on iOS */
+  }
+}

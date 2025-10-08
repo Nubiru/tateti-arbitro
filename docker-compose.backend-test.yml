@@ -1,0 +1,95 @@
+# Configuración de pruebas solo del backend
+services:
+    # Ta-Te-Ti Arbitrator (Backend only)
+    arbitrator:
+        build:
+            context: .
+            dockerfile: Dockerfile.backend
+        image: tateti-arbitro:v1.0.0-backend-test
+        container_name: tateti-arbitrator-backend-test
+        ports:
+            - "4000:4000"
+        environment:
+            - NODE_ENV=test
+            - DOCKER_ENV=true
+            - PORT=4000
+            - LOG_LEVEL=debug
+            - TRUST_PROXY=true
+            - RATE_LIMIT_WINDOW_MS=30000
+            - RATE_LIMIT_MAX=2000
+        networks:
+            - tateti-network
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://localhost:4000/api/stream/status', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+
+    # Player 1 - Random Bot
+    player1:
+        build:
+            context: ./players/random-bot
+            tags: [tateti-random-bot:v1.0.0-test]
+        container_name: tateti-random-bot-1-backend-test
+        ports:
+            - "3001:3001"
+        environment:
+            - PORT=3001
+            - PLAYER_NAME=RandomBot1
+        networks:
+            - tateti-network
+        depends_on:
+            arbitrator:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://127.0.0.1:3001/health', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
+
+    # Player 2 - Random Bot
+    player2:
+        build:
+            context: ./players/random-bot
+            tags: [tateti-random-bot:v1.0.0-test]
+        container_name: tateti-random-bot-2-backend-test
+        ports:
+            - "3002:3002"
+        environment:
+            - PORT=3002
+            - PLAYER_NAME=RandomBot2
+        networks:
+            - tateti-network
+        depends_on:
+            arbitrator:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://127.0.0.1:3002/health', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
+
+networks:
+    tateti-network:
+        driver: bridge

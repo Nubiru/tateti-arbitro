@@ -1,0 +1,105 @@
+/* AnimatedButton Component Styles */
+/* Source: https://uiverse.io/Spacious74/helpless-tiger-55 */
+
+.animated-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  background: linear-gradient(45deg, var(--primary-color, #00ff88), #00cc6a);
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  min-height: 2.5rem;
+  min-width: 6rem;
+}
+
+.animated-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left 0.5s;
+}
+
+.animated-button:hover::before {
+  left: 100%;
+}
+
+.animated-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+}
+
+.animated-button:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 15px rgba(0, 255, 136, 0.2);
+}
+
+.animated-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.animated-button:disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.animated-button:disabled::before {
+  display: none;
+}
+
+.animated-button-text {
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.animated-button:hover .animated-button-text {
+  transform: scale(1.05);
+}
+
+/* Theme variants */
+[data-theme='dark-classic'] .animated-button {
+  background: linear-gradient(45deg, #4a90e2, #357abd);
+}
+
+[data-theme='dark-classic'] .animated-button:hover {
+  box-shadow: 0 8px 25px rgba(74, 144, 226, 0.3);
+}
+
+[data-theme='light-default'] .animated-button {
+  background: linear-gradient(45deg, #007bff, #0056b3);
+  color: #ffffff;
+}
+
+[data-theme='light-default'] .animated-button:hover {
+  box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+}
+
+[data-theme='light-classic'] .animated-button {
+  background: linear-gradient(45deg, #28a745, #1e7e34);
+  color: #ffffff;
+}
+
+[data-theme='light-classic'] .animated-button:hover {
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
+}

@@ -1,0 +1,104 @@
+/* CustomRadio Component Styles */
+/* Source: https://uiverse.io/Shoh2008/bad-starfish-74 */
+/* Animated radial gradient radio button with scale effects */
+
+.custom-radio {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  margin: var(--spacing-xs, 4px) 0;
+}
+
+.custom-radio-input {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: var(--radio-size, 20px);
+  height: var(--radio-size, 20px);
+  border-radius: calc(var(--radio-size, 20px) / 2);
+  cursor: pointer;
+  box-shadow:
+    hsla(0, 0%, 100%, 0.15) 0 1px 1px,
+    inset hsla(0, 0%, 0%, 0.5) 0 0 0 1px;
+  background-color: hsla(0, 0%, 0%, 0.2);
+  background-image: radial-gradient(
+    var(--primary-color, hsl(200, 100%, 90%)) 0%,
+    var(--primary-hover, hsl(200, 100%, 70%)) 15%,
+    hsla(200, 100%, 60%, 0.3) 28%,
+    hsla(200, 100%, 30%, 0) 70%
+  );
+  background-repeat: no-repeat;
+  background-position: 0 var(--radio-size, 24px);
+  transition:
+    background-position 0.15s cubic-bezier(0.8, 0, 1, 1),
+    transform 0.25s cubic-bezier(0.8, 0, 1, 1);
+  outline: none;
+  flex-shrink: 0;
+}
+
+.custom-radio-input:checked {
+  background-position: 0 0;
+  transition:
+    background-position 0.2s 0.15s cubic-bezier(0, 0, 0.2, 1),
+    transform 0.25s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.custom-radio-input:active {
+  transform: scale(1.5);
+  transition: transform 0.1s cubic-bezier(0, 0, 0.2, 1);
+}
+
+.custom-radio-input:checked ~ .custom-radio-input,
+.custom-radio-input:checked ~ .custom-radio-input:active {
+  background-position: 0 calc(-1 * var(--radio-size, 24px));
+}
+
+.custom-radio-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background-image: radial-gradient(
+    var(--text-light, hsl(0, 0%, 60%)) 0%,
+    var(--text-light, hsl(0, 0%, 50%)) 15%,
+    hsla(0, 0%, 40%, 0.3) 28%,
+    hsla(0, 0%, 30%, 0) 70%
+  );
+}
+
+.custom-radio-label {
+  cursor: pointer;
+  font-size: var(--text-base, 14px);
+  color: var(--text-primary);
+  user-select: none;
+  transition: color var(--transition-fast, 0.2s);
+}
+
+.custom-radio-input:disabled + .custom-radio-label {
+  cursor: not-allowed;
+  color: var(--text-light);
+  opacity: 0.6;
+}
+
+.custom-radio:hover .custom-radio-label {
+  color: var(--primary-color);
+}
+
+.custom-radio-input:checked + .custom-radio-label {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Configurable sizing */
+.custom-radio.size-small {
+  --radio-size: 18px;
+}
+
+.custom-radio.size-large {
+  --radio-size: 32px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .custom-radio {
+    --radio-size: 20px;
+  }
+}

@@ -1,0 +1,242 @@
+/* AnimatedInput Component Styles */
+/* Source: https://uiverse.io/Lakshay-art/curvy-earwig-22 */
+
+.animated-input-container {
+  position: relative;
+  margin: 0.75rem 0;
+  width: 100%;
+}
+
+.animated-input-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #ffffff);
+  transition: color 0.3s ease;
+}
+
+.animated-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.animated-input {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  color: var(--text-primary, #ffffff);
+  background: transparent;
+  border: none;
+  outline: none;
+  transition: all 0.3s ease;
+  border-radius: 0.5rem;
+}
+
+.animated-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  transition: color 0.3s ease;
+}
+
+.animated-input-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid rgba(0, 255, 136, 0.3);
+  border-radius: 0.5rem;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.animated-input-border::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    var(--primary-color, #00ff88),
+    #00cc6a,
+    var(--primary-color, #00ff88)
+  );
+  background-size: 200% 200%;
+  border-radius: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+/* Focus states */
+.animated-input:focus + .animated-input-border {
+  border-color: var(--primary-color, #00ff88);
+  box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.1);
+}
+
+.animated-input:focus + .animated-input-border::before {
+  opacity: 1;
+  animation: gradient-shift 2s ease infinite;
+}
+
+.animated-input:focus::placeholder {
+  color: rgba(0, 255, 136, 0.7);
+}
+
+.animated-input:focus ~ .animated-input-label,
+.animated-input:focus + .animated-input-border + .animated-input-label {
+  color: var(--primary-color, #00ff88);
+}
+
+/* Hover states */
+.animated-input-wrapper:hover .animated-input-border {
+  border-color: rgba(0, 255, 136, 0.5);
+}
+
+.animated-input-wrapper:hover .animated-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Filled state */
+.animated-input:not(:placeholder-shown) + .animated-input-border {
+  border-color: var(--primary-color, #00ff88);
+}
+
+.animated-input:not(:placeholder-shown)::placeholder {
+  color: transparent;
+}
+
+/* Disabled state */
+.animated-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.animated-input:disabled + .animated-input-border {
+  border-color: #666;
+}
+
+.animated-input:disabled::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Theme variants */
+[data-theme='dark-classic'] .animated-input-border {
+  border-color: rgba(74, 144, 226, 0.3);
+}
+
+[data-theme='dark-classic'] .animated-input:focus + .animated-input-border {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.1);
+}
+
+[data-theme='dark-classic']
+  .animated-input:focus
+  + .animated-input-border::before {
+  background: linear-gradient(45deg, #4a90e2, #357abd, #4a90e2);
+}
+
+[data-theme='dark-classic'] .animated-input:focus::placeholder {
+  color: rgba(74, 144, 226, 0.7);
+}
+
+[data-theme='dark-classic'] .animated-input:focus ~ .animated-input-label,
+[data-theme='dark-classic']
+  .animated-input:focus
+  + .animated-input-border
+  + .animated-input-label {
+  color: #4a90e2;
+}
+
+[data-theme='light-default'] .animated-input {
+  color: #333;
+}
+
+[data-theme='light-default'] .animated-input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='light-default'] .animated-input-label {
+  color: #333;
+}
+
+[data-theme='light-default'] .animated-input-border {
+  border-color: rgba(0, 123, 255, 0.3);
+}
+
+[data-theme='light-default'] .animated-input:focus + .animated-input-border {
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+[data-theme='light-default']
+  .animated-input:focus
+  + .animated-input-border::before {
+  background: linear-gradient(45deg, #007bff, #0056b3, #007bff);
+}
+
+[data-theme='light-default'] .animated-input:focus::placeholder {
+  color: rgba(0, 123, 255, 0.7);
+}
+
+[data-theme='light-default'] .animated-input:focus ~ .animated-input-label,
+[data-theme='light-default']
+  .animated-input:focus
+  + .animated-input-border
+  + .animated-input-label {
+  color: #007bff;
+}
+
+[data-theme='light-classic'] .animated-input {
+  color: #333;
+}
+
+[data-theme='light-classic'] .animated-input::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+[data-theme='light-classic'] .animated-input-label {
+  color: #333;
+}
+
+[data-theme='light-classic'] .animated-input-border {
+  border-color: rgba(40, 167, 69, 0.3);
+}
+
+[data-theme='light-classic'] .animated-input:focus + .animated-input-border {
+  border-color: #28a745;
+  box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
+}
+
+[data-theme='light-classic']
+  .animated-input:focus
+  + .animated-input-border::before {
+  background: linear-gradient(45deg, #28a745, #1e7e34, #28a745);
+}
+
+[data-theme='light-classic'] .animated-input:focus::placeholder {
+  color: rgba(40, 167, 69, 0.7);
+}
+
+[data-theme='light-classic'] .animated-input:focus ~ .animated-input-label,
+[data-theme='light-classic']
+  .animated-input:focus
+  + .animated-input-border
+  + .animated-input-label {
+  color: #28a745;
+}

@@ -1,0 +1,74 @@
+/* Card Component Styles */
+/* @lastModified 2025-10-03 */
+/* @version 1.0.0 */
+
+.card {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 12px;
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  transition: all 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md, 0 4px 6px rgba(0, 0, 0, 0.1));
+  transform: translateY(-2px);
+}
+
+/* Variants */
+.default {
+  border: 1px solid var(--border-light, #e2e8f0);
+}
+
+.elevated {
+  box-shadow: var(--shadow-lg, 0 10px 15px rgba(0, 0, 0, 0.1));
+}
+
+.outlined {
+  border: 2px solid var(--border-medium, #cbd5e0);
+  box-shadow: none;
+}
+
+.player {
+  border: 1px solid var(--border-light, #e2e8f0);
+  background: var(--bg-secondary, #f8fafc);
+  height: 200px;
+  transition: all var(--transition-fast);
+  padding: var(--spacing-sm);
+}
+
+.outlined:hover {
+  border-color: var(--primary-color, #3182ce);
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+/* Padding variants */
+.padding-small {
+  padding: 16px;
+}
+
+.padding-medium {
+  padding: 24px;
+}
+
+.padding-large {
+  padding: 32px;
+}
+
+.padding-none {
+  padding: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .card {
+    border-radius: 8px;
+  }
+
+  .padding-medium {
+    padding: 20px;
+  }
+
+  .padding-large {
+    padding: 24px;
+  }
+}

@@ -1,0 +1,59 @@
+name: Deploy to Production
+
+# Workflow de despliegue a producción
+# Se ejecuta cuando se hace push a las ramas principales
+
+on:
+    push:
+        branches: [master, main]
+
+jobs:
+    # Job 1: Despliegue del frontend a Vercel
+    # Construye y despliega el frontend React a producción
+    deploy-frontend:
+        name: Deploy Frontend to Vercel
+        runs-on: ubuntu-latest
+
+        steps:
+            # Paso 1: Obtener el código del repositorio
+            - name: Checkout code
+              uses: actions/checkout@v4
+
+            # Paso 2: Configurar Node.js 20 LTS
+            - name: Setup Node.js 20
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+
+            # Paso 3: Instalar dependencias del cliente React
+            - name: Install client dependencies
+              run: cd client && npm ci
+
+            # Paso 4: Construir frontend para producción
+            - name: Build frontend
+              run: cd client && npm run build
+
+            # Paso 5: Desplegar frontend a Vercel en modo producción
+            - name: Deploy to Vercel Production
+              uses: amondnet/vercel-action@v25
+              with:
+                  vercel-token: ${{ secrets.VERCEL_TOKEN }}
+                  vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+                  vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+                  vercel-args: "--prod"
+                  working-directory: ./public
+                  scope: ${{ secrets.VERCEL_ORG_ID }}
+
+    # Job 2: Notificación de backend listo
+    # Informa que el backend está listo para despliegue manual
+    deploy-backend:
+        name: Backend Deployment Ready
+        runs-on: ubuntu-latest
+
+        steps:
+            # Paso 1: Mostrar notificación de que el backend está listo
+            - name: Build notification
+              run: |
+                  echo "✅ Backend Docker image: tateti-arbitro:v1.0.0"
+                  echo "📦 Deploy to Railway/Render/DigitalOcean manually or via their CLI"
+                  echo "🔗 Update environment variables with production URLs"

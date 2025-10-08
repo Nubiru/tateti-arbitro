@@ -1,0 +1,41 @@
+import React, { useState, useEffect } from 'react';
+import GameContainer from './containers/GameContainer';
+import ErrorBoundary from './components/ErrorBoundary';
+import Header from './components/layout/Header';
+import { GameProvider } from './context/GameContext';
+
+/**
+ * Componente Principal de la Aplicación
+ * @lastModified 2025-10-05
+ * @version 1.0.0
+ */
+
+function App() {
+  const [theme, setTheme] = useState(() => {
+    // Get theme from localStorage or default to 'dark-neon'
+    return localStorage.getItem('tateti-theme') || 'dark-neon';
+  });
+
+  // Apply theme to html element
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('tateti-theme', theme);
+  }, [theme]);
+
+  const handleThemeChange = (newTheme) => {
+    setTheme(newTheme);
+  };
+
+  return (
+    <ErrorBoundary>
+      <GameProvider>
+        <Header currentTheme={theme} onThemeChange={handleThemeChange} />
+        <div className="app-content">
+          <GameContainer />
+        </div>
+      </GameProvider>
+    </ErrorBoundary>
+  );
+}
+
+export default App;

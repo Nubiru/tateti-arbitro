@@ -1,0 +1,115 @@
+/* Button Component Styles */
+/* @lastModified 2025-10-03 */
+/* @version 1.0.0 */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  font-family: inherit;
+  line-height: 1;
+}
+
+/* Variants */
+.primary {
+  background: var(--primary-color, #3182ce);
+  color: white;
+}
+
+.primary:hover:not(.disabled) {
+  background: var(--primary-hover, #2c5aa0);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(49, 130, 206, 0.3);
+}
+
+.secondary {
+  background: var(--secondary-color, #e2e8f0);
+  color: var(--text-primary, #2d3748);
+}
+
+.secondary:hover:not(.disabled) {
+  background: var(--secondary-hover, #cbd5e0);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.success {
+  background: var(--success-color, #38a169);
+  color: white;
+}
+
+.success:hover:not(.disabled) {
+  background: var(--success-hover, #2f855a);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+}
+
+.danger {
+  background: var(--danger-color, #e53e3e);
+  color: white;
+}
+
+.danger:hover:not(.disabled) {
+  background: var(--danger-hover, #c53030);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+}
+
+/* Sizes */
+.small {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+}
+
+.medium {
+  padding: 12px 24px;
+  font-size: 1rem;
+}
+
+.large {
+  padding: 16px 32px;
+  font-size: 1.125rem;
+}
+
+/* States */
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.button:active:not(.disabled) {
+  transform: translateY(0);
+}
+
+/* Focus styles */
+.button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .button {
+    width: 100%;
+  }
+
+  .small {
+    padding: 10px 16px;
+  }
+
+  .medium {
+    padding: 14px 24px;
+  }
+
+  .large {
+    padding: 18px 32px;
+  }
+}

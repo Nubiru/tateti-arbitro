@@ -1,0 +1,134 @@
+/* PlayerProfile Component Styles */
+.playerProfile {
+  width: 100%;
+  height: 200px;
+  transition: all var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+}
+
+.playerProfile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.playerProfile.connected {
+  border-color: var(--success-color, #10b981);
+  background: linear-gradient(
+    135deg,
+    var(--bg-secondary) 0%,
+    rgba(16, 185, 129, 0.05) 100%
+  );
+}
+
+/* Player Header */
+.playerHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-xs);
+  padding-bottom: var(--spacing-xs);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.playerNumber {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--primary-color);
+  background: var(--bg-tertiary);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  min-width: 24px;
+  text-align: center;
+}
+
+.connectionStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  font-size: var(--text-xs);
+  color: var(--success-color, #10b981);
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  background: var(--success-color, #10b981);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.statusText {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Player Inputs */
+.playerInputs {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: var(--spacing-xs);
+}
+
+.playerNameInput,
+.playerPortInput {
+  width: 100%;
+  font-size: var(--text-sm);
+}
+
+.playerNameInput {
+  font-weight: 500;
+}
+
+.playerPortInput {
+  font-family: 'Courier New', monospace;
+}
+
+.humanLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: color var(--transition-fast);
+}
+
+.humanLabel:hover {
+  color: var(--text-primary);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .playerProfile {
+    height: 180px;
+  }
+
+  .playerInputs {
+    gap: 2px;
+  }
+
+  .playerNameInput,
+  .playerPortInput {
+    font-size: var(--text-xs);
+  }
+}

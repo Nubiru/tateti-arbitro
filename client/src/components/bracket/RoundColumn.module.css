@@ -1,0 +1,123 @@
+/* RoundColumn.module.css */
+.roundColumn {
+  display: flex;
+  flex-direction: column;
+  min-width: 250px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-md);
+  margin: var(--spacing-sm);
+  border: 1px solid var(--border-light);
+}
+
+.roundHeader {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+  padding-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.roundTitle {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
+}
+
+.roundStats {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.matchCount {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--primary-color);
+}
+
+.matchLabel {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.matchesContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  flex: 1;
+}
+
+.matchNode {
+  margin: 0;
+}
+
+.emptyRound {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.emptyText {
+  font-size: var(--text-sm);
+}
+
+.progressContainer {
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-md);
+  border-top: 1px solid var(--border-light);
+}
+
+.progressBar {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-primary);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-sm);
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--primary-color),
+    var(--success-color)
+  );
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progressText {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-align: center;
+  display: block;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .roundColumn {
+    min-width: 200px;
+    padding: var(--spacing-sm);
+    margin: var(--spacing-xs);
+  }
+
+  .roundTitle {
+    font-size: var(--text-md);
+  }
+
+  .matchCount {
+    font-size: var(--text-lg);
+  }
+
+  .matchesContainer {
+    gap: var(--spacing-sm);
+  }
+}

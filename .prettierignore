@@ -1,0 +1,57 @@
+# Dependencies
+node_modules/
+client/node_modules/
+
+# Build outputs
+coverage/
+public/
+dist/
+build/
+
+# Package files
+package-lock.json
+client/package-lock.json
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+
+# Archive files
+archive/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Git
+.git/
+
+# Documentation files (keep original formatting)
+*.md
+ENV_SETUP.md
+AUTOMATION_SETUP.md
+DOCKER_SETUP.md
+code-standard.md
+
+# Config files (keep original formatting)
+jest.config.mjs
+jest.setup.js
+babel.config.mjs
+client/babel.config.mjs
+client/vite.config.js
+
+# GitHub workflows (keep original formatting)
+.github/
+
+# Player bot files
+players/
+
+# Scripts
+scripts/

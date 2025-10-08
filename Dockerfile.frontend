@@ -1,0 +1,95 @@
+# Dockerfile del Frontend para la Interfaz Ta-Te-Ti
+# @lastModified 2025-10-05
+# @version 1.0.0
+
+# Etapa de producción con Nginx (frontend construido localmente)
+FROM nginx:alpine
+
+# Actualizaciones de seguridad
+RUN apk update && apk upgrade && apk add --no-cache dumb-init
+
+# Crear usuario no-root (el grupo nginx ya existe)
+RUN adduser -S frontend -u 1001 -G nginx
+
+# Copiar recursos del frontend pre-construido (construido localmente)
+COPY public /usr/share/nginx/html
+
+# Crear configuración personalizada de nginx
+RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
+server {
+    listen 80;
+    server_name localhost;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Compresión Gzip
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
+
+    # Cabeceras de seguridad
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "no-referrer-when-downgrade" always;
+
+    # Proxy de API al backend
+    location /api/ {
+        proxy_pass http://arbitrator:4000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 86400;
+    }
+
+    # Servir archivos estáticos
+    location / {
+        try_files $uri $uri/ /index.html;
+        
+        # Cachear recursos estáticos
+        location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+            expires 1y;
+            add_header Cache-Control "public, immutable";
+        }
+    }
+
+    # Endpoint de verificación de salud
+    location /health {
+        access_log off;
+        return 200 "healthy\n";
+        add_header Content-Type text/plain;
+    }
+}
+EOF
+
+# Cambiar propiedad
+RUN chown -R frontend:nginx /usr/share/nginx/html && \
+    chown -R frontend:nginx /var/cache/nginx && \
+    chown -R frontend:nginx /var/log/nginx && \
+    chown -R frontend:nginx /etc/nginx/conf.d
+
+# Cambiar a usuario no-root
+USER frontend
+
+# Exponer puerto
+EXPOSE 80
+
+# Verificación de salud
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost/health || exit 1
+
+# Etiquetas OCI
+LABEL org.opencontainers.image.title="tateti-interfaz" \
+      org.opencontainers.image.version="1.0.0" \
+      org.opencontainers.image.description="Ta-Te-Ti Frontend Interface with Nginx" \
+      org.opencontainers.image.source="https://github.com/your-repo/tateti-arbitro"
+
+# Start Nginx with dumb-init
+ENTRYPOINT ["dumb-init", "--"]
+CMD ["nginx", "-g", "daemon off;"]

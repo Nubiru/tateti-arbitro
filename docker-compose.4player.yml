@@ -1,0 +1,159 @@
+# 4-Player Tournament Configuration
+# Clean setup for 4-player tournament testing
+services:
+    # Ta-Te-Ti Arbitrator (Backend)
+    arbitrator:
+        build:
+            context: .
+            dockerfile: Dockerfile.backend
+        image: tateti-arbitro:v1.0.0-4player
+        container_name: tateti-arbitrator-4player
+        ports:
+            - "4000:4000"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        environment:
+            - NODE_ENV=production
+            - DOCKER_ENV=true
+            - DOCKER_DISCOVERY=true
+            - PORT=4000
+            - LOG_LEVEL=debug
+            - TRUST_PROXY=true
+            - RATE_LIMIT_WINDOW_MS=30000
+            - RATE_LIMIT_MAX=2000
+        networks:
+            - tateti-network
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://localhost:4000/api/stream/status', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+
+    # 2 Random Bots
+    random-bot-1:
+        build:
+            context: ./players/random-bot
+            dockerfile: Dockerfile
+        image: tateti-random-bot:v1.0.0
+        container_name: tateti-random-bot-1-4player
+        ports:
+            - "3001:3001"
+        environment:
+            - PORT=3001
+            - PLAYER_NAME=RandomBot1
+        networks:
+            - tateti-network
+        depends_on:
+            arbitrator:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://127.0.0.1:3001/health', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
+
+    random-bot-2:
+        build:
+            context: ./players/random-bot
+            dockerfile: Dockerfile
+        image: tateti-random-bot:v1.0.0
+        container_name: tateti-random-bot-2-4player
+        ports:
+            - "3002:3002"
+        environment:
+            - PORT=3002
+            - PLAYER_NAME=RandomBot2
+        networks:
+            - tateti-network
+        depends_on:
+            arbitrator:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://127.0.0.1:3002/health', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
+
+    # 2 Algorithm Bots
+    algo-bot-1:
+        build:
+            context: ./players/algoritmo-bot
+            dockerfile: Dockerfile
+        image: tateti-algoritmo-bot-1:v1.0.0
+        container_name: tateti-algo-bot-1-4player
+        ports:
+            - "3003:3003"
+        environment:
+            - PORT=3003
+            - PLAYER_NAME=AlgoBot1
+        networks:
+            - tateti-network
+        depends_on:
+            arbitrator:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://127.0.0.1:3003/health', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
+
+    algo-bot-2:
+        build:
+            context: ./players/algoritmo-bot
+            dockerfile: Dockerfile
+        image: tateti-algoritmo-bot-2:v1.0.0
+        container_name: tateti-algo-bot-2-4player
+        ports:
+            - "3004:3004"
+        environment:
+            - PORT=3004
+            - PLAYER_NAME=AlgoBot2
+        networks:
+            - tateti-network
+        depends_on:
+            arbitrator:
+                condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://127.0.0.1:3004/health', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
+
+networks:
+    tateti-network:
+        driver: bridge

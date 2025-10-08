@@ -12,7 +12,9 @@ app.post('/api/match', async (req, res) => {
   const { player1, player2, timeoutMs } = req.body || {};
 
   if (!player1 || !player2) {
-    return res.status(400).json({ error: 'Se necesitan dos jugadores para iniciar la partida.' });
+    return res
+      .status(400)
+      .json({ error: 'Se necesitan dos jugadores para iniciar la partida.' });
   }
 
   try {

@@ -1,0 +1,48 @@
+/* AnimatedCard Component Styles */
+/* Source: https://uiverse.io/adamgiebl/new-lionfish-4 */
+
+.animated-card {
+  background:
+    linear-gradient(var(--bg-secondary), var(--bg-secondary)) padding-box,
+    linear-gradient(
+        145deg,
+        transparent 35%,
+        var(--primary-color),
+        var(--accent-color)
+      )
+      border-box;
+  border: 2px solid transparent;
+  padding: var(--spacing-xl);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  box-sizing: border-box;
+  border-radius: var(--radius-xl);
+  transition: all var(--transition-normal);
+  width: var(--card-width, 100%);
+  height: var(--card-height, 100%);
+  overflow: hidden;
+}
+
+.animated-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.animated-card-title {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--primary-color);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.animated-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  flex: 1;
+}
