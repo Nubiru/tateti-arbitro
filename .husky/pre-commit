@@ -1,15 +1,5 @@
-echo "🔍 Ejecutando puertas de calidad pre-commit..."
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
 
-# 1. Format check
-npm run format:check || exit 1
-cd client && npm run format:check || exit 1
-cd ..
-
-# 2. Lint check
-npm run lint || exit 1
-npm run lint:client || exit 1
-
-# 3. Tests (all projects)
-npm test -- --runInBand --passWithNoTests=false || exit 1
-
-echo "✅ ¡Todas las puertas de calidad pasaron!"
+# Ejecutar puertas de calidad pre-commit
+npm run qa:precommit

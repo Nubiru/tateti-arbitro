@@ -1,11 +1,14 @@
-# Configuración de producción para Ta-Te-Ti Arbitrator
-# @lastModified 2025-10-05
+# Configuración de Producción Completa (Frontend + Backend + Bots)
+# @lastModified 2025-10-08
 # @version 1.0.0
+# Uso: npm run docker:prod
 
 services:
-    # Ta-Te-Ti Arbitrator
+    # Backend Arbitrator
     arbitrator:
-        build: .
+        build:
+            context: .
+            dockerfile: Dockerfile
         image: tateti-arbitro:v1.0.0
         container_name: tateti-arbitrator
         ports:

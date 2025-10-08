@@ -1,19 +1,22 @@
-# Configuración de pruebas de humo para Ta-Te-Ti Arbitrator
-# @lastModified 2025-10-05
+# Configuración de Pruebas Rápidas (Smoke Tests)
+# @lastModified 2025-10-08
 # @version 1.0.0
+# Uso: npm run docker:smoke
 
 services:
-    # Ta-Te-Ti Arbitrator
+    # Backend Arbitrator
     arbitrator:
-        build: .
-        image: tateti-arbitro:v1.0.0-smoke
+        build:
+            context: .
+            dockerfile: Dockerfile
+        image: tateti-arbitro:v1.0.0
         container_name: tateti-arbitrator-smoke
         ports:
             - "4000:4000"
         environment:
-            - NODE_ENV=production
+            - NODE_ENV=test
             - PORT=4000
-            - LOG_LEVEL=info
+            - LOG_LEVEL=debug
             - TRUST_PROXY=true
             - RATE_LIMIT_WINDOW_MS=60000
             - RATE_LIMIT_MAX=1000
@@ -32,12 +35,13 @@ services:
             retries: 3
             start_period: 40s
 
-    # Player 1 - Random Bot
-    player1:
+    # Random Bot 1
+    random-bot-1:
         build:
             context: ./players/random-bot
-            tags: [tateti-random-bot:v1.0.0-smoke]
-        container_name: tateti-random-bot-1-smoke
+            dockerfile: Dockerfile
+        image: tateti-random-bot:v1.0.0
+        container_name: tateti-random-bot-1
         ports:
             - "3001:3001"
         environment:
@@ -48,13 +52,26 @@ services:
         depends_on:
             arbitrator:
                 condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://127.0.0.1:3001/health', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
 
-    # Player 2 - Random Bot
-    player2:
+    # Random Bot 2
+    random-bot-2:
         build:
             context: ./players/random-bot
-            tags: [tateti-random-bot:v1.0.0-smoke]
-        container_name: tateti-random-bot-2-smoke
+            dockerfile: Dockerfile
+        image: tateti-random-bot:v1.0.0
+        container_name: tateti-random-bot-2
         ports:
             - "3002:3002"
         environment:
@@ -65,6 +82,18 @@ services:
         depends_on:
             arbitrator:
                 condition: service_healthy
+        healthcheck:
+            test:
+                [
+                    "CMD",
+                    "node",
+                    "-e",
+                    "import('http').then(h=>h.get('http://127.0.0.1:3002/health', r=>process.exit(r.statusCode===200?0:1)))",
+                ]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
 
 networks:
     tateti-network:

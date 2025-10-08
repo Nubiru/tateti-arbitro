@@ -220,57 +220,88 @@ cat .vercel/project.json
 
 ## Flujo de Trabajo
 
-### Flujo de Desarrollo
+### Flujo de Desarrollo (Layered Scripts)
 
 ```bash
 # 1. Crear rama de feature
 git checkout -b feature/new-feature
 
-# 2. Desarrollar código
+# 2. Iniciar entorno de desarrollo (Frontend FUERA de Docker)
+npm run dev:smoke     # O dev:4player, dev:8player
+
+# 3. Desarrollar código con hot-reload
+# Frontend: http://localhost:5173 (Vite)
+# Backend: http://localhost:4000
 # ... escribir código ...
 
-# 3. VALIDACIÓN PRE-COMMIT (OBLIGATORIO)
+# 4. VALIDACIÓN PRE-COMMIT (OBLIGATORIO)
 npm run qa:precommit
 
-# 4. Si ✅ pasa, hacer commit
+# 5. Si ✅ pasa, hacer commit
 git add .
 git commit -m "feat: nueva funcionalidad"
 
-# 5. Push a GitHub
+# 6. Testing de integración (Frontend DENTRO de Docker)
+npm run docker:smoke  # Valida que todo funciona containerizado
+
+# 7. Push a GitHub
 git push origin feature/new-feature
 
-# 6. Crear Pull Request
+# 8. Crear Pull Request
 # GitHub Actions se ejecuta automáticamente
 # Vercel crea despliegue preview
 
-# 7. Revisar y mergear
+# 9. Revisar y mergear
 # Profesor aprueba → Merge a master
 # El despliegue de producción se activa automáticamente
 ```
 
-### Flujo de Release
+### Flujo de Release (Pipeline Automatizado)
 
 ```bash
+# OPCIÓN 1: Pipeline Completo (Un Solo Comando)
+npm run deploy:prod
+# ✅ Ejecuta qa:precommit
+# ✅ Construye frontend (React → public/)
+# ✅ Construye imágenes Docker
+# ✅ Inicia stack completo
+
+# OPCIÓN 2: Manual (Control Fino)
+
 # 1. VALIDACIÓN PRE-COMMIT (OBLIGATORIO)
 npm run qa:precommit
 
-# 2. Si ✅ pasa, asegurar que todas las pruebas pasen
+# 2. Verificación completa (QA + Build)
 npm run qa:full
 
-# 3. Build del frontend
-cd client && npm run build && cd ..
-
-# 4. Build de imágenes Docker
-npm run docker:build:all
-
-# 5. Tag de release
+# 3. Tag de release
 git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
 
-# 6. Desplegar
+# 4. Desplegar
+npm run deploy:prod
 # - Frontend: Auto-despliega vía GitHub Actions
 # - Backend: Desplegar vía Railway/Render
 # - Bots: Desplegar vía Vercel
+```
+
+### Flujo de Testing (Diferentes Configuraciones)
+
+```bash
+# Testing Rápido (2 jugadores)
+npm run deploy:smoke
+
+# Testing Torneo 4 Jugadores
+npm run deploy:4player
+
+# Testing Torneo 8 Jugadores
+npm run deploy:8player
+
+# Cada comando ejecuta:
+# 1. QA completo (format + lint + tests)
+# 2. Build de frontend
+# 3. Build de Docker
+# 4. Deploy de stack
 ```
 
 ## Pruebas en Producción

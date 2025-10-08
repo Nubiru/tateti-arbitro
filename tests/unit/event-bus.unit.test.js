@@ -26,10 +26,21 @@ describe('Pruebas Unitarias de EventBus', () => {
       setHeader: jest.fn(),
       status: jest.fn().mockReturnThis(),
       destroyed: false,
+      _sseTimeout: null,
     };
   });
 
   afterEach(() => {
+    // CRITICAL: Clean up all timeouts to prevent hanging tests
+    eventBus.connections.forEach(conn => {
+      if (conn._sseTimeout) {
+        clearTimeout(conn._sseTimeout);
+        conn._sseTimeout = null;
+      }
+    });
+    // Clear connections without calling end() on mocks
+    eventBus.connections.clear();
+    jest.clearAllTimers();
     jest.clearAllMocks();
   });
 

@@ -29,12 +29,15 @@ export const validatePlayers = players => {
   });
 };
 
-export const normalizePlayer = player => {
+export const normalizePlayer = (player, id) => {
   return {
+    id: id || player.id || 'X', // Player ID for board representation
     name: player.name.trim(),
     port: player.port,
     host: player.host || 'localhost',
     protocol: player.protocol || 'http',
+    type: player.type || 'algorithm',
+    isHuman: player.isHuman || false,
   };
 };
 
@@ -204,36 +207,26 @@ export const processMove = (board, position, symbol) => {
 };
 
 // Create match result function
-export const createMatchResult = (
-  board,
-  boardSize,
+export const createMatchResult = ({
+  players,
+  history,
   winner,
-  winningLine = null
-) => {
-  const gameOver = checkGameOver(board, boardSize);
-
-  if (gameOver.result === 'win') {
-    return {
-      status: 'win',
-      winner: winner,
-      winningLine: winningLine,
-      board: board,
-    };
-  } else if (gameOver.result === 'draw') {
-    return {
-      status: 'draw',
-      winner: null,
-      winningLine: null,
-      board: board,
-    };
-  } else {
-    return {
-      status: 'continue',
-      winner: null,
-      winningLine: null,
-      board: board,
-    };
-  }
+  winningLine,
+  result,
+  message,
+  finalBoard,
+}) => {
+  return {
+    players,
+    history,
+    winner,
+    winningLine,
+    result,
+    message,
+    finalBoard,
+    status: result, // Alias for backwards compatibility
+    board: finalBoard, // Alias for backwards compatibility
+  };
 };
 
 // Apply rolling window function (for no-tie mode)

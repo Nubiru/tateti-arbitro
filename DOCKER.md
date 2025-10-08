@@ -1,222 +1,123 @@
-# 🐳 Guía Completa de Docker - Ta-Te-Ti Arbitro v1.0.0
+# 🐳 Guía Docker - Ta-Te-Ti Arbitro v1.0.0
 
-## 📋 Resumen de Configuraciones
+## 📋 Resumen
 
-| Configuración           | Archivo                           | Descripción                 | Bots                   | Imágenes Versionadas | Uso               |
-| ----------------------- | --------------------------------- | --------------------------- | ---------------------- | -------------------- | ----------------- |
-| **Pruebas de Humo**     | `docker-compose.test.yml`         | Backend + 4 bots            | 4 Random               | v1.0.0-test          | Testing rápido    |
-| **Torneos 8 Jugadores** | `docker-compose.8player.yml`      | Backend + 8 bots            | 4 Random + 4 Algoritmo | v1.0.0               | Torneos completos |
-| **Producción Completa** | `docker-compose.yml`              | Frontend + Backend + 8 bots | 8 Bots (4+4)           | v1.0.0               | Deploy completo   |
-| **Backend Testing**     | `docker-compose.backend-test.yml` | Solo backend + 2 bots       | 2 Random               | v1.0.0-backend-test  | Testing backend   |
+Sistema containerizado con Docker para ejecutar el árbitro de Ta-Te-Ti con diferentes configuraciones de jugadores.
 
-## 🏗️ Arquitectura de Servicios Refactorizada
-
-### GameOptionsService
-- **Configuración Centralizada**: Manejo unificado de opciones de juego
-- **Validación Robusta**: Validación completa con valores por defecto
-- **Sistema de Throttling**: Control inteligente de velocidad de juego
-- **Gestión de Estado**: Helpers para estados de juego y procesamiento de datos
-
-### PlayerService
-- **Descubrimiento Dinámico**: Detección automática de bots disponibles
-- **Generación de Jugadores**: Creación inteligente basada en bots saludables
-- **Sistema de Fallbacks**: Manejo automático de bots no disponibles
-- **Validación de Configuración**: Validación completa de setup de partida
-
-## 🔍 Descubrimiento Dinámico de Bots
-
-El sistema incluye **descubrimiento automático de bots** que detecta hasta 16 jugadores:
-
-- **Docker API**: Consulta contenedores en ejecución
-- **Health Checks**: Verifica estado de cada bot (2s timeout)
-- **Metadata**: Obtiene información de `/info` endpoint
-- **Cache**: Almacena resultados por 30 segundos
-- **Frontend**: Pobla automáticamente lista de jugadores
+**Node.js 20 LTS** en todos los contenedores.
 
 ---
 
-## Node.js Version
+## 🎯 **ESTRATEGIA DE FRONTEND**
 
-This project uses Node.js 20 LTS in all environments:
-- Local development: Use nvm to install Node 20
-- Docker containers: node:20-alpine and node:20-slim
-- CI/CD pipeline: Node 20 via GitHub Actions
+### **Modo Desarrollo (Frontend FUERA de Docker):**
+```bash
+npm run dev:smoke     # Backend en Docker, Frontend en Vite
+npm run dev:4player   # Backend + 4 bots, Frontend en Vite
+npm run dev:8player   # Backend + 8 bots, Frontend en Vite
+```
+- ✅ **Hot-reload instantáneo** - Cambios reflejados al instante
+- ✅ **Mejor DX** - Debugging más fácil con Vite
+- ✅ **Más rápido** - No rebuilds de Docker
+- 🌐 **Acceso**: http://localhost:5173
 
-## 🚀 Guía Paso a Paso
+### **Modo Producción (Frontend DENTRO de Docker):**
+```bash
+npm run docker:smoke   # Todo containerizado
+npm run docker:4player # Todo containerizado
+npm run docker:8player # Todo containerizado
+npm run docker:prod    # Stack completo con Nginx
+```
+- ✅ **Deployment unificado** - Una sola unidad
+- ✅ **Optimizado** - Nginx sirve assets estáticos
+- ✅ **Production-ready** - Configuración de seguridad
+- 🌐 **Acceso**: http://localhost:4000 (o :80 en prod)
 
-### **Paso 1: Preparación del Sistema**
+---
+
+## 🚀 Configuraciones Disponibles
+
+| Configuración | Comando Dev | Comando Docker | Jugadores | Uso |
+|--------------|-------------|----------------|-----------|-----|
+| **Pruebas Rápidas** | `dev:smoke` | `docker:smoke` | 2 bots | Testing rápido |
+| **Torneo 4 Jugadores** | `dev:4player` | `docker:4player` | 4 bots | Torneos pequeños |
+| **Torneo 8 Jugadores** | `dev:8player` | `docker:8player` | 8 bots | Torneos completos |
+| **Producción** | - | `docker:prod` | Frontend + Backend + 2 | Deploy completo |
+
+---
+
+## 📦 Prerequisitos
 
 ```bash
-# 1. Verificar que Docker esté instalado y funcionando
+# Verificar Docker instalado
 docker --version
 docker-compose --version
 
-# 2. Navegar al directorio del proyecto
+# Navegar al proyecto
 cd tateti-arbitro
 
-# 3. Instalar dependencias (si no está hecho)
+# Instalar dependencias
 npm install
 cd client && npm install && cd ..
-
-# 4. Configurar variables de entorno (OBLIGATORIO)
-cp .env.example .env
-# Editar .env con tus valores específicos
 ```
 
-### **Paso 2: Construcción de Imágenes (OBLIGATORIO)**
+---
+
+## 🔨 Construcción de Imágenes
+
+### Construcción Rápida (Recomendado)
 
 ```bash
-# Construir TODAS las imágenes con versiones v1.0.0
+# Construir todas las imágenes
 npm run docker:build:all
+```
 
-# Verificar que las imágenes se construyeron correctamente
+### Construcción Manual
+
+```bash
+# Solo backend
+npm run docker:build
+
+# Solo frontend
+npm run docker:build:frontend
+```
+
+### Verificar Imágenes
+
+```bash
 docker images | grep tateti
 
 # Deberías ver:
 # tateti-arbitro:v1.0.0
 # tateti-interfaz:v1.0.0
 # tateti-random-bot:v1.0.0
-# tateti-algoritmo-bot:v1.0.0
-```
-
-### **Paso 3: Despliegue de Producción Completa**
-
-#### **Opción A: Stack Completo (Frontend + Backend + 8 Bots)**
-
-```bash
-# Levantar stack completo de producción
-docker-compose up
-
-# Verificar que todos los servicios están funcionando
-docker-compose ps
-
-# Acceder a la aplicación:
-# - Frontend: http://localhost
-# - Backend API: http://localhost:4000
-# - Bot Discovery: http://localhost:4000/api/bots/available
-```
-
-#### **Opción B: Pruebas de Humo (4 Jugadores)**
-
-```bash
-# Levantar stack de pruebas
-docker-compose -f docker-compose.test.yml up
-
-# Verificar health checks
-curl http://localhost:4000/health
-
-# Detener cuando termine
-docker-compose -f docker-compose.test.yml down
-```
-
-#### **Opción C: Torneo de 8 Jugadores**
-
-```bash
-# Levantar torneo completo
-docker-compose -f docker-compose.8player.yml up
-
-# Verificar que todos los bots están saludables
-curl http://localhost:4000/api/bots/available
-
-# Detener cuando termine
-docker-compose -f docker-compose.8player.yml down
-```
-
-### **Paso 4: Desarrollo Local (Solo Backend)**
-
-```bash
-# Solo backend con 2 bots para desarrollo
-npm run dev:backend
-
-# Luego en otra terminal, iniciar frontend:
-npm run dev:frontend
-```
-
-#### **Verificar que Funciona**
-
-```bash
-# Verificar contenedores
-docker ps
-
-# Verificar backend
-curl http://localhost:4000/api/health
-
-# Verificar frontend
-# Abrir navegador en http://localhost:5173
-```
-
-#### **Detener Servicios**
-
-```bash
-# Detener todo
-Ctrl+C  # Si usaste dev:full
-npm run docker:down:test  # Si usaste dev:backend
 ```
 
 ---
 
-### **Paso 3: Desarrollo con 8 Jugadores (Torneos)**
+## 🎮 Uso
 
-#### **Opción A: Backend + Frontend en Paralelo (Recomendado)**
+### **OPCIÓN A: Desarrollo (Frontend FUERA)**
 
-```bash
-# Iniciar backend (8 bots) + frontend automáticamente
-npm run dev:full:8player
-
-# El sistema iniciará:
-# - Backend en Docker (puerto 4000)
-# - 4 Random Bots (puertos 3001-3004)
-# - 4 Algorithm Bots (puertos 3005-3008)
-# - Frontend en desarrollo (puerto 5173)
-```
-
-#### **Opción B: Solo Backend (8 bots)**
+Mejor experiencia con hot-reload instantáneo.
 
 ```bash
-# Solo backend con 8 bots
-npm run dev:backend:8player
+# 1. Pruebas Rápidas (2 Jugadores)
+npm run dev:smoke
 
-# Luego en otra terminal, iniciar frontend:
-npm run dev:frontend
-```
+# 2. Torneo de 4 Jugadores
+npm run dev:4player
 
-#### **Verificar que Funciona**
-
-```bash
-# Verificar todos los contenedores (debería haber 9)
-docker ps
-
-# Verificar backend
-curl http://localhost:4000/api/health
-
-# Verificar bots individuales
-curl http://localhost:3001/health  # RandomBot1
-curl http://localhost:3005/health  # AlgoBot1
-
-# Verificar frontend
-# Abrir navegador en http://localhost:5173
-# Ir a ConfigScreen y seleccionar "Torneo" con 8 jugadores
-```
-
-#### **Detener Servicios**
-
-```bash
-# Detener todo
-Ctrl+C  # Si usaste dev:full:8player
-npm run docker:down:8player  # Si usaste dev:backend:8player
-```
-
----
-
-### **Paso 4: Producción Completa**
-
-```bash
-# Construir y ejecutar todo (frontend + backend + 4 bots)
-npm run docker:up
+# 3. Torneo de 8 Jugadores
+npm run dev:8player
 
 # Verificar
-docker ps
 curl http://localhost:4000/api/health
+curl http://localhost:4000/api/bots/available
+
+# Acceder
+# Frontend: http://localhost:5173 (Vite)
+# Backend: http://localhost:4000
 
 # Detener
 npm run docker:down
@@ -224,43 +125,114 @@ npm run docker:down
 
 ---
 
-## 🔧 Comandos de Gestión
+### **OPCIÓN B: Docker Completo (Frontend DENTRO)**
 
-### **Ver Estado del Sistema**
+Para testing de integración y pre-producción.
 
 ```bash
-# Ver contenedores activos
+# 1. Pruebas Rápidas (2 Jugadores)
+npm run docker:smoke
+# ✅ Construye frontend automáticamente
+# ✅ Inicia backend + 2 bots
+
+# 2. Torneo de 4 Jugadores
+npm run docker:4player
+# ✅ Construye frontend automáticamente
+# ✅ Inicia backend + 4 bots
+
+# 3. Torneo de 8 Jugadores
+npm run docker:8player
+# ✅ Construye frontend automáticamente
+# ✅ Inicia backend + 8 bots
+
+# 4. Producción Completa
+npm run docker:prod
+# ✅ Construye frontend automáticamente
+# ✅ Construye imagen de Nginx
+# ✅ Inicia stack completo
+
+# Verificar
+curl http://localhost:4000/api/health
+curl http://localhost:4000/api/bots/available
+
+# Acceder
+# Frontend + Backend: http://localhost:4000
+# (Producción: http://localhost:80)
+
+# Detener
+npm run docker:down
+```
+
+---
+
+### **OPCIÓN C: Pipeline Completo (QA → Build → Deploy)**
+
+Un solo comando para todo el flujo.
+
+```bash
+# Pipeline completo: QA → Build → Deploy smoke
+npm run deploy:smoke
+
+# Pipeline completo: QA → Build → Deploy 4 jugadores
+npm run deploy:4player
+
+# Pipeline completo: QA → Build → Deploy 8 jugadores
+npm run deploy:8player
+
+# Pipeline completo: QA → Build → Deploy producción
+npm run deploy:prod
+
+# Cada comando ejecuta:
+# 1. ✅ qa:precommit (format + lint + tests)
+# 2. ✅ build:frontend (React → public/)
+# 3. ✅ docker build (imágenes)
+# 4. ✅ docker-compose up (deploy)
+```
+
+**Servicios por Configuración:**
+
+| Config | Backend | Bots | Frontend |
+|--------|---------|------|----------|
+| smoke | :4000 | 3001-3002 | :5173 (dev) / :4000 (docker) |
+| 4player | :4000 | 3001-3004 | :5173 (dev) / :4000 (docker) |
+| 8player | :4000 | 3001-3008 | :5173 (dev) / :4000 (docker) |
+| prod | :4000 | 3001-3002 | :80 (Nginx) |
+
+---
+
+## 🔧 Comandos Útiles
+
+### Ver Estado
+
+```bash
+# Contenedores activos
 docker ps
 
-# Ver logs de un contenedor específico
-docker logs tateti-arbitrator-8player
+# Logs de todos los servicios
+docker-compose -f docker-compose.smoke.yml logs
+
+# Logs de un servicio específico
+docker logs tateti-arbitrator-smoke
 docker logs tateti-random-bot-1
-docker logs tateti-algo-bot-1
-
-# Ver logs de todos los servicios
-docker-compose -f docker-compose.8player.yml logs
 ```
 
-### **Reiniciar Servicios**
+### Reiniciar Servicios
 
 ```bash
-# Reiniciar solo el backend
-docker restart tateti-arbitrator-8player
+# Reiniciar backend
+docker restart tateti-arbitrator-smoke
 
-# Reiniciar todos los bots
-docker-compose -f docker-compose.8player.yml restart
-
-# Reconstruir y reiniciar todo
-npm run dev:backend:8player
+# Reiniciar un bot
+docker restart tateti-random-bot-1
 ```
 
-### **Limpiar Sistema**
+### Limpieza
 
 ```bash
-# Detener y eliminar contenedores
-npm run docker:down:8player
+# Detener todos los contenedores
+npm run docker:down
 
-# Limpiar imágenes y volúmenes no utilizados
+# Limpiar recursos no utilizados
 npm run docker:clean
 
 # Limpiar todo (¡CUIDADO!)
@@ -271,47 +243,48 @@ docker system prune -a --volumes -f
 
 ## 🐛 Solución de Problemas
 
-### **Error: Puerto ya en uso**
+### Puerto ya en uso
 
 ```bash
 # Ver qué está usando el puerto
 netstat -ano | findstr :4000  # Windows
 lsof -i :4000                 # Linux/Mac
 
-# Detener proceso o cambiar puerto en docker-compose.yml
+# Cambiar puerto en docker-compose.yml
+ports:
+  - "4001:4000"  # Usar 4001 en lugar de 4000
 ```
 
-### **Error: Contenedor no inicia**
+### Contenedor no inicia
 
 ```bash
 # Ver logs detallados
-docker logs tateti-arbitrator-8player
+docker logs tateti-arbitrator-smoke
 
-# Reconstruir imagen
-docker-compose -f docker-compose.8player.yml build --no-cache
+# Reconstruir imagen sin caché
+docker-compose -f docker-compose.smoke.yml build --no-cache
 
 # Verificar espacio en disco
 docker system df
 ```
 
-### **Error: Bots no responden**
+### Bots no responden
 
 ```bash
-# Verificar que los bots estén corriendo
+# Verificar que estén corriendo
 docker ps | grep bot
 
-# Verificar conectividad de red
-docker network ls
+# Verificar conectividad
 docker network inspect tateti-arbitro_tateti-network
 
-# Reiniciar bots específicos
+# Reiniciar bot específico
 docker restart tateti-random-bot-1
 ```
 
-### **Error: Frontend no conecta al backend**
+### Frontend no conecta al backend
 
 ```bash
-# Verificar que el backend esté en puerto 4000
+# Verificar backend
 curl http://localhost:4000/api/health
 
 # Verificar configuración de proxy en client/vite.config.js
@@ -320,152 +293,61 @@ curl http://localhost:4000/api/health
 
 ---
 
-## 📊 Monitoreo y Logs
-
-### **Ver Logs en Tiempo Real**
+## 📊 Verificación de Salud
 
 ```bash
-# Logs de todos los servicios
-docker-compose -f docker-compose.8player.yml logs -f
-
-# Logs de un servicio específico
-docker logs -f tateti-arbitrator-8player
-docker logs -f tateti-random-bot-1
-```
-
-### **Métricas del Sistema**
-
-```bash
-# Estado de salud del backend
+# Backend
 curl http://localhost:4000/api/health
 
-# Estado detallado
+# Detallado
 curl http://localhost:4000/api/health/detailed
 
-# Verificar conexiones SSE
+# Bots disponibles
+curl http://localhost:4000/api/bots/available
+
+# SSE Stream
 curl -N http://localhost:4000/api/stream
 ```
 
 ---
 
-## 🎯 Casos de Uso Comunes
+## 🎯 Casos de Uso
 
-### **1. Desarrollo de Nuevas Funcionalidades**
+### Desarrollo de Funcionalidades
 
 ```bash
-# Usar configuración de 2 jugadores para desarrollo rápido
-npm run dev:full
+# Usar configuración de 2 jugadores
+npm run docker:smoke
 ```
 
-### **2. Testing de Torneos**
+### Testing de Torneos
 
 ```bash
-# Usar configuración de 8 jugadores
-npm run dev:full:8player
+# Usar configuración de 4 u 8 jugadores
+npm run docker:4player
+npm run docker:8player
 ```
 
-### **3. Demostración al Profesor**
+### Demostración
 
 ```bash
-# Usar configuración de producción
-npm run docker:up
-```
-
-### **4. Debugging de Problemas**
-
-```bash
-# Solo backend para debugging
-npm run dev:backend:8player
-
-# Ver logs específicos
-docker logs -f tateti-arbitrator-8player
-```
-
----
-
-## 🔍 Bot Discovery - Nueva Funcionalidad
-
-### **¿Qué es Bot Discovery?**
-
-El sistema ahora incluye **descubrimiento automático de bots** que permite:
-
-- **Detección automática** de bots disponibles en el sistema
-- **Health checking** en tiempo real de todos los bots
-- **Auto-población** de la lista de jugadores en la interfaz
-- **Estado de conexión** visual para cada bot (verde=saludable, rojo=offline)
-
-### **API de Bot Discovery**
-
-```bash
-# Obtener lista de bots disponibles
-curl http://localhost:4000/api/bots/available
-
-# Respuesta esperada:
-{
-  "bots": [
-    {
-      "name": "RandomBot1",
-      "port": 3001,
-      "status": "healthy",
-      "type": "random",
-      "capabilities": ["3x3", "5x5"],
-      "lastSeen": "2025-10-06T15:30:00.000Z",
-      "isHuman": false
-    },
-    // ... más bots
-  ],
-  "total": 8,
-  "healthy": 8,
-  "timestamp": "2025-10-06T15:30:00.000Z"
-}
-```
-
-### **Configuración de Bots**
-
-El sistema soporta hasta **8 bots** con la siguiente configuración:
-
-| Bot Name   | Puerto | Tipo      | Capacidades | Servicio Docker |
-| ---------- | ------ | --------- | ----------- | --------------- |
-| RandomBot1 | 3001   | random    | 3x3, 5x5    | random-bot-1    |
-| RandomBot2 | 3002   | random    | 3x3, 5x5    | random-bot-2    |
-| RandomBot3 | 3003   | random    | 3x3, 5x5    | random-bot-3    |
-| RandomBot4 | 3004   | random    | 3x3, 5x5    | random-bot-4    |
-| AlgoBot1   | 3005   | algorithm | 3x3, 5x5    | algo-bot-1      |
-| AlgoBot2   | 3006   | algorithm | 3x3, 5x5    | algo-bot-2      |
-| AlgoBot3   | 3007   | algorithm | 3x3, 5x5    | algo-bot-3      |
-| AlgoBot4   | 3008   | algorithm | 3x3, 5x5    | algo-bot-4      |
-
-### **Verificación de Bot Discovery**
-
-```bash
-# 1. Verificar que el backend esté funcionando
-curl http://localhost:4000/health
-
-# 2. Verificar bot discovery API
-curl http://localhost:4000/api/bots/available
-
-# 3. Verificar bots individuales
-curl http://localhost:3001/health  # RandomBot1
-curl http://localhost:3005/health  # AlgoBot1
-
-# 4. Verificar en la interfaz web
-# Abrir http://localhost y verificar que se muestran los bots descubiertos
+# Usar stack completo de producción
+npm run docker:prod
 ```
 
 ---
 
 ## ⚠️ Notas Importantes
 
-1. **Frontend SÍ está en Docker** - Stack completo containerizado con Nginx
-2. **Puertos 3001-3008** - Reservados para bots, no usar para otras aplicaciones
-3. **Puerto 4000** - Backend principal, debe estar libre
-4. **Puerto 80** - Frontend de producción (Nginx), se inicia automáticamente
-5. **Red Docker** - Los contenedores se comunican por nombres de servicio, no localhost
-6. **Health Checks** - Todos los servicios tienen verificaciones de salud automáticas
-7. **Bot Discovery** - Sistema automático de descubrimiento y health checking
-8. **Versionado** - Todas las imágenes están versionadas con v1.0.0
-9. **🏗️ Servicios Refactorizados** - GameOptionsService y PlayerService incluidos en build
-10. **✅ 100% Tests Passing** - Cobertura completa de pruebas unitarias
+1. **Node.js 20 LTS** - Versión unificada en todos los contenedores
+2. **Puertos Reservados:**
+   - `4000` - Backend
+   - `80` - Frontend (producción)
+   - `3001-3008` - Bots
+3. **Red Docker** - Los contenedores se comunican por nombres de servicio
+4. **Health Checks** - Todos los servicios tienen verificaciones automáticas
+5. **Imágenes Versionadas** - Todas usan tag `v1.0.0`
+6. **Frontend Pre-construido** - Se construye localmente antes de Docker
 
 ---
 
@@ -475,10 +357,10 @@ Si encuentras problemas:
 
 1. **Verificar logs**: `docker logs <nombre-contenedor>`
 2. **Verificar puertos**: `netstat -ano | findstr :4000`
-3. **Reiniciar servicios**: `npm run docker:down:8player && npm run dev:full:8player`
-4. **Limpiar sistema**: `npm run docker:clean`
+3. **Reiniciar**: `npm run docker:down && npm run docker:smoke`
+4. **Limpiar**: `npm run docker:clean`
 5. **Verificar espacio**: `docker system df`
 
 ---
 
-**¡Listo! Ahora puedes usar el sistema de Ta-Te-Ti Arbitro con Docker de manera eficiente.**
+**¡Listo! Sistema Docker configurado y listo para usar.**

@@ -18,17 +18,19 @@ Sistema de arbitraje para partidas de Ta-Te-Ti entre bots HTTP con **descubrimie
 ```bash
 # Instalar dependencias
 npm install
+cd client && npm install && cd ..
 
-# Pruebas rápidas (recomendado)
-npm run test:4player    # Torneo 4 jugadores
-npm run test:8player    # Torneo 8 jugadores
+# Docker - Pruebas y Desarrollo
+npm run docker:smoke     # Pruebas rápidas (2 jugadores)
+npm run docker:4player   # Torneo 4 jugadores
+npm run docker:8player   # Torneo 8 jugadores
 
-# Desarrollo completo
-npm run dev:full:4player  # Backend + Frontend (4 jugadores)
-npm run dev:full:8player  # Backend + Frontend (8 jugadores)
+# Docker - Producción
+npm run docker:build:all  # Construir imágenes
+npm run docker:prod       # Stack completo (Frontend + Backend)
 
-# Producción
-npm run docker:build:all && docker-compose up
+# Detener contenedores
+npm run docker:down
 ```
 
 ### 🔍 Validación Pre-commit (OBLIGATORIO)
@@ -44,18 +46,19 @@ git commit -m "tu mensaje"
 
 > 📚 **Documentación Detallada**: Ver [ARRANQUE.md](./ARRANQUE.md) para comandos completos y flujos de trabajo.
 
-## 📋 Comandos Principales
+## 📋 Comandos de Testing y QA
 
 |     Categoría |      Comando          |      Descripción         |
 |---------------|-----------------------|--------------------------|
-| **Pruebas**   | `npm run test:4player`|  Torneo 4 jugadores    |
-| **Pruebas**   | `npm run test:8player`|  Torneo 8 jugadores    |
-| **Desarrollo**|`npm run dev:full:4player`| Backend + Frontend (4P) |
-| **Desarrollo**|`npm run dev:full:8player`| Backend + Frontend (8P) |
-| **Docker**  |`npm run docker:build:all`|Construir todas lasimágenes|
-| **Docker**    |  `docker-compose up`  | Producción completa      |
-| **Calidad**   |    `npm run qa:precommit`  | **Validación pre-commit** |
-| **Calidad**   |    `npm run qa:full`  | Todas las verificaciones |
+| **Testing**   | `npm run test:unit`   | Tests unitarios          |
+| **Testing**   | `npm run test:client` | Tests del cliente        |
+| **Testing**   | `npm run test:integration` | Tests de integración |
+| **Docker**    | `npm run docker:smoke` | Pruebas rápidas (2 bots) |
+| **Docker**    | `npm run docker:4player` | Torneo 4 jugadores    |
+| **Docker**    | `npm run docker:8player` | Torneo 8 jugadores    |
+| **Docker**    | `npm run docker:prod` | Stack completo           |
+| **Calidad**   | `npm run qa:precommit` | **Validación pre-commit** |
+| **Calidad**   | `npm run qa:full`     | QA + Build completo      |
 
 > 📚 **Comandos Completos**: Ver [ARRANQUE.md](./ARRANQUE.md) para lista completa de comandos.
 

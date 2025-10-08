@@ -44,11 +44,15 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
       toISOString: jest.fn(() => '2025-10-03T10:00:00.000Z'),
     };
 
+    // Add mock delay function
+    const mockDelay = jest.fn().mockResolvedValue();
+
     coordinator = new ArbitratorCoordinator({
       httpAdapter: mockHttpAdapter,
       eventsAdapter: mockEventsAdapter,
       logger: mockLogger,
       clock: mockClock,
+      delay: mockDelay, // Inject instant delay
     });
   });
 

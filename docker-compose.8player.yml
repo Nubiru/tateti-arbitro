@@ -1,9 +1,14 @@
+# Configuración de Torneos de 8 Jugadores
+# @lastModified 2025-10-08
+# @version 1.0.0
+# Uso: npm run docker:8player
+
 services:
     arbitrator:
         build:
             context: .
-            dockerfile: Dockerfile.backend
-        image: tateti-arbitro:v1.0.0-8player
+            dockerfile: Dockerfile
+        image: tateti-arbitro:v1.0.0
         container_name: tateti-arbitrator-8player
         ports:
             - "4000:4000"

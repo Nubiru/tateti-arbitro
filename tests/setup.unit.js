@@ -15,6 +15,16 @@ global.console = {
   error: jest.fn(),
 };
 
+// Use fake timers to prevent real timeouts from hanging tests
+beforeEach(() => {
+  jest.useFakeTimers();
+});
+
+afterEach(() => {
+  jest.runOnlyPendingTimers();
+  jest.useRealTimers();
+});
+
 // Simular Express solo para pruebas unitarias
 jest.mock('express', () => {
   const mockApp = {

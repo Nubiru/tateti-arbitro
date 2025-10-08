@@ -6,32 +6,29 @@
  */
 
 import { describe, test, expect, beforeEach, jest } from '@jest/globals';
-
-// We'll create the service after writing tests (TDD approach)
+import StatisticsService from '../../src/services/statistics.service.js';
+import {
+  createMockMatchData,
+  createMockPlayer,
+} from '../helpers/test-factories.js';
 describe('StatisticsService', () => {
-  let StatisticsService;
-
   beforeEach(() => {
     jest.clearAllMocks();
-    // Import the service (will be created after tests)
-    StatisticsService =
-      require('../../src/services/statistics.service.js').default;
+    // Reset statistics before each test
+    StatisticsService.resetStats();
   });
 
   describe('recordMatch()', () => {
     test('should store match data correctly', () => {
-      const matchData = {
-        winner: { name: 'Bot1', type: 'algorithm' },
+      const matchData = createMockMatchData({
+        winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 5,
         duration: 2000,
-        boardSize: 3,
-        gameMode: 'individual',
-        timestamp: '2025-10-07T10:00:00.000Z',
-      };
+      });
 
       StatisticsService.recordMatch(matchData);
       const stats = StatisticsService.getStats();
@@ -44,18 +41,15 @@ describe('StatisticsService', () => {
     });
 
     test('should handle draw matches', () => {
-      const matchData = {
+      const matchData = createMockMatchData({
         winner: null,
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 9,
         duration: 3000,
-        boardSize: 3,
-        gameMode: 'individual',
-        timestamp: '2025-10-07T10:00:00.000Z',
-      };
+      });
 
       StatisticsService.recordMatch(matchData);
       const stats = StatisticsService.getStats();
@@ -67,31 +61,26 @@ describe('StatisticsService', () => {
     });
 
     test('should handle multiple matches correctly', () => {
-      const match1 = {
-        winner: { name: 'Bot1', type: 'algorithm' },
+      const match1 = createMockMatchData({
+        winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 3,
         duration: 1000,
-        boardSize: 3,
-        gameMode: 'individual',
-        timestamp: '2025-10-07T10:00:00.000Z',
-      };
+      });
 
-      const match2 = {
-        winner: { name: 'Bot2', type: 'random' },
+      const match2 = createMockMatchData({
+        winner: createMockPlayer({ name: 'Bot2', type: 'random' }),
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 7,
         duration: 2500,
-        boardSize: 3,
-        gameMode: 'individual',
         timestamp: '2025-10-07T10:01:00.000Z',
-      };
+      });
 
       StatisticsService.recordMatch(match1);
       StatisticsService.recordMatch(match2);
@@ -105,18 +94,15 @@ describe('StatisticsService', () => {
     });
 
     test('should handle missing winner gracefully', () => {
-      const matchData = {
+      const matchData = createMockMatchData({
         winner: undefined,
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 4,
         duration: 1500,
-        boardSize: 3,
-        gameMode: 'individual',
-        timestamp: '2025-10-07T10:00:00.000Z',
-      };
+      });
 
       StatisticsService.recordMatch(matchData);
       const stats = StatisticsService.getStats();
@@ -132,6 +118,7 @@ describe('StatisticsService', () => {
 
       expect(stats).toEqual({
         totalGames: 0,
+        wins: {},
         winsByType: {
           algorithm: 0,
           random: 0,
@@ -153,44 +140,37 @@ describe('StatisticsService', () => {
     });
 
     test('should calculate win rates correctly', () => {
-      const match1 = {
-        winner: { name: 'Bot1', type: 'algorithm' },
+      const match1 = createMockMatchData({
+        winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 3,
         duration: 1000,
-        boardSize: 3,
-        gameMode: 'individual',
-        timestamp: '2025-10-07T10:00:00.000Z',
-      };
+      });
 
-      const match2 = {
-        winner: { name: 'Bot2', type: 'random' },
+      const match2 = createMockMatchData({
+        winner: createMockPlayer({ name: 'Bot2', type: 'random' }),
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 5,
         duration: 2000,
-        boardSize: 3,
-        gameMode: 'individual',
         timestamp: '2025-10-07T10:01:00.000Z',
-      };
+      });
 
-      const match3 = {
+      const match3 = createMockMatchData({
         winner: null,
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 9,
         duration: 3000,
-        boardSize: 3,
-        gameMode: 'individual',
         timestamp: '2025-10-07T10:02:00.000Z',
-      };
+      });
 
       StatisticsService.recordMatch(match1);
       StatisticsService.recordMatch(match2);
@@ -206,31 +186,30 @@ describe('StatisticsService', () => {
     });
 
     test('should track games by board size and mode', () => {
-      const match1 = {
-        winner: { name: 'Bot1', type: 'algorithm' },
+      const match1 = createMockMatchData({
+        winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 3,
         duration: 1000,
         boardSize: 3,
         gameMode: 'individual',
-        timestamp: '2025-10-07T10:00:00.000Z',
-      };
+      });
 
-      const match2 = {
-        winner: { name: 'Bot2', type: 'random' },
+      const match2 = createMockMatchData({
+        winner: createMockPlayer({ name: 'Bot2', type: 'random' }),
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 5,
         duration: 2000,
         boardSize: 5,
         gameMode: 'tournament',
         timestamp: '2025-10-07T10:01:00.000Z',
-      };
+      });
 
       StatisticsService.recordMatch(match1);
       StatisticsService.recordMatch(match2);
@@ -245,18 +224,15 @@ describe('StatisticsService', () => {
 
   describe('resetStats()', () => {
     test('should clear all statistics', () => {
-      const matchData = {
-        winner: { name: 'Bot1', type: 'algorithm' },
+      const matchData = createMockMatchData({
+        winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
-          { name: 'Bot1', type: 'algorithm' },
-          { name: 'Bot2', type: 'random' },
+          createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+          createMockPlayer({ name: 'Bot2', type: 'random' }),
         ],
         moves: 5,
         duration: 2000,
-        boardSize: 3,
-        gameMode: 'individual',
-        timestamp: '2025-10-07T10:00:00.000Z',
-      };
+      });
 
       StatisticsService.recordMatch(matchData);
       expect(StatisticsService.getStats().totalGames).toBe(1);
@@ -305,21 +281,19 @@ describe('StatisticsService', () => {
       const start = performance.now();
 
       for (let i = 0; i < 1000; i++) {
-        const matchData = {
-          winner: {
+        const matchData = createMockMatchData({
+          winner: createMockPlayer({
             name: `Bot${(i % 2) + 1}`,
             type: i % 2 === 0 ? 'algorithm' : 'random',
-          },
+          }),
           players: [
-            { name: 'Bot1', type: 'algorithm' },
-            { name: 'Bot2', type: 'random' },
+            createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
+            createMockPlayer({ name: 'Bot2', type: 'random' }),
           ],
           moves: Math.floor(Math.random() * 9) + 1,
           duration: Math.floor(Math.random() * 5000) + 1000,
-          boardSize: 3,
-          gameMode: 'individual',
           timestamp: new Date().toISOString(),
-        };
+        });
         StatisticsService.recordMatch(matchData);
       }
 

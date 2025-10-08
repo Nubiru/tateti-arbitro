@@ -1,12 +1,15 @@
-# 4-Player Tournament Configuration
-# Clean setup for 4-player tournament testing
+# Configuración de Torneos de 4 Jugadores
+# @lastModified 2025-10-08
+# @version 1.0.0
+# Uso: npm run docker:4player
+
 services:
-    # Ta-Te-Ti Arbitrator (Backend)
+    # Backend Arbitrator
     arbitrator:
         build:
             context: .
-            dockerfile: Dockerfile.backend
-        image: tateti-arbitro:v1.0.0-4player
+            dockerfile: Dockerfile
+        image: tateti-arbitro:v1.0.0
         container_name: tateti-arbitrator-4player
         ports:
             - "4000:4000"

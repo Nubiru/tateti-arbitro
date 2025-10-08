@@ -1,8 +1,9 @@
 /**
  * Test Data Factories
  * Provides complete, valid test data for all test types
- * @lastModified 2025-10-07
- * @version 1.0.0
+ * Following fix.plan.md Stage 3 requirements
+ * @lastModified 2025-10-08
+ * @version 2.0.0
  */
 
 /**
@@ -17,6 +18,7 @@ export function createMockPlayer(overrides = {}) {
     port: 3001,
     host: 'localhost',
     protocol: 'http',
+    isHuman: false,
     ...overrides,
   };
 }
@@ -51,6 +53,25 @@ export function createMockMatchData(overrides = {}) {
     boardSize: 3,
     gameMode: 'individual',
     timestamp: '2025-10-07T10:00:00.000Z',
+    ...overrides,
+  };
+}
+
+/**
+ * Create mock arbitrator core
+ * @param {Object} overrides - Properties to override
+ * @returns {Object} Complete arbitrator core mock
+ */
+export function createMockArbitratorCore(overrides = {}) {
+  return {
+    createInitialBoard: jest.fn().mockReturnValue(Array(9).fill(0)),
+    isValidMove: jest.fn().mockReturnValue(true),
+    makeMove: jest.fn().mockReturnValue(true),
+    checkWinner: jest.fn().mockReturnValue(null),
+    isBoardFull: jest.fn().mockReturnValue(false),
+    getNextPlayer: jest.fn().mockReturnValue('O'),
+    checkGameOver: jest.fn().mockReturnValue({ gameOver: false, winner: null }),
+    getValidMoves: jest.fn().mockReturnValue([0, 1, 2, 3, 4, 5, 6, 7, 8]),
     ...overrides,
   };
 }
@@ -105,8 +126,9 @@ export function createMockLogger(overrides = {}) {
  * @returns {Object} Complete clock mock
  */
 export function createMockClock(overrides = {}) {
+  const mockDate = new Date('2025-10-07T10:00:00.000Z');
   return {
-    now: jest.fn(() => new Date('2025-10-07T10:00:00.000Z').getTime()),
+    now: jest.fn(() => mockDate),
     toISOString: jest.fn(() => '2025-10-07T10:00:00.000Z'),
     ...overrides,
   };
@@ -114,7 +136,6 @@ export function createMockClock(overrides = {}) {
 
 /**
  * Create mock delay function
- * @param {Object} overrides - Properties to override
  * @returns {Function} Mock delay function
  */
 export function createMockDelay() {
@@ -128,11 +149,76 @@ export function createMockDelay() {
  */
 export function createMockArbitratorDependencies(overrides = {}) {
   return {
+    arbitratorCore: createMockArbitratorCore(),
     httpAdapter: createMockHttpAdapter(),
     eventsAdapter: createMockEventsAdapter(),
     logger: createMockLogger(),
     clock: createMockClock(),
     delay: createMockDelay(),
+    ...overrides,
+  };
+}
+
+/**
+ * Create complete TournamentCoordinator dependencies
+ * @param {Object} overrides - Properties to override
+ * @returns {Object} Complete dependencies object
+ */
+export function createMockTournamentDependencies(overrides = {}) {
+  return {
+    arbitrator: createMockArbitratorCore(),
+    eventsAdapter: createMockEventsAdapter(),
+    logger: createMockLogger(),
+    clock: createMockClock(),
+    ...overrides,
+  };
+}
+
+/**
+ * Create mock SSE response object
+ * @param {Object} overrides - Properties to override
+ * @returns {Object} Complete SSE response mock
+ */
+export function createMockSSEResponse(overrides = {}) {
+  return {
+    writeHead: jest.fn(),
+    write: jest.fn(),
+    end: jest.fn(),
+    on: jest.fn(),
+    destroy: jest.fn(),
+    ...overrides,
+  };
+}
+
+/**
+ * Create mock Express request object
+ * @param {Object} overrides - Properties to override
+ * @returns {Object} Complete Express request mock
+ */
+export function createMockRequest(overrides = {}) {
+  return {
+    body: {},
+    params: {},
+    query: {},
+    headers: {},
+    method: 'GET',
+    url: '/',
+    ...overrides,
+  };
+}
+
+/**
+ * Create mock Express response object
+ * @param {Object} overrides - Properties to override
+ * @returns {Object} Complete Express response mock
+ */
+export function createMockResponse(overrides = {}) {
+  return {
+    status: jest.fn().mockReturnThis(),
+    json: jest.fn().mockReturnThis(),
+    send: jest.fn().mockReturnThis(),
+    end: jest.fn().mockReturnThis(),
+    setHeader: jest.fn().mockReturnThis(),
     ...overrides,
   };
 }

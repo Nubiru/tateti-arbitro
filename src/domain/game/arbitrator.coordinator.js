@@ -9,10 +9,10 @@ import {
   validatePlayers,
   normalizePlayer,
   checkWin,
+  getWinningLine,
   isBoardFull,
   isValidMove,
   createInitialBoard,
-  processMove,
   createMatchResult,
   applyRollingWindow,
 } from './arbitrator.core.js';
@@ -48,7 +48,7 @@ export class ArbitratorCoordinator {
 
     // Normalizar jugadores usando función pura
     const normalizedPlayers = players.map((player, index) =>
-      normalizePlayer(player, index + 1)
+      normalizePlayer(player, index === 0 ? 'X' : 'O')
     );
 
     const board = createInitialBoard(boardSize);
@@ -150,30 +150,6 @@ export class ArbitratorCoordinator {
         break;
       }
 
-      // Procesar movimiento usando función pura
-      const moveResult = processMove(board, move, currentPlayer.id, boardSize);
-      if (!moveResult.success) {
-        step.error = moveResult.error;
-        history.push(step);
-        winner = opponent;
-        result = 'error';
-        message = `${currentPlayer.name} eligió una casilla ocupada.`;
-
-        logger.error(
-          'ARBITRATOR',
-          'MATCH',
-          'OCCUPIED_CELL',
-          'Casilla ocupada',
-          {
-            player: currentPlayer.name,
-            move: move,
-            turn: turn + 1,
-          }
-        );
-
-        break;
-      }
-
       // Actualizar tablero
       board[move] = currentPlayer.id;
 
@@ -209,10 +185,10 @@ export class ArbitratorCoordinator {
       history.push(step);
 
       // Verificar victoria usando función pura
-      const winCheck = checkWin(board, boardSize);
+      const winCheck = checkWin(board, boardSize, currentPlayer.id);
       if (winCheck) {
         winner = currentPlayer;
-        winningLine = winCheck;
+        winningLine = getWinningLine(board, boardSize, currentPlayer.id);
         result = 'win';
         message = `${currentPlayer.name} ganó.`;
 
@@ -291,15 +267,17 @@ export class ArbitratorCoordinator {
    * Solicitar un movimiento de un jugador usando adaptador HTTP
    * @param {Object} player - Objeto jugador
    * @param {Array} board - Estado actual del tablero
-   * @param {number} playerId - ID del jugador
+   * @param {number} playerId - ID del jugador (NOT sent to player - internal use only)
    * @param {number} timeoutMs - Tiempo de espera en milisegundos
    * @returns {Promise<Object>} Resultado del movimiento
    */
   async requestMove(player, board, playerId, timeoutMs) {
+    // NOTE: We only send the board to the player.
+    // Player apps are stateless and don't need to know their symbol.
+    // The arbitrator tracks which player is which and places the correct symbol.
     return await this.httpAdapter.requestMove(player, '/move', {
       params: {
         board: JSON.stringify(board),
-        player: playerId,
       },
       timeout: timeoutMs,
     });

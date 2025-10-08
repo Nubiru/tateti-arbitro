@@ -58,10 +58,28 @@ class EventBus {
       }
     }, 300000); // 5 minutos timeout
 
+    // Store timeout for cleanup
+    res._sseTimeout = timeout;
+
     // Limpiar timeout cuando la conexión se cierre
-    res.on('close', () => clearTimeout(timeout));
-    res.on('finish', () => clearTimeout(timeout));
-    res.on('error', () => clearTimeout(timeout));
+    res.on('close', () => {
+      if (res._sseTimeout) {
+        clearTimeout(res._sseTimeout);
+        res._sseTimeout = null;
+      }
+    });
+    res.on('finish', () => {
+      if (res._sseTimeout) {
+        clearTimeout(res._sseTimeout);
+        res._sseTimeout = null;
+      }
+    });
+    res.on('error', () => {
+      if (res._sseTimeout) {
+        clearTimeout(res._sseTimeout);
+        res._sseTimeout = null;
+      }
+    });
   }
 
   /**

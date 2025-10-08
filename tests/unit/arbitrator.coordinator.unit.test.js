@@ -6,28 +6,17 @@
  */
 
 import { ArbitratorCoordinator } from '../../src/domain/game/arbitrator.coordinator.js';
+import {
+  createMockArbitratorDependencies,
+  createMockPlayers,
+} from '../helpers/test-factories.js';
 
 describe('Pruebas Unitarias de ArbitratorCoordinator', () => {
   let coordinator;
   let mockDependencies;
 
   beforeEach(() => {
-    mockDependencies = {
-      httpAdapter: {
-        requestMove: jest.fn(),
-      },
-      eventsAdapter: {
-        broadcastMatchStart: jest.fn(),
-        broadcastMatchMove: jest.fn(),
-        broadcastMatchWin: jest.fn(),
-        broadcastMatchDraw: jest.fn(),
-        broadcastMatchError: jest.fn(),
-      },
-      clock: {
-        now: () => new Date('2025-10-06T15:30:00.000Z'),
-      },
-    };
-
+    mockDependencies = createMockArbitratorDependencies();
     coordinator = new ArbitratorCoordinator(mockDependencies);
   });
 
@@ -48,19 +37,16 @@ describe('Pruebas Unitarias de ArbitratorCoordinator', () => {
   });
 
   describe('runMatch', () => {
-    const mockPlayers = [
-      { name: 'Player1', port: 3001, host: 'localhost', protocol: 'http' },
-      { name: 'Player2', port: 3002, host: 'localhost', protocol: 'http' },
-    ];
+    const mockPlayers = createMockPlayers();
 
     test('debería ejecutar partida exitosa con ganador', async () => {
       // Mock HTTP adapter responses
       mockDependencies.httpAdapter.requestMove
-        .mockResolvedValueOnce({ position: 0 }) // Player1 move
-        .mockResolvedValueOnce({ position: 1 }) // Player2 move
-        .mockResolvedValueOnce({ position: 3 }) // Player1 move
-        .mockResolvedValueOnce({ position: 4 }) // Player2 move
-        .mockResolvedValueOnce({ position: 6 }); // Player1 move (wins)
+        .mockResolvedValueOnce({ move: 0, error: null }) // Player1 move
+        .mockResolvedValueOnce({ move: 1, error: null }) // Player2 move
+        .mockResolvedValueOnce({ move: 3, error: null }) // Player1 move
+        .mockResolvedValueOnce({ move: 4, error: null }) // Player2 move
+        .mockResolvedValueOnce({ move: 6, error: null }); // Player1 move (wins)
 
       const result = await coordinator.runMatch(mockPlayers, {
         boardSize: 3,
@@ -68,9 +54,10 @@ describe('Pruebas Unitarias de ArbitratorCoordinator', () => {
         noTie: false,
       });
 
-      expect(result.winner).toBe(mockPlayers[0]);
-      expect(result.status).toBe('win');
-      expect(result.board).toEqual(['X', 'O', 0, 'X', 'O', 0, 'X', 0, 0]);
+      expect(result.winner.name).toBe('Bot1');
+      expect(result.winner.id).toBe('X');
+      expect(result.result).toBe('win');
+      expect(result.finalBoard).toEqual(['X', 'O', 0, 'X', 'O', 0, 'X', 0, 0]);
       expect(
         mockDependencies.eventsAdapter.broadcastMatchStart
       ).toHaveBeenCalled();
@@ -80,17 +67,20 @@ describe('Pruebas Unitarias de ArbitratorCoordinator', () => {
     });
 
     test('debería ejecutar partida con empate', async () => {
-      // Mock moves that result in a draw
+      // Mock moves that result in a TRUE draw
+      // Board will be: X O X
+      //                X X O
+      //                O X O
       mockDependencies.httpAdapter.requestMove
-        .mockResolvedValueOnce({ position: 0 }) // Player1
-        .mockResolvedValueOnce({ position: 1 }) // Player2
-        .mockResolvedValueOnce({ position: 2 }) // Player1
-        .mockResolvedValueOnce({ position: 3 }) // Player2
-        .mockResolvedValueOnce({ position: 4 }) // Player1
-        .mockResolvedValueOnce({ position: 5 }) // Player2
-        .mockResolvedValueOnce({ position: 6 }) // Player1
-        .mockResolvedValueOnce({ position: 7 }) // Player2
-        .mockResolvedValueOnce({ position: 8 }); // Player1
+        .mockResolvedValueOnce({ move: 0, error: null }) // Player1 (X)
+        .mockResolvedValueOnce({ move: 1, error: null }) // Player2 (O)
+        .mockResolvedValueOnce({ move: 2, error: null }) // Player1 (X)
+        .mockResolvedValueOnce({ move: 6, error: null }) // Player2 (O)
+        .mockResolvedValueOnce({ move: 3, error: null }) // Player1 (X)
+        .mockResolvedValueOnce({ move: 5, error: null }) // Player2 (O)
+        .mockResolvedValueOnce({ move: 4, error: null }) // Player1 (X)
+        .mockResolvedValueOnce({ move: 8, error: null }) // Player2 (O)
+        .mockResolvedValueOnce({ move: 7, error: null }); // Player1 (X) - draw
 
       const result = await coordinator.runMatch(mockPlayers, {
         boardSize: 3,
@@ -98,17 +88,18 @@ describe('Pruebas Unitarias de ArbitratorCoordinator', () => {
         noTie: false,
       });
 
-      expect(result.winner).toBe(null);
-      expect(result.status).toBe('draw');
+      expect(result.winner).toBeNull();
+      expect(result.result).toBe('draw');
       expect(
         mockDependencies.eventsAdapter.broadcastMatchDraw
       ).toHaveBeenCalled();
     });
 
     test('debería manejar error de jugador', async () => {
-      mockDependencies.httpAdapter.requestMove.mockRejectedValueOnce(
-        new Error('Player timeout')
-      );
+      mockDependencies.httpAdapter.requestMove.mockResolvedValueOnce({
+        move: null,
+        error: 'Player timeout',
+      });
 
       const result = await coordinator.runMatch(mockPlayers, {
         boardSize: 3,
@@ -116,9 +107,10 @@ describe('Pruebas Unitarias de ArbitratorCoordinator', () => {
         noTie: false,
       });
 
-      expect(result.winner).toBe(null);
-      expect(result.status).toBe('error');
-      expect(result.error).toContain('Player timeout');
+      // When Player1 errors, Player2 wins by default
+      expect(result.winner.name).toBe('Bot2');
+      expect(result.result).toBe('error');
+      expect(result.message).toContain('Player timeout');
       expect(
         mockDependencies.eventsAdapter.broadcastMatchError
       ).toHaveBeenCalled();
@@ -134,36 +126,37 @@ describe('Pruebas Unitarias de ArbitratorCoordinator', () => {
 
     test('debería usar opciones por defecto', async () => {
       mockDependencies.httpAdapter.requestMove
-        .mockResolvedValueOnce({ position: 0 })
-        .mockResolvedValueOnce({ position: 1 })
-        .mockResolvedValueOnce({ position: 3 })
-        .mockResolvedValueOnce({ position: 4 })
-        .mockResolvedValueOnce({ position: 6 });
+        .mockResolvedValueOnce({ move: 0, error: null })
+        .mockResolvedValueOnce({ move: 1, error: null })
+        .mockResolvedValueOnce({ move: 3, error: null })
+        .mockResolvedValueOnce({ move: 4, error: null })
+        .mockResolvedValueOnce({ move: 6, error: null });
 
       const result = await coordinator.runMatch(mockPlayers);
 
-      expect(result.board).toHaveLength(9); // 3x3 por defecto
-      expect(result.winner).toBe(mockPlayers[0]);
+      expect(result.finalBoard).toHaveLength(9); // 3x3 por defecto
+      expect(result.winner.name).toBe('Bot1');
+      expect(result.result).toBe('win');
     });
 
     test('debería manejar tablero 5x5', async () => {
       mockDependencies.httpAdapter.requestMove
-        .mockResolvedValueOnce({ position: 0 })
-        .mockResolvedValueOnce({ position: 1 })
-        .mockResolvedValueOnce({ position: 5 })
-        .mockResolvedValueOnce({ position: 6 })
-        .mockResolvedValueOnce({ position: 10 })
-        .mockResolvedValueOnce({ position: 11 })
-        .mockResolvedValueOnce({ position: 15 })
-        .mockResolvedValueOnce({ position: 16 })
-        .mockResolvedValueOnce({ position: 20 });
+        .mockResolvedValueOnce({ move: 0, error: null })
+        .mockResolvedValueOnce({ move: 1, error: null })
+        .mockResolvedValueOnce({ move: 5, error: null })
+        .mockResolvedValueOnce({ move: 6, error: null })
+        .mockResolvedValueOnce({ move: 10, error: null })
+        .mockResolvedValueOnce({ move: 11, error: null })
+        .mockResolvedValueOnce({ move: 15, error: null })
+        .mockResolvedValueOnce({ move: 16, error: null })
+        .mockResolvedValueOnce({ move: 20, error: null });
 
       const result = await coordinator.runMatch(mockPlayers, {
         boardSize: '5x5',
         timeoutMs: 1000,
       });
 
-      expect(result.board).toHaveLength(25); // 5x5
+      expect(result.finalBoard).toHaveLength(25); // 5x5
     });
   });
 });
