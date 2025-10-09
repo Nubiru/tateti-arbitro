@@ -2,6 +2,7 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # Layer 2: Pre-push QA (Comprehensive)
-# Ejecuta todas las validaciones de pre-commit + integration tests + build
+# Ejecuta todas las validaciones de pre-commit + integration tests + build + Docker
+# Valida que las imágenes Docker se puedan construir exitosamente
 npm run qa:prepush
 
