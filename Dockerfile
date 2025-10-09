@@ -39,8 +39,8 @@ USER arbitrator
 EXPOSE 4000
 
 # Verificación de salud
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD node -e "import('http').then(h=>h.get('http://localhost:4000/api/stream/status', r=>process.exit(r.statusCode===200?0:1)))"
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD node -e "import('http').then(h=>h.get('http://127.0.0.1:4000/api/health', r=>process.exit(r.statusCode===200?0:1)))"
 
 # Etiquetas OCI
 LABEL org.opencontainers.image.title="tateti-arbitro" \

@@ -26,9 +26,15 @@ import logger from '../../app/logger.js';
  * @version 1.0.0
  */
 export class ArbitratorCoordinator {
-  constructor({ httpAdapter, eventsAdapter, clock = Date }) {
+  constructor({
+    httpAdapter,
+    eventsAdapter,
+    logger: injectedLogger,
+    clock = Date,
+  }) {
     this.httpAdapter = httpAdapter;
     this.eventsAdapter = eventsAdapter;
+    this.logger = injectedLogger || logger; // Use injected logger or fall back to imported logger
     this.clock = clock;
   }
 
@@ -87,13 +93,29 @@ export class ArbitratorCoordinator {
         boardBefore: [...board],
       };
 
-      // Solicitar movimiento usando adaptador HTTP
-      const { move, error } = await this.requestMove(
-        currentPlayer,
-        board,
-        currentPlayer.id,
-        timeoutMs
-      );
+      // Solicitar movimiento - diferente para humanos vs bots
+      let move, error;
+
+      if (currentPlayer.isHuman) {
+        // Human player - wait for move submission via HTTP endpoint
+        const humanMoveResult = await this.waitForHumanMove(
+          currentPlayer,
+          board,
+          timeoutMs
+        );
+        move = humanMoveResult.move;
+        error = humanMoveResult.error;
+      } else {
+        // Bot player - request from bot service
+        const botMoveResult = await this.requestMove(
+          currentPlayer,
+          board,
+          currentPlayer.id,
+          timeoutMs
+        );
+        move = botMoveResult.move;
+        error = botMoveResult.error;
+      }
 
       if (error) {
         step.error = error;
@@ -281,6 +303,87 @@ export class ArbitratorCoordinator {
       },
       timeout: timeoutMs,
     });
+  }
+
+  /**
+   * Wait for human move submission via HTTP endpoint
+   * @param {Object} player - Player object
+   * @param {Array} board - Current board state
+   * @param {number} timeoutMs - Timeout in milliseconds
+   * @returns {Promise<Object>} Move result {move, error}
+   */
+  async waitForHumanMove(player, board, timeoutMs) {
+    return new Promise(resolve => {
+      const matchId = `match-${Date.now()}`;
+
+      // Initialize pending moves map if not exists
+      if (!this.pendingHumanMoves) {
+        this.pendingHumanMoves = new Map();
+      }
+
+      this.pendingHumanMoves.set(matchId, {
+        player,
+        board,
+        resolve,
+        timeout: setTimeout(() => {
+          this.pendingHumanMoves.delete(matchId);
+          resolve({ move: null, error: 'Timeout waiting for human move' });
+        }, timeoutMs),
+      });
+
+      // Store matchId for this game (needed for submitHumanMove)
+      this.currentMatchId = matchId;
+
+      this.logger.debug(
+        'ARBITRATOR',
+        'MATCH',
+        'WAIT_HUMAN',
+        'Esperando movimiento humano',
+        {
+          player: player.name,
+          matchId: matchId,
+          timeoutMs: timeoutMs,
+        }
+      );
+    });
+  }
+
+  /**
+   * Submit human move (called by HTTP endpoint)
+   * @param {string} matchId - Match identifier
+   * @param {string} player - Player identifier
+   * @param {number} position - Move position
+   * @returns {Object} Move result
+   */
+  submitHumanMove(matchId, player, position) {
+    if (!this.pendingHumanMoves || !this.pendingHumanMoves.has(matchId)) {
+      throw new Error('No pending move for this match');
+    }
+
+    const pending = this.pendingHumanMoves.get(matchId);
+    clearTimeout(pending.timeout);
+    this.pendingHumanMoves.delete(matchId);
+
+    // Validate move
+    if (!isValidMove(pending.board, position)) {
+      throw new Error('Invalid move position');
+    }
+
+    this.logger.info(
+      'ARBITRATOR',
+      'MATCH',
+      'HUMAN_MOVE',
+      'Movimiento humano recibido',
+      {
+        player: player,
+        position: position,
+        matchId: matchId,
+      }
+    );
+
+    pending.resolve({ move: position, error: null });
+
+    return { success: true, move: position };
   }
 }
 

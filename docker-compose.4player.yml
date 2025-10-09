@@ -15,15 +15,11 @@ services:
             - "4000:4000"
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
+        env_file:
+            - .env
         environment:
             - NODE_ENV=production
-            - DOCKER_ENV=true
             - DOCKER_DISCOVERY=true
-            - PORT=4000
-            - LOG_LEVEL=debug
-            - TRUST_PROXY=true
-            - RATE_LIMIT_WINDOW_MS=30000
-            - RATE_LIMIT_MAX=2000
         networks:
             - tateti-network
         healthcheck:

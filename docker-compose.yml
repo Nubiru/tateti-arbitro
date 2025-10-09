@@ -13,13 +13,13 @@ services:
         container_name: tateti-arbitrator
         ports:
             - "4000:4000"
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        env_file:
+            - .env
         environment:
             - NODE_ENV=production
-            - PORT=4000
-            - LOG_LEVEL=info
-            - TRUST_PROXY=true
-            - RATE_LIMIT_WINDOW_MS=900000
-            - RATE_LIMIT_MAX=100
+            - DOCKER_DISCOVERY=true
         networks:
             - tateti-network
         healthcheck:

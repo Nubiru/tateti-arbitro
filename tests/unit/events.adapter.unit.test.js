@@ -1,13 +1,14 @@
 /**
  * Pruebas unitarias para Adaptador de Eventos
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-10-08
+ * @version 2.0.0
  */
 
 import {
   EventsAdapter,
   createEventsAdapter,
 } from '../../src/domain/game/events.adapter.js';
+import { createMockLogger } from '../helpers/test-factories.js';
 
 describe('Pruebas Unitarias del Adaptador de Eventos', () => {
   let mockEventBus;
@@ -15,18 +16,15 @@ describe('Pruebas Unitarias del Adaptador de Eventos', () => {
   let eventsAdapter;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     mockEventBus = {
       broadcast: jest.fn(),
     };
-    mockLogger = {
-      debug: jest.fn(),
-      error: jest.fn(),
-    };
+    mockLogger = createMockLogger();
     eventsAdapter = new EventsAdapter({
       eventBus: mockEventBus,
       logger: mockLogger,
     });
-    jest.clearAllMocks();
   });
 
   describe('EventsAdapter Class', () => {

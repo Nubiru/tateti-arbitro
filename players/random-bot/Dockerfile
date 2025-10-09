@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
@@ -19,12 +19,12 @@ RUN adduser -S player -u 1001
 RUN chown -R player:nodejs /app
 USER player
 
-# Expose port
+# Expose port (will be set via environment variable)
 EXPOSE 3001
 
-# Health check with ES6 syntax
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "import('http').then(h=>h.get('http://localhost:3001/health', r=>process.exit(r.statusCode===200?0:1)))"
+# Health check - uses PORT environment variable
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD node -e "const port=process.env.PORT||3001;import('http').then(h=>h.get('http://127.0.0.1:'+port+'/health', r=>process.exit(r.statusCode===200?0:1)))"
 
 # OCI Labels
 LABEL org.opencontainers.image.title="tateti-random-bot" \

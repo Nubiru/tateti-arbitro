@@ -1,34 +1,29 @@
 /**
  * Pruebas unitarias para funcionalidad SSE (Server-Sent Events)
  * Pruebas para funciones puras y lógica de SSE
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-10-08
+ * @version 2.0.0
  */
 
 import { jest } from '@jest/globals';
 import eventBus from '../../src/app/event-bus.js';
+import { createMockSSEResponse } from '../helpers/test-factories.js';
 
 describe('Pruebas Unitarias del Sistema SSE', () => {
   let mockResponse;
 
   beforeEach(() => {
+    jest.clearAllMocks();
     // Restablecer la instancia singleton
     eventBus.connections.clear();
     eventBus.eventCounts.clear();
     eventBus.totalEvents = 0;
     eventBus.startTime = Date.now();
 
-    // Simular objeto de respuesta Express
-    mockResponse = {
-      writeHead: jest.fn(),
-      write: jest.fn(),
-      end: jest.fn(),
-      on: jest.fn(),
-      setHeader: jest.fn(),
-      status: jest.fn().mockReturnThis(),
+    mockResponse = createMockSSEResponse({
       destroyed: false,
       _sseTimeout: null,
-    };
+    });
   });
 
   afterEach(() => {

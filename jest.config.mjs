@@ -16,7 +16,7 @@ export default {
     {
       displayName: 'backend-unit',
       testEnvironment: 'node',
-      testTimeout: 1000, // 1 second max for unit tests
+      timeout: 1000, // 1 second max for unit tests
       maxWorkers: 4, // Parallel execution for speed
       transform: {
         '^.+\\.(js|mjs)$': 'babel-jest'
@@ -43,7 +43,7 @@ export default {
     {
       displayName: 'backend-integration',
       testEnvironment: 'node',
-      testTimeout: 30000, // 30 seconds for real delays
+      timeout: 30000, // 30 seconds for real delays
       maxWorkers: 1, // Single worker for integration tests
       transform: {
         '^.+\\.(js|mjs)$': 'babel-jest'
@@ -66,25 +66,27 @@ export default {
     {
       displayName: 'client',
       testEnvironment: 'jsdom',
-      testTimeout: 5000, // 5 seconds for React rendering
+      timeout: 5000, // 5 seconds for React rendering
       maxWorkers: 2, // Parallel execution for client tests
       testMatch: [
-        '<rootDir>/client/src/**/*.test.jsx',
-        '<rootDir>/client/src/**/*.test.js'
+        '<rootDir>/client/tests/**/*.test.{js,jsx}', // NEW: Centralized test location
+        '<rootDir>/client/src/**/*.test.jsx', // OLD: Keep for backwards compatibility during migration
+        '<rootDir>/client/src/**/*.test.js' // OLD: Keep for backwards compatibility during migration
       ],
       collectCoverageFrom: [
         '<rootDir>/client/src/**/*.{js,jsx}',
         '!<rootDir>/client/src/**/*.test.{js,jsx}',
         '!<rootDir>/client/src/**/*.spec.{js,jsx}',
         '!<rootDir>/client/src/**/__tests__/**',
-        '!<rootDir>/client/src/**/__mocks__/**'
+        '!<rootDir>/client/src/**/__mocks__/**',
+        '!<rootDir>/client/tests/**' // Exclude test directory from coverage
       ],
       setupFilesAfterEnv: ['<rootDir>/client/src/setupTests.js'],
       moduleNameMapper: {
         '^(\\.{1,2}/.*)\\.js$': '$1',
         '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
         '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
-          '<rootDir>/client/src/__mocks__/fileMock.js'
+          '<rootDir>/client/tests/mocks/fileMock.js'
       },
       transform: {
         '^.+\\.(js|jsx)$': 'babel-jest'

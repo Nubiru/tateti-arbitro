@@ -36,16 +36,12 @@ const PresentationScreen = ({ onStart, onActivity }) => {
     onStart();
   };
 
-  const handleActivity = () => {
-    onActivity();
-  };
-
   return (
     <div
       className={styles.presentationScreen}
       data-testid="presentation-screen"
-      onMouseMove={handleActivity}
-      onKeyDown={handleActivity}
+      onMouseMove={onActivity}
+      onKeyDown={onActivity}
     >
       <div className={styles.presentationContainer}>
         {/* Main Logo/Title */}

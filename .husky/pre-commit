@@ -1,5 +1,2 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
-
 # Ejecutar puertas de calidad pre-commit
 npm run qa:precommit

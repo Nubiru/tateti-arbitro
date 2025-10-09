@@ -1,8 +1,8 @@
 /**
  * Pruebas unitarias para Adaptador HTTP
  * Pruebas para funciones puras y lógica del adaptador HTTP
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-10-08
+ * @version 2.0.0
  */
 
 import { jest } from '@jest/globals';
@@ -17,8 +17,7 @@ import {
   handleRequestError,
   createHttpAdapter,
 } from '../../src/domain/game/http.adapter.js';
-
-// No se necesita simulación de axios para pruebas de funciones puras
+import { createMockLogger } from '../helpers/test-factories.js';
 
 describe('Pruebas Unitarias del Adaptador HTTP', () => {
   let httpAdapter;
@@ -26,14 +25,7 @@ describe('Pruebas Unitarias del Adaptador HTTP', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    mockLogger = {
-      info: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
-      warn: jest.fn(),
-    };
-
+    mockLogger = createMockLogger();
     httpAdapter = new HttpAdapter({ logger: mockLogger });
   });
 

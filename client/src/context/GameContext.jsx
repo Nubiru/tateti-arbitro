@@ -4,6 +4,7 @@ import React, {
   useReducer,
   useEffect,
   useState,
+  useRef,
 } from 'react';
 
 /**
@@ -122,6 +123,18 @@ export const GameProvider = ({ children }) => {
   const [sseConnection, setSseConnection] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting', 'connected', 'disconnected', 'error'
 
+  // Move queue for animation
+  const [moveQueue, setMoveQueue] = useState([]);
+  const [isProcessingMoves, setIsProcessingMoves] = useState(false);
+  const moveQueueRef = useRef(moveQueue);
+  const processingRef = useRef(isProcessingMoves);
+
+  // Keep refs in sync
+  useEffect(() => {
+    moveQueueRef.current = moveQueue;
+    processingRef.current = isProcessingMoves;
+  }, [moveQueue, isProcessingMoves]);
+
   // manejo de conexión SSE con el servidor
   useEffect(() => {
     let eventSource = null;
@@ -173,16 +186,15 @@ export const GameProvider = ({ children }) => {
 
       eventSource.addEventListener('match:move', event => {
         const data = JSON.parse(event.data);
-        dispatch({
-          type: 'UPDATE_BOARD',
-          payload: {
-            board: data.board,
-            history: data.history || [],
-            moveCount: data.turn || 0,
-            currentPlayer: data.player,
-            move: data.move,
+        // Queue moves for delayed animation instead of instant dispatch
+        setMoveQueue(prev => [
+          ...prev,
+          {
+            type: 'move',
+            data: data,
+            timestamp: Date.now(),
           },
-        });
+        ]);
       });
 
       eventSource.addEventListener('match:win', event => {
@@ -306,6 +318,58 @@ export const GameProvider = ({ children }) => {
     };
   }, []); // Empty dependency array - only run once
 
+  // Process move queue with configurable delay
+  useEffect(() => {
+    if (moveQueue.length === 0 || isProcessingMoves) return;
+
+    setIsProcessingMoves(true);
+
+    const processNextMove = () => {
+      const nextMove = moveQueueRef.current[0];
+      if (!nextMove) {
+        setIsProcessingMoves(false);
+        return;
+      }
+
+      // Get delay from game config (default: normal = 1000ms)
+      const delayMs = getDelayForSpeed(state.config?.speed || 'normal');
+
+      setTimeout(() => {
+        dispatch({
+          type: 'UPDATE_BOARD',
+          payload: {
+            board: nextMove.data.board,
+            history: nextMove.data.history || [],
+            moveCount: nextMove.data.turn || 0,
+            currentPlayer: nextMove.data.player,
+            move: nextMove.data.move,
+          },
+        });
+
+        setMoveQueue(prev => prev.slice(1));
+
+        // Process next move
+        if (moveQueueRef.current.length > 1) {
+          processNextMove();
+        } else {
+          setIsProcessingMoves(false);
+        }
+      }, delayMs);
+    };
+
+    processNextMove();
+  }, [moveQueue.length, isProcessingMoves, state.config?.speed]);
+
+  // Helper function for speed mapping
+  function getDelayForSpeed(speed) {
+    const delays = {
+      slow: 2000,
+      normal: 1000,
+      fast: 200,
+    };
+    return delays[speed] || 1000;
+  }
+
   // Acciones del juego
   const startMatch = async (player1, player2, options = {}) => {
     try {
@@ -406,6 +470,8 @@ export const GameProvider = ({ children }) => {
   };
 
   const resetGame = () => {
+    setMoveQueue([]);
+    setIsProcessingMoves(false);
     dispatch({ type: 'RESET_GAME' });
   };
 
@@ -469,6 +535,8 @@ export const GameProvider = ({ children }) => {
     dispatch,
     connectionStatus,
     sseConnection,
+    moveQueue,
+    isProcessingMoves,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

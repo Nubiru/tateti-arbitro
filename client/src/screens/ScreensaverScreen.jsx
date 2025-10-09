@@ -1,61 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ScreensaverScreen.module.css';
+import ScreensaverService from '../services/ScreensaverService';
 
 /**
  * Screensaver Screen Component
  * UPC branding with animated elements
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-10-09
+ * @version 2.0.0
  */
 
 const ScreensaverScreen = ({ onReturn, onActivity }) => {
   const [currentGame, setCurrentGame] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Juegos simulados para protector de pantalla
-  const simulatedGames = [
-    {
-      player1: 'Bot Alpha',
-      player2: 'Bot Beta',
-      moves: 7,
-      winner: 'Bot Alpha',
-    },
-    {
-      player1: 'AI Master',
-      player2: 'Code Warrior',
-      moves: 5,
-      winner: 'Code Warrior',
-    },
-    {
-      player1: 'Logic King',
-      player2: 'Strategy Pro',
-      moves: 9,
-      winner: 'Logic King',
-    },
-    {
-      player1: 'Algorithm Ace',
-      player2: 'Data Genius',
-      moves: 6,
-      winner: 'Data Genius',
-    },
-    {
-      player1: 'Cyber Player',
-      player2: 'Digital Mind',
-      moves: 8,
-      winner: 'Cyber Player',
-    },
-  ];
+  // Get simulated games from service
+  const simulatedGames = ScreensaverService.getSimulatedGames();
 
   useEffect(() => {
     setIsVisible(true);
 
-    // Ciclar a través de juegos simulados
-    const gameInterval = setInterval(() => {
-      setCurrentGame(prev => (prev + 1) % simulatedGames.length);
-    }, 5000);
+    // Game cycler using service
+    const cleanup = ScreensaverService.createGameCycler(
+      simulatedGames,
+      5000,
+      newIndex => setCurrentGame(newIndex)
+    );
 
-    return () => clearInterval(gameInterval);
-  }, [simulatedGames.length]);
+    return cleanup;
+  }, [simulatedGames]);
 
   const handleScreenClick = () => {
     onActivity();

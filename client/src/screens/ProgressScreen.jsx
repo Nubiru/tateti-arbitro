@@ -41,7 +41,7 @@ const ProgressScreen = ({
     }
   }, [board, history, moveCount]);
 
-  // Simplified - no async operations in unit tests
+  // Call onActivity on mount (no useEffect needed for sync operations)
   useEffect(() => {
     onActivity();
   }, [onActivity]);

@@ -23,6 +23,8 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
     startMatch,
     startTournament,
     resetGame,
+    moveQueue,
+    isProcessingMoves,
   } = useGame();
   const [currentScreen, setCurrentScreen] = useState('presentation');
 
@@ -30,6 +32,15 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
   useEffect(() => {
     // No cambiar automáticamente si estamos en la pantalla de presentación
     if (currentScreen === 'presentation' && gameState === 'idle') {
+      return;
+    }
+
+    // Guard: Don't route to celebration if moves are still being processed
+    if (
+      gameState === 'completed' &&
+      (moveQueue.length > 0 || isProcessingMoves)
+    ) {
+      // Stay on progress screen until move queue is empty and processing is done
       return;
     }
 
@@ -58,7 +69,7 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
           setCurrentScreen('config');
         }
     }
-  }, [gameState, currentScreen]);
+  }, [gameState, currentScreen, moveQueue.length, isProcessingMoves]);
 
   // Manejar navegación hacia atrás
   const handleBack = () => {
@@ -90,7 +101,11 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
   const handleStart = async gameConfig => {
     if (gameConfig.gameMode === 'tournament') {
       // Iniciar torneo
-      await startTournament(gameConfig);
+      await startTournament(gameConfig.players, {
+        boardSize: gameConfig.boardSize,
+        speed: gameConfig.speed,
+        noTie: gameConfig.noTie,
+      });
     } else {
       // Iniciar partida individual
       const [player1, player2] = gameConfig.players;

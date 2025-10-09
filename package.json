@@ -8,10 +8,10 @@
     "start": "node index.js",
     "dev": "node --watch index.js",
     "test": "jest --runInBand --detectOpenHandles",
-    "test:unit": "jest --selectProjects backend-unit --maxWorkers=4 --detectOpenHandles",
+    "test:unit": "jest --selectProjects backend-unit --detectOpenHandles",
     "test:unit:watch": "jest --selectProjects backend-unit --watch",
-    "test:integration": "jest --selectProjects backend-integration --maxWorkers=1",
-    "test:client": "jest --selectProjects client --maxWorkers=2",
+    "test:integration": "jest --selectProjects backend-integration",
+    "test:client": "jest --selectProjects client",
     "test:integration:online": "npm run test:integration",
     "test:full": "npm run test:unit && npm run test:client",
     "test:watch": "jest --runInBand --watch --detectOpenHandles",
@@ -49,7 +49,9 @@
     "deploy:smoke": "npm run qa:precommit && npm run docker:smoke",
     "deploy:4player": "npm run qa:precommit && npm run docker:4player",
     "deploy:8player": "npm run qa:precommit && npm run docker:8player",
-    "deploy:prod": "npm run qa:full && npm run docker:prod"
+    "deploy:prod": "npm run qa:full && npm run docker:prod",
+    "verify:smoke": "bash scripts/test-smoke-layer.sh",
+    "verify:smoke:win": "powershell -ExecutionPolicy Bypass -File scripts/test-smoke-layer.ps1"
   },
   "keywords": [
     "tateti",

@@ -48,7 +48,7 @@ export function createApp(dependencies = {}) {
       eventsAdapter,
       logger,
       clock: {
-        now: () => Date.now(),
+        now: () => new Date(),
         toISOString: () => new Date().toISOString(),
       },
     });
@@ -59,7 +59,7 @@ export function createApp(dependencies = {}) {
       eventsAdapter: eventsAdapter,
       logger,
       clock: {
-        now: () => Date.now(),
+        now: () => new Date(),
         toISOString: () => new Date().toISOString(),
       },
     });
@@ -193,6 +193,26 @@ export function createApp(dependencies = {}) {
     });
   });
 
+  // Statistics endpoint
+  app.get('/api/statistics', (req, res) => {
+    try {
+      // TODO: Implement StatisticsService integration
+      res.json({
+        totalGames: 0,
+        wins: 0,
+        draws: 0,
+        totalMoves: 0,
+        averageMovesPerGame: 0,
+        message: 'Statistics tracking not yet implemented',
+      });
+    } catch (error) {
+      logger.error('STATS', 'ROUTE', 'ERROR', 'Error en ruta de estadísticas', {
+        error: error.message,
+      });
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  });
+
   // Rutas de partidas
   app.post(
     '/api/match',
@@ -200,7 +220,8 @@ export function createApp(dependencies = {}) {
     handleValidationErrors,
     async (req, res) => {
       try {
-        console.log('Match endpoint called with body:', req.body);
+        console.log('✅ Match endpoint - Validation passed');
+        console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
         const {
           player1,
           player2,
@@ -460,14 +481,14 @@ export function createApp(dependencies = {}) {
         return 'localhost';
       };
 
-      // Check health of each bot
-      for (const bot of botConfigs) {
+      // Check health of each bot (PARALLEL for speed)
+      const healthCheckPromises = botConfigs.map(async bot => {
         try {
           const host = getHostForPort(bot.port);
           const healthUrl = `http://${host}:${bot.port}/health`;
 
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          const timeoutId = setTimeout(() => controller.abort(), 500); // 500ms timeout
 
           const response = await fetch(healthUrl, {
             method: 'GET',
@@ -478,7 +499,7 @@ export function createApp(dependencies = {}) {
 
           if (response.ok) {
             await response.json(); // Consume response but don't use data
-            availableBots.push({
+            return {
               name: bot.name,
               port: bot.port,
               type: bot.type,
@@ -486,9 +507,9 @@ export function createApp(dependencies = {}) {
               status: 'healthy',
               lastSeen: new Date().toISOString(),
               isHuman: false,
-            });
+            };
           } else {
-            availableBots.push({
+            return {
               name: bot.name,
               port: bot.port,
               type: bot.type,
@@ -496,10 +517,10 @@ export function createApp(dependencies = {}) {
               status: 'unhealthy',
               lastSeen: null,
               isHuman: false,
-            });
+            };
           }
         } catch (error) {
-          availableBots.push({
+          return {
             name: bot.name,
             port: bot.port,
             type: bot.type,
@@ -507,9 +528,13 @@ export function createApp(dependencies = {}) {
             status: 'offline',
             lastSeen: null,
             isHuman: false,
-          });
+          };
         }
-      }
+      });
+
+      // Wait for all health checks to complete in parallel
+      const results = await Promise.all(healthCheckPromises);
+      availableBots.push(...results);
 
       res.json({
         bots: availableBots,

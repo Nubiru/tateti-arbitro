@@ -186,6 +186,8 @@ export function createMockSSEResponse(overrides = {}) {
     end: jest.fn(),
     on: jest.fn(),
     destroy: jest.fn(),
+    setHeader: jest.fn(),
+    status: jest.fn().mockReturnThis(),
     ...overrides,
   };
 }

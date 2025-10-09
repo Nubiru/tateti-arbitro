@@ -175,11 +175,13 @@ describe('Middleware de Validación', () => {
     });
 
     test('debería manejar error de jugador faltante', () => {
+      const errors = [
+        { msg: 'Se necesitan dos jugadores para iniciar la partida.' },
+      ];
+
       validationResult.mockReturnValue({
         isEmpty: () => false,
-        array: () => [
-          { msg: 'Se necesitan dos jugadores para iniciar la partida.' },
-        ],
+        array: () => errors,
       });
 
       handleValidationErrors(req, res, next);
@@ -187,6 +189,7 @@ describe('Middleware de Validación', () => {
       expect(res.status).toHaveBeenCalledWith(400);
       expect(res.json).toHaveBeenCalledWith({
         error: 'Se necesitan dos jugadores para iniciar la partida.',
+        details: errors,
       });
       expect(next).not.toHaveBeenCalled();
     });

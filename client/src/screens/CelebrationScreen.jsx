@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styles from './CelebrationScreen.module.css';
 import GameOptionsService from '../services/GameOptionsService';
+import CelebrationService from '../services/CelebrationService';
 
 /**
  * Celebration Screen Component
  * Winner celebration with auto-return
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-10-09
+ * @version 2.0.0
  */
 
 const CelebrationScreen = ({
@@ -18,53 +19,49 @@ const CelebrationScreen = ({
   const [countdown, setCountdown] = useState(60);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Extract real data from results
-  const result = matchResult || tournamentResult;
-  const winner = result?.winner;
-  const history = result?.history || [];
-  const movesCount = history.length;
-  const gameTime = result?.gameTime || 'N/A';
-  // Calculate enhanced statistics
-  // const gamesPlayed = tournamentResult ? tournamentResult.totalMatches || 1 : 1;
-  const averageTime = tournamentResult
-    ? tournamentResult.averageTime || gameTime
-    : gameTime;
+  // Extract statistics using service
+  const stats = CelebrationService.calculateGameStatistics(
+    matchResult,
+    tournamentResult
+  );
+  const metadata = CelebrationService.getGameMetadata(
+    matchResult || tournamentResult,
+    tournamentResult
+  );
 
-  // Per-player move counts
-  const player1Moves = history.filter(h => h.playerId === 'player1').length;
-  const player2Moves = history.filter(h => h.playerId === 'player2').length;
-
-  // Game metadata
-  const gameMode =
-    result?.gameMode || (tournamentResult ? 'Torneo' : 'Individual');
-  const boardSize = result?.boardSize || '3x3';
-  const speed = result?.speed || 'normal';
-  const noTieMode = result?.noTie || false;
-
-  // Tournament specific
-  const totalRounds = tournamentResult?.totalRounds || 1;
-  const totalMatches = tournamentResult?.totalMatches || 1;
+  const {
+    winner,
+    movesCount,
+    gameTime,
+    player1Moves,
+    player2Moves,
+    totalRounds,
+    totalMatches,
+    averageTime,
+  } = stats;
+  const {
+    gameMode,
+    boardSize,
+    speed,
+    noTie: noTieMode,
+    winningLine,
+  } = metadata;
 
   // Winner's winning line/pattern - using GameOptionsService
-  const winningLine = result?.winningLine || null;
   const winningPattern = GameOptionsService.formatWinningLine(winningLine);
 
   useEffect(() => {
     onActivity();
     setIsVisible(true);
 
-    // Cuenta regresiva de retorno automático
-    const timer = setInterval(() => {
-      setCountdown(prev => {
-        if (prev <= 1) {
-          onReturn();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    // Countdown timer using service
+    const cleanup = CelebrationService.createCountdownTimer(
+      60,
+      remaining => setCountdown(remaining),
+      () => onReturn()
+    );
 
-    return () => clearInterval(timer);
+    return cleanup;
   }, [onReturn, onActivity]);
 
   const handleReturnClick = () => {

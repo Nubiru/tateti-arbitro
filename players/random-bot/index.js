@@ -60,39 +60,37 @@ app.get('/health', (req, res) => {
 
 /**
  * Move endpoint - receives board state and returns move
+ * Stateless API: receives 'board' param, returns 'move' value
  */
 app.get('/move', (req, res) => {
   try {
-    const { tablero, jugador } = req.query;
+    const { board } = req.query;
 
-    if (!tablero || !jugador) {
+    if (!board) {
       return res.status(400).json({
-        error: 'Se requieren parámetros tablero y jugador'
+        error: 'Missing required parameter: board'
       });
     }
 
-    const board = JSON.parse(tablero);
-    const playerId = parseInt(jugador);
+    const boardArray = JSON.parse(board);
 
-    if (!Array.isArray(board)) {
+    if (!Array.isArray(boardArray)) {
       return res.status(400).json({
-        error: 'El tablero debe ser un array'
+        error: 'Board must be an array'
       });
     }
 
-    const move = getRandomMove(board, playerId);
+    const move = getRandomMove(boardArray);
 
-    logger.info(`${PLAYER_NAME}: Movimiento ${move} en tablero:`, board);
+    logger.info(`${PLAYER_NAME}: Move ${move} on board:`, boardArray);
 
     res.json({
-      movimiento: move,
-      jugador: playerId,
-      timestamp: new Date().toISOString()
+      move: move
     });
   } catch (error) {
-    logger.error(`${PLAYER_NAME}: Error procesando movimiento:`, error);
+    logger.error(`${PLAYER_NAME}: Error processing move:`, error);
     res.status(500).json({
-      error: 'Error interno del jugador'
+      error: 'Internal player error'
     });
   }
 });
@@ -102,10 +100,10 @@ app.get('/move', (req, res) => {
  */
 app.get('/info', (req, res) => {
   res.json({
-    nombre: PLAYER_NAME,
-    estrategia: 'Aleatoria',
+    name: PLAYER_NAME,
+    strategy: 'Random',
     version: '1.0.0',
-    puerto: PORT
+    port: PORT
   });
 });
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PlayerService } from '../services/PlayerService';
 import styles from './ConfigScreen.module.css';
 import {
@@ -65,73 +65,34 @@ const ConfigScreen = ({
   // Local state for visual theme to handle radio button interactions
   const [localVisualTheme, setLocalVisualTheme] = useState(visualTheme);
 
-  // Ref to track last processed target count to prevent unnecessary re-runs
-  const lastProcessedTargetCount = useRef(null);
-
-  // Bot discovery on mount - skip in test environment
+  // Bot discovery on mount
   useEffect(() => {
-    // Skip bot discovery in test environment to keep unit tests synchronous
-    if (process.env.NODE_ENV === 'test') {
-      return;
-    }
-
     const discoverBots = async () => {
-      try {
-        setBotDiscoveryStatus('loading');
-        const response = await fetch('/api/bots/available');
-        if (response.ok) {
-          const data = await response.json();
-          setAvailableBots(data.bots);
-          setBotDiscoveryStatus('success');
-        } else {
-          // Bot discovery failed - handled by error state
-          setBotDiscoveryStatus('error');
-        }
-      } catch (error) {
-        // Error discovering bots - could be logged in development
+      setBotDiscoveryStatus('loading');
+      const result = await playerService.discoverBots();
+
+      if (result.success) {
+        setAvailableBots(result.bots);
+        setBotDiscoveryStatus('success');
+      } else {
         setBotDiscoveryStatus('error');
       }
     };
 
     discoverBots();
-  }, []);
+  }, [playerService]);
 
-  // Populate players immediately after bot discovery completes
+  // Populate players when bot discovery completes or config changes
   useEffect(() => {
-    if (botDiscoveryStatus === 'success' && availableBots.length > 0) {
-      const healthyBots = availableBots.filter(bot => bot.status === 'healthy');
-      healthyBots.sort((a, b) => a.port - b.port);
-
-      const targetCount =
-        config.gameMode === 'single' ? 2 : config.playerCount || 2;
-      const newPlayers = [];
-
-      for (let i = 0; i < targetCount; i++) {
-        if (i < healthyBots.length) {
-          newPlayers.push({
-            name: healthyBots[i].name,
-            port: healthyBots[i].port,
-            isHuman: false,
-            status: healthyBots[i].status,
-            type: healthyBots[i].type,
-            capabilities: healthyBots[i].capabilities,
-          });
-        } else {
-          const fallback = playerService.generatePlayers(i + 1, [])[i];
-          newPlayers.push(fallback);
-        }
-      }
-
+    if (botDiscoveryStatus === 'success') {
+      const newPlayers = playerService.populatePlayersForMode(
+        config.gameMode,
+        availableBots,
+        config
+      );
       setPlayers(newPlayers);
-      lastProcessedTargetCount.current = targetCount;
     }
-  }, [
-    botDiscoveryStatus,
-    availableBots,
-    config.gameMode,
-    config.playerCount,
-    playerService,
-  ]);
+  }, [botDiscoveryStatus, availableBots, config, playerService]);
 
   // Notify activity on mount
   useEffect(() => {
@@ -152,110 +113,38 @@ const ConfigScreen = ({
     }
   }, [initialConfig.players]);
 
-  // Auto-generate players based on game mode and playerCount
-  useEffect(() => {
-    // Don't auto-generate if initialConfig.players is provided
-    if (initialConfig.players && initialConfig.players.length > 0) {
-      return;
-    }
+  // Player population is now handled by the useEffect above that calls populatePlayersForMode
 
-    // Wait for bot discovery to complete
-    if (botDiscoveryStatus === 'loading') {
-      return;
-    }
+  const handleConfigChange = (key, value) => {
+    setConfig(prev => {
+      const newConfig = { ...prev, [key]: value };
 
-    let targetPlayerCount;
-
-    if (config.gameMode === 'single') {
-      // Individual mode: always 2 players
-      targetPlayerCount = 2;
-    } else {
-      // Tournament mode: use selected playerCount
-      targetPlayerCount = config.playerCount || 2;
-    }
-
-    // Skip if we've already processed this target count
-    if (lastProcessedTargetCount.current === targetPlayerCount) {
-      return;
-    }
-
-    // Reset the ref when game mode changes to force regeneration
-    if (lastProcessedTargetCount.current !== targetPlayerCount) {
-      lastProcessedTargetCount.current = null;
-    }
-
-    const currentPlayerCount = players.length;
-
-    // Only update if target count is different
-    if (targetPlayerCount !== currentPlayerCount) {
-      // Always regenerate players when count changes
-      const newPlayers = [];
-      const healthyBots = availableBots.filter(bot => bot.status === 'healthy');
-
-      // Sort bots by port for consistent ordering
-      healthyBots.sort((a, b) => a.port - b.port);
-
-      for (let i = 0; i < targetPlayerCount; i++) {
-        if (i < healthyBots.length) {
-          // Use discovered bot
-          newPlayers.push({
-            name: healthyBots[i].name,
-            port: healthyBots[i].port,
-            isHuman: false,
-            status: healthyBots[i].status,
-            type: healthyBots[i].type,
-            capabilities: healthyBots[i].capabilities,
-          });
-        } else {
-          // Fallback to generic bot
-          const playerNumber = i + 1;
-          // Use service to build consistent fallback structure
-          const fallback = playerService.generatePlayers(playerNumber, [])[
-            playerNumber - 1
-          ];
-          newPlayers.push(fallback);
+      // Auto-adjust playerCount when gameMode changes
+      if (key === 'gameMode') {
+        if (value === 'single') {
+          newConfig.playerCount = 2;
+        } else if (value === 'tournament' && prev.playerCount < 4) {
+          newConfig.playerCount = 4; // Default to 4 for tournament mode
         }
       }
 
-      setPlayers(newPlayers);
-
-      // Update the ref to track this target count
-      lastProcessedTargetCount.current = targetPlayerCount;
-
-      if (onActivity) onActivity();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    config.gameMode,
-    config.playerCount,
-    availableBots,
-    botDiscoveryStatus,
-    onActivity,
-    // Removed players.length and config.players to prevent infinite loops
-  ]);
-
-  // Smart bot detection and auto-fill - REMOVED INFINITE LOOP
-  // This useEffect was causing infinite loops and corrupting player data
-  // Player data is now managed by the auto-generation useEffect above
-
-  const handleConfigChange = (key, value) => {
-    setConfig(prev => ({ ...prev, [key]: value }));
+      return newConfig;
+    });
     if (onActivity) onActivity();
   };
 
   const updatePlayer = (index, field, value) => {
-    const newPlayers = [...players];
-    newPlayers[index] = { ...newPlayers[index], [field]: value };
+    const newPlayers = playerService.updatePlayer(players, index, field, value);
     setPlayers(newPlayers);
     if (onActivity) onActivity();
   };
 
   const isTournamentValid = () => {
-    if (config.gameMode === 'tournament') {
-      const validSizes = [2, 4, 8, 16];
-      return validSizes.includes(players.length);
-    }
-    return true;
+    const validation = playerService.validatePlayerSelection(
+      players,
+      config.gameMode
+    );
+    return validation.isValid;
   };
 
   const handleStart = () => {
