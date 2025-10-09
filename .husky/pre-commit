@@ -1,2 +1,6 @@
-# Ejecutar puertas de calidad pre-commit
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Layer 1: Pre-commit QA (Fast - Essential checks only)
+# Format, lint, and unit tests
 npm run qa:precommit

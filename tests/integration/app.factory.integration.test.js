@@ -257,22 +257,20 @@ describe('Pruebas de Integración de Manejadores de Rutas de App Factory', () =>
         expect(response.status).toBe(200);
         expect(response.body).toEqual(mockResult);
         expect(mockArbitrator.runMatch).toHaveBeenCalledWith(
-          [
-            {
+          expect.arrayContaining([
+            expect.objectContaining({
               name: 'Player1',
               port: 3001,
-              host: 'random-bot-1',
               protocol: 'http',
               isHuman: false,
-            },
-            {
+            }),
+            expect.objectContaining({
               name: 'Player2',
               port: 3002,
-              host: 'random-bot-2',
               protocol: 'http',
               isHuman: false,
-            },
-          ],
+            }),
+          ]),
           { timeoutMs: 3000, boardSize: 3, noTie: false }
         );
       });

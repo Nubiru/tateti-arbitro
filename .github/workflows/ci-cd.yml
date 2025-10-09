@@ -45,22 +45,26 @@ jobs:
               run: npm run lint:client
 
             # Paso 7: Ejecutar pruebas unitarias del backend
-            - name: Run backend tests
-              run: npm test -- --selectProjects backend --coverage
+            - name: Run backend unit tests
+              run: npm run test:unit -- --coverage
 
-            # Paso 8: Ejecutar pruebas unitarias del frontend
+            # Paso 8: Ejecutar pruebas de integración del backend
+            - name: Run backend integration tests
+              run: npm run test:integration -- --coverage
+
+            # Paso 9: Ejecutar pruebas del frontend
             - name: Run frontend tests
-              run: npm test -- --selectProjects client --coverage
+              run: npm run test:client -- --coverage
 
-            # Paso 9: Construir frontend localmente para verificar
+            # Paso 10: Construir frontend localmente para verificar
             - name: Build frontend locally
               run: cd client && npm run build
 
-            # Paso 10: Construir imágenes Docker para verificar
+            # Paso 11: Construir imágenes Docker para verificar
             - name: Build Docker images
-              run: npm run docker:build:all
+              run: npm run build:all
 
-            # Paso 11: Subir cobertura de pruebas a Codecov (opcional)
+            # Paso 12: Subir cobertura de pruebas a Codecov (opcional)
             - name: Upload coverage to Codecov (optional)
               uses: codecov/codecov-action@v3
               with:

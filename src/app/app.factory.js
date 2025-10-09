@@ -220,8 +220,10 @@ export function createApp(dependencies = {}) {
     handleValidationErrors,
     async (req, res) => {
       try {
-        console.log('✅ Match endpoint - Validation passed');
-        console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
+        if (process.env.NODE_ENV !== 'test') {
+          console.log('✅ Match endpoint - Validation passed');
+          console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
+        }
         const {
           player1,
           player2,
@@ -230,10 +232,8 @@ export function createApp(dependencies = {}) {
           noTie = false,
         } = req.body;
 
-        // Normalizar jugadores para el árbitro
-        // Use Docker service names when running in container, localhost for local dev
         const getHostForPort = port => {
-          if (process.env.NODE_ENV === 'test' || process.env.DOCKER_ENV) {
+          if (process.env.DOCKER_DISCOVERY === 'true') {
             // Map ports to Docker service names for 8-player support
             const portToService = {
               3001: 'random-bot-1',
@@ -273,7 +273,9 @@ export function createApp(dependencies = {}) {
           noTie,
         });
 
-        console.log('Match result:', result);
+        if (process.env.NODE_ENV !== 'test') {
+          console.log('Match result:', result);
+        }
         res.json(result);
       } catch (error) {
         logger.error('MATCH', 'ROUTE', 'ERROR', 'Error en ruta de partida', {
@@ -316,11 +318,13 @@ export function createApp(dependencies = {}) {
     handleValidationErrors,
     async (req, res) => {
       try {
-        console.log(
-          '🏆 Tournament endpoint called with body:',
-          JSON.stringify(req.body, null, 2)
-        );
-        console.log('🏆 Tournament validation errors:', req.validationErrors);
+        if (process.env.NODE_ENV !== 'test') {
+          console.log(
+            '🏆 Tournament endpoint called with body:',
+            JSON.stringify(req.body, null, 2)
+          );
+          console.log('🏆 Tournament validation errors:', req.validationErrors);
+        }
 
         const {
           players,
@@ -329,14 +333,18 @@ export function createApp(dependencies = {}) {
           noTie = false,
         } = req.body;
 
-        console.log('🏆 Tournament parsed players:', players);
-        console.log('🏆 Tournament players type:', typeof players);
-        console.log('🏆 Tournament players isArray:', Array.isArray(players));
+        if (process.env.NODE_ENV !== 'test') {
+          console.log('🏆 Tournament parsed players:', players);
+          console.log('🏆 Tournament players type:', typeof players);
+          console.log('🏆 Tournament players isArray:', Array.isArray(players));
+        }
 
         if (!players || !Array.isArray(players) || players.length < 2) {
-          console.log(
-            '🏆 Tournament validation failed - invalid players array'
-          );
+          if (process.env.NODE_ENV !== 'test') {
+            console.log(
+              '🏆 Tournament validation failed - invalid players array'
+            );
+          }
           return res.status(400).json({
             error: 'Se requieren al menos 2 jugadores para un torneo',
           });
@@ -462,9 +470,8 @@ export function createApp(dependencies = {}) {
         },
       ];
 
-      // Helper function to get host for port
       const getHostForPort = port => {
-        if (process.env.NODE_ENV === 'test' || process.env.DOCKER_ENV) {
+        if (process.env.DOCKER_DISCOVERY === 'true') {
           // Map ports to Docker service names for 8-player support
           const portToService = {
             3001: 'random-bot-1',

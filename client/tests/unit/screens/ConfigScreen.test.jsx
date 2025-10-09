@@ -5,13 +5,7 @@
  */
 
 import React from 'react';
-import {
-  render,
-  screen,
-  fireEvent,
-  act,
-  waitFor,
-} from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ConfigScreen from '../../../src/screens/ConfigScreen';
 
 describe('ConfigScreen', () => {
@@ -64,6 +58,8 @@ describe('ConfigScreen', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.clearAllTimers();
+    jest.useRealTimers();
   });
 
   const mockConfig = {
@@ -271,9 +267,7 @@ describe('ConfigScreen', () => {
 
     const player1Input = screen.getByDisplayValue('Jugador1');
 
-    act(() => {
-      fireEvent.change(player1Input, { target: { value: 'Bot Inteligente' } });
-    });
+    fireEvent.change(player1Input, { target: { value: 'Bot Inteligente' } });
 
     expect(player1Input.value).toBe('Bot Inteligente');
   });

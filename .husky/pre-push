@@ -1,0 +1,7 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Layer 2: Pre-push QA (Comprehensive)
+# Ejecuta todas las validaciones de pre-commit + integration tests + build
+npm run qa:prepush
+

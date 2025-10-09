@@ -146,14 +146,16 @@ export const validateHealth = [
 export const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
-    console.log('❌ VALIDATION FAILED ━━━━━━━━━━━━━━━━━━━━');
-    console.log('📍 Endpoint:', req.method, req.path);
-    console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
-    console.log(
-      '❌ Validation errors:',
-      JSON.stringify(errors.array(), null, 2)
-    );
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    if (process.env.NODE_ENV !== 'test') {
+      console.log('❌ VALIDATION FAILED ━━━━━━━━━━━━━━━━━━━━');
+      console.log('📍 Endpoint:', req.method, req.path);
+      console.log('📦 Request body:', JSON.stringify(req.body, null, 2));
+      console.log(
+        '❌ Validation errors:',
+        JSON.stringify(errors.array(), null, 2)
+      );
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    }
 
     // Store validation errors in request for debugging
     req.validationErrors = errors.array();
@@ -178,7 +180,9 @@ export const handleValidationErrors = (req, res, next) => {
       details: errors.array(),
     });
   }
-  console.log('✅ Validation passed for:', req.method, req.path);
+  if (process.env.NODE_ENV !== 'test') {
+    console.log('✅ Validation passed for:', req.method, req.path);
+  }
   next();
 };
 
