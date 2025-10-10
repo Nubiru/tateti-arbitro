@@ -54,7 +54,9 @@
     "deploy:8player": "npm run qa:precommit && npm run docker:8player",
     "deploy:prod": "npm run qa:full && npm run docker:prod",
     "verify:smoke": "bash scripts/test-smoke-layer.sh",
-    "verify:smoke:win": "powershell -ExecutionPolicy Bypass -File scripts/test-smoke-layer.ps1"
+    "verify:smoke:win": "powershell -ExecutionPolicy Bypass -File scripts/test-smoke-4bots.ps1",
+    "verify:smoke:win:logs": "powershell -ExecutionPolicy Bypass -File scripts/test-smoke-4bots.ps1 -ShowLogs",
+    "verify:smoke:win:json": "powershell -ExecutionPolicy Bypass -File scripts/test-smoke-4bots.ps1 -JsonOutput"
   },
   "keywords": [
     "tateti",

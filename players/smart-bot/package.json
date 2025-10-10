@@ -1,12 +1,11 @@
 {
-  "name": "random-bot-player",
+  "name": "smart-bot-player",
   "version": "1.0.0",
-  "description": "Random strategy bot for Ta-Te-Ti",
+  "description": "Smart strategy bot for Ta-Te-Ti (WIN→BLOCK→CENTER→CORNERS)",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js",
     "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest tests/unit",
     "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules jest tests/integration",
@@ -20,11 +19,8 @@
     "jest": "^29.7.0",
     "supertest": "^6.3.3"
   },
-  "keywords": [
-    "tateti",
-    "bot",
-    "player"
-  ],
+  "keywords": ["tateti", "bot", "smart", "strategy"],
   "author": "UPC Programación Full Stack",
   "license": "ISC"
 }
+

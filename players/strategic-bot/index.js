@@ -1,7 +1,13 @@
-import express from 'express';
-import getRandomMove from './algorithm.js';
+/**
+ * Strategic Bot Player for Ta-Te-Ti
+ * Implements turn-based positional strategy
+ * @lastModified 2025-10-10
+ * @version 1.0.0
+ */
 
-// Simple logger for player bot - forwards to console with structured format
+import express from 'express';
+import getStrategicMove from './algorithm.js';
+
 const logger = {
   info: (message, data) => {
     // eslint-disable-next-line no-console
@@ -16,22 +22,12 @@ const logger = {
   }
 };
 
-/**
- * Random Bot Player for Ta-Te-Ti
- * Implements random move strategy
- * @lastModified 2025-10-10
- * @version 1.0.0
- */
-
 const app = express();
-const PORT = process.env.PORT || 3001;
-const PLAYER_NAME = process.env.PLAYER_NAME || 'RandomBot';
+const PORT = process.env.PORT || 3004;
+const PLAYER_NAME = process.env.PLAYER_NAME || 'StrategicBot';
 
 app.use(express.json());
 
-/**
- * Health check endpoint
- */
 app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
@@ -40,10 +36,6 @@ app.get('/health', (req, res) => {
   });
 });
 
-/**
- * Move endpoint - receives board state and returns move
- * Stateless API: receives 'board' param, returns 'move' value
- */
 app.get('/move', (req, res) => {
   try {
     const { board } = req.query;
@@ -70,13 +62,17 @@ app.get('/move', (req, res) => {
       });
     }
 
-    const move = getRandomMove(boardArray);
+    if (boardArray.length !== 9 && boardArray.length !== 25) {
+      return res.status(400).json({
+        error: 'Board must be 9 (3x3) or 25 (5x5) elements'
+      });
+    }
 
-    logger.info(`${PLAYER_NAME}: Move ${move} on board:`, boardArray);
+    const move = getStrategicMove(boardArray);
 
-    res.json({
-      move: move
-    });
+    logger.info(`${PLAYER_NAME}: Move ${move} on board`, boardArray);
+
+    res.json({ move });
   } catch (error) {
     logger.error(`${PLAYER_NAME}: Error processing move:`, error);
     res.status(500).json({
@@ -85,13 +81,10 @@ app.get('/move', (req, res) => {
   }
 });
 
-/**
- * Player info endpoint
- */
 app.get('/info', (req, res) => {
   res.json({
     name: PLAYER_NAME,
-    strategy: 'Random',
+    strategy: 'Strategic',
     version: '1.0.0',
     port: PORT
   });
@@ -104,3 +97,4 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 
 // Export app and server for testing
 export { app, server };
+

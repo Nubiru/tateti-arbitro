@@ -1,174 +1,117 @@
-# Estrategia de Calidad en Capas
+# Estrategia de Calidad
 
-_Última actualización: 09 de Octubre 2025_
+Sistema de validación incremental en 3 capas siguiendo el principio "Fail Fast, Fail Early".
 
-## Filosofía
+## 📊 Capas de Validación
 
-Nuestra estrategia de calidad sigue el principio de **"Fail Fast, Fail Early"** con validación incremental en 3 capas. Cada capa agrega más verificaciones, atrapando errores lo más temprano posible en el ciclo de desarrollo.
+### Capa 1: Pre-commit (~30s)
 
-## Capa 1: Pre-commit (Rápido - ~30s)
+**Objetivo**: Errores comunes antes de commit
 
-**Objetivo**: Atrapar el 90% de errores comunes antes de hacer commit
-
-**Qué valida**:
+**Valida:**
 - ✅ Formato de código (Prettier)
-- ✅ Linting (ESLint backend + frontend)
-- ✅ Tests unitarios (backend + frontend)
-- ✅ Tests de cliente React
+- ✅ Linting (ESLint)
+- ✅ Tests unitarios
 
-**Cuándo se ejecuta**:
-- Automáticamente antes de cada `git commit`
-- Manualmente con `npm run qa:precommit`
-
-**Tiempo estimado**: 30 segundos
-
-**Hook**: `.husky/pre-commit`
-
+**Ejecución:**
 ```bash
 npm run qa:precommit
 ```
 
+**Hook**: `.husky/pre-commit` (automático)
+
 ---
 
-## Capa 2: Pre-push (Comprensivo - ~3min)
+### Capa 2: Pre-push (~3min)
 
-**Objetivo**: Validación completa antes de enviar código al repositorio remoto
+**Objetivo**: Validación completa antes de push
 
-**Qué valida**:
-- ✅ Todo lo de Capa 1 (pre-commit)
-- ✅ Tests de integración (backend)
-- ✅ Build del frontend (Vite)
-- ✅ **Build de imagen Docker del backend** (validación de Dockerfile)
+**Valida:**
+- ✅ Todo de Capa 1
+- ✅ Tests de integración
+- ✅ Build del frontend
+- ✅ Build de imagen Docker
 
-**Cuándo se ejecuta**:
-- Automáticamente antes de cada `git push`
-- Manualmente con `npm run qa:prepush`
-
-**Tiempo estimado**: 2-3 minutos
-
-**Hook**: `.husky/pre-push`
-
+**Ejecución:**
 ```bash
 npm run qa:prepush
 ```
 
-**Nota crítica**: Esta capa ahora incluye `npm run build:backend` que construye la imagen Docker del arbitrador. Esto asegura que cualquier error de sintaxis en Dockerfiles sea detectado **antes** de hacer push, evitando fallos en CI/CD.
+**Hook**: `.husky/pre-push` (automático)
 
 ---
 
-## Capa 3: CI/CD (Completo - ~5min)
+### Capa 3: CI/CD (~5min)
 
-**Objetivo**: Validación completa en ambiente limpio antes de despliegue
+**Objetivo**: Validación en ambiente limpio
 
-**Qué valida**:
-- ✅ Todo lo de Capa 2 (pre-push)
-- ✅ **Build de todas las imágenes Docker** (backend + frontend)
-- ✅ Cobertura de código (Codecov)
-- ✅ Preview deployment (Vercel)
+**Valida:**
+- ✅ Todo de Capa 2
+- ✅ Build de todas las imágenes Docker
+- ✅ Cobertura de código
+- ✅ Preview deployment
 
-**Cuándo se ejecuta**:
-- Automáticamente en cada push a `master`/`main`
-- Automáticamente en cada Pull Request
-
-**Tiempo estimado**: 4-5 minutos
-
-**Pipeline**: `.github/workflows/ci-cd.yml`
-
+**Ejecución:**
 ```bash
 npm run qa:cicd
+# o
+npm run qa:full
 ```
 
----
-
-## Resumen de Comandos
-
-| Comando | Capa | Uso | Tiempo |
-|---------|------|-----|--------|
-| `npm run qa:precommit` | 1 | Validación rápida local | ~30s |
-| `npm run qa:prepush` | 2 | Validación completa + Docker | ~3min |
-| `npm run qa:cicd` | 3 | Validación CI/CD completa | ~5min |
-| `npm run qa:full` | 3 | Alias de `qa:cicd` | ~5min |
+**Pipeline**: `.github/workflows/ci-cd.yml` (automático)
 
 ---
 
-## Flujo de Desarrollo Recomendado
+## 🔄 Flujo de Desarrollo
 
 ```
 1. Desarrollar código
    ↓
 2. git add .
    ↓
-3. git commit -m "mensaje"  → Ejecuta Capa 1 (pre-commit)
+3. git commit   → Capa 1 (pre-commit)
    ↓
-4. git push                  → Ejecuta Capa 2 (pre-push)
+4. git push     → Capa 2 (pre-push)
    ↓
-5. GitHub Actions            → Ejecuta Capa 3 (CI/CD)
+5. GitHub       → Capa 3 (CI/CD)
    ↓
-6. Merge a master/main
+6. Merge a master
 ```
 
----
+## 🛠️ Solución de Fallos
 
-## Qué Hacer Si Falla Alguna Capa
+### Falla Capa 1
 
-### Falla Capa 1 (pre-commit)
-- **Problema**: Linting, formato, o tests unitarios
-- **Solución**: 
-  ```bash
-  npm run format:write  # Arreglar formato
-  npm run lint          # Ver errores de linting
-  npm run test:unit     # Ver qué tests fallan
-  ```
+```bash
+npm run format:write   # Arreglar formato
+npm run lint           # Ver errores
+npm run test:unit      # Ver tests
+```
 
-### Falla Capa 2 (pre-push)
-- **Problema**: Tests de integración, build frontend, o Docker
-- **Solución**:
-  ```bash
-  npm run test:integration  # Ver tests de integración
-  cd client && npm run build  # Verificar build frontend
-  npm run build:backend     # Verificar Docker build
-  ```
+### Falla Capa 2
 
-### Falla Capa 3 (CI/CD)
-- **Problema**: Ambiente limpio detectó un issue
-- **Solución**: 
-  - Revisar logs de GitHub Actions
-  - Ejecutar localmente: `npm run qa:cicd`
-  - Si pasa local pero falla en CI/CD, puede ser problema de ambiente
+```bash
+npm run test:integration        # Tests de integración
+cd client && npm run build      # Build frontend
+npm run build:backend           # Build Docker
+```
 
----
+### Falla Capa 3
 
-## Ventajas de Esta Estrategia
+```bash
+# Ejecutar localmente
+npm run qa:cicd
 
-1. **Fail Fast**: Errores detectados en segundos, no minutos
-2. **Feedback Inmediato**: Desarrollador sabe de inmediato si algo está mal
-3. **Prevención de Push Roto**: Docker build validado antes de push
-4. **CI/CD Confiable**: Si pasa pre-push, muy probable que pase CI/CD
-5. **Tiempo Optimizado**: No esperar 5min de CI/CD para saber que faltó un `;`
+# Revisar logs de GitHub Actions
+```
+
+## 💡 Ventajas
+
+1. **Fail Fast**: Errores en segundos, no minutos
+2. **Feedback Inmediato**: Saber de inmediato si algo falla
+3. **CI/CD Confiable**: Si pasa pre-push, muy probable que pase CI/CD
+4. **Tiempo Optimizado**: No esperar 5min para descubrir error de sintaxis
 
 ---
 
-## Lecciones Aprendidas
-
-### ❌ Problema Anterior
-- Pre-commit y pre-push no validaban Docker builds
-- Errores de sintaxis en Dockerfile solo se detectaban en CI/CD
-- Desarrollador esperaba 5 minutos para descubrir error de sintaxis
-
-### ✅ Solución Actual
-- Pre-push valida build de imagen Docker del backend
-- Errores de Dockerfile detectados en ~3min localmente
-- CI/CD se usa para validación final, no para debugging
-
----
-
-## Mantenimiento
-
-Este documento debe actualizarse cuando:
-- Se agreguen nuevas capas de validación
-- Cambien los tiempos estimados significativamente
-- Se modifiquen los hooks de Git
-- Se actualice el pipeline de CI/CD
-
-**Última revisión**: 09 de Octubre 2025
-**Próxima revisión**: 09 de Noviembre 2025
+**Última actualización**: 2025-10-10
