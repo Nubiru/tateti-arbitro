@@ -1,13 +1,22 @@
 /**
  * Pruebas Unitarias de CelebrationScreen
  * Pruebas para el componente CelebrationScreen
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-10-10
+ * @version 1.1.0
  */
 
 import React from 'react';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import CelebrationScreen from '../../../src/screens/CelebrationScreen';
+
+// Mock process.env to prevent debug logs from affecting test assertions
+const originalEnv = process.env;
+beforeAll(() => {
+  process.env = { ...originalEnv, LOG_LEVEL: undefined };
+});
+afterAll(() => {
+  process.env = originalEnv;
+});
 
 // Simular módulos CSS
 jest.mock('../../../src/screens/CelebrationScreen.module.css', () => ({

@@ -37,6 +37,15 @@ const ProgressScreen = ({
   // Handle real-time updates directly (backend controls timing)
   useEffect(() => {
     if (board && history && moveCount !== undefined) {
+      // DEBUG: Log board updates
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log('[DEBUG][ProgressScreen] Board updated:', {
+          moveCount,
+          boardState: board,
+          historyLength: history.length,
+        });
+      }
+
       setDisplayedBoard([...board]);
       setDisplayedHistory([...history]);
       setDisplayedMoveCount(moveCount);
@@ -45,8 +54,18 @@ const ProgressScreen = ({
 
   // Call onActivity on mount (no useEffect needed for sync operations)
   useEffect(() => {
+    // DEBUG: Log game config
+    if (process.env.LOG_LEVEL === 'debug') {
+      console.log('[DEBUG][ProgressScreen] Mounted with config:', {
+        boardSize: config?.boardSize,
+        speed: config?.speed,
+        noTie: config?.noTie,
+        gameMode: config?.gameMode,
+      });
+    }
+
     onActivity();
-  }, [onActivity]);
+  }, [onActivity, config]);
 
   const getBoardSize = () => {
     return config?.boardSize === '5x5' ? 25 : 9;
@@ -130,7 +149,7 @@ const ProgressScreen = ({
                 className={`${styles.cellNumber} cellNumber`}
                 data-testid={`cell-number-${index}`}
               >
-                {index}
+                {/* Empty cell - no number display */}
               </span>
             )}
           </div>

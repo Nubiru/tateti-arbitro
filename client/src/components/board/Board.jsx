@@ -16,7 +16,6 @@ const Board = ({
   moveCount = 0,
   winningLine = [],
   onCellClick,
-  showNumbers = true,
   title,
   className = '',
 }) => {
@@ -64,7 +63,7 @@ const Board = ({
         {cell ? (
           <span className={styles.symbol}>{getPlayerSymbol(cell)}</span>
         ) : (
-          showNumbers && <span className={styles.cellNumber}>{index}</span>
+          <span className={styles.cellNumber}>{/* Empty cell */}</span>
         )}
       </div>
     );

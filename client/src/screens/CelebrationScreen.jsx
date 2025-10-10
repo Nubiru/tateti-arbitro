@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import styles from './CelebrationScreen.module.css';
 import GameOptionsService from '../services/GameOptionsService';
 import CelebrationService from '../services/CelebrationService';
@@ -6,8 +6,8 @@ import CelebrationService from '../services/CelebrationService';
 /**
  * Celebration Screen Component
  * Winner celebration with auto-return
- * @lastModified 2025-10-09
- * @version 2.0.0
+ * @lastModified 2025-10-10
+ * @version 2.1.0
  */
 
 const CelebrationScreen = ({
@@ -19,14 +19,20 @@ const CelebrationScreen = ({
   const [countdown, setCountdown] = useState(60);
   const [isVisible, setIsVisible] = useState(false);
 
-  // Extract statistics using service
-  const stats = CelebrationService.calculateGameStatistics(
-    matchResult,
-    tournamentResult
+  // Memoize statistics to prevent unnecessary re-renders
+  const stats = useMemo(
+    () =>
+      CelebrationService.calculateGameStatistics(matchResult, tournamentResult),
+    [matchResult, tournamentResult]
   );
-  const metadata = CelebrationService.getGameMetadata(
-    matchResult || tournamentResult,
-    tournamentResult
+
+  const metadata = useMemo(
+    () =>
+      CelebrationService.getGameMetadata(
+        matchResult || tournamentResult,
+        tournamentResult
+      ),
+    [matchResult, tournamentResult]
   );
 
   const {
@@ -51,6 +57,21 @@ const CelebrationScreen = ({
   const winningPattern = GameOptionsService.formatWinningLine(winningLine);
 
   useEffect(() => {
+    // DEBUG: Log celebration data
+    if (process.env.LOG_LEVEL === 'debug') {
+      console.log('[DEBUG][CelebrationScreen] Mounted with data:', {
+        winner: stats.winner,
+        movesCount: stats.movesCount,
+        gameTime: stats.gameTime,
+        gameMode: metadata.gameMode,
+        boardSize: metadata.boardSize,
+        speed: metadata.speed,
+        noTie: metadata.noTieMode,
+        matchResult: matchResult,
+        tournamentResult: tournamentResult,
+      });
+    }
+
     onActivity();
     setIsVisible(true);
 
@@ -62,7 +83,8 @@ const CelebrationScreen = ({
     );
 
     return cleanup;
-  }, [onReturn, onActivity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [matchResult, tournamentResult]);
 
   const handleReturnClick = () => {
     onActivity();

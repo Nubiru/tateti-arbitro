@@ -6,131 +6,20 @@ import React, {
   useState,
   useRef,
 } from 'react';
+import { gameReducer, initialState } from './gameReducer';
+import {
+  getDelayForSpeed,
+  getPlayerIdForTurn,
+  formatGameConfig,
+} from './gameHelpers';
 
 /**
  * Contexto de Juego para gestión centralizada de estado
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-10-10
+ * @version 1.1.0
  */
 
 const GameContext = createContext();
-
-// Reductor de estado del juego
-const gameReducer = (state, action) => {
-  switch (action.type) {
-    case 'SET_CONFIG':
-      return {
-        ...state,
-        config: action.payload,
-        gameState: 'idle',
-      };
-
-    case 'START_MATCH':
-      return {
-        ...state,
-        gameState: 'playing',
-        currentMatch: action.payload,
-        board:
-          action.payload.boardSize === 5 ? Array(25).fill(0) : Array(9).fill(0),
-        history: [],
-        moveCount: 0,
-      };
-
-    case 'UPDATE_BOARD':
-      return {
-        ...state,
-        board: action.payload.board,
-        history: action.payload.history,
-        moveCount: action.payload.moveCount,
-      };
-
-    case 'MATCH_COMPLETE':
-      return {
-        ...state,
-        gameState: 'completed',
-        matchResult: action.payload,
-        board: action.payload.finalBoard || state.board,
-      };
-
-    case 'START_TOURNAMENT':
-      return {
-        ...state,
-        gameState: 'tournament',
-        tournament: action.payload,
-        currentMatch: null,
-        board:
-          action.payload.boardSize === 5 ? Array(25).fill(0) : Array(9).fill(0),
-        history: [],
-        moveCount: 0,
-      };
-
-    case 'TOURNAMENT_UPDATE':
-      return {
-        ...state,
-        tournament: action.payload,
-      };
-
-    case 'TOURNAMENT_COMPLETE':
-      return {
-        ...state,
-        gameState: 'completed',
-        tournament: action.payload,
-        tournamentResult: action.payload,
-      };
-
-    case 'RESET_GAME':
-      return {
-        ...state,
-        gameState: 'idle',
-        currentMatch: null,
-        tournament: null,
-        board: Array(9).fill(0),
-        history: [],
-        moveCount: 0,
-        matchResult: null,
-        tournamentResult: null,
-        error: null,
-      };
-
-    case 'SET_ERROR':
-      return {
-        ...state,
-        gameState: 'error',
-        error: action.payload,
-      };
-
-    case 'REMOVE_MOVE': {
-      // Infinity mode: Remove oldest move from board
-      const newBoard = [...state.board];
-      newBoard[action.payload.position] = 0;
-      return {
-        ...state,
-        board: newBoard,
-        // Track next removal position for pulsating effect
-        nextRemovalPosition:
-          state.moveCount >= 5 ? state.history?.[0]?.move || null : null,
-      };
-    }
-
-    default:
-      return state;
-  }
-};
-
-// Estado inicial
-const initialState = {
-  config: null,
-  gameState: 'idle', // 'idle', 'playing', 'completed', 'tournament', 'tournament_completed', 'error'
-  currentMatch: null,
-  tournament: null,
-  board: Array(9).fill(0),
-  history: [],
-  moveCount: 0,
-  matchResult: null,
-  tournamentResult: null,
-  error: null,
-  nextRemovalPosition: null, // For infinity mode pulsating animation
-};
 
 export const GameProvider = ({ children }) => {
   const [state, dispatch] = useReducer(gameReducer, initialState);
@@ -206,6 +95,20 @@ export const GameProvider = ({ children }) => {
 
       eventSource.addEventListener('match:move', event => {
         const data = JSON.parse(event.data);
+
+        // DEBUG: Log move event received
+        if (process.env.LOG_LEVEL === 'debug') {
+          console.log(
+            '[DEBUG][GameContext][SSE:match:move] Received move event:',
+            {
+              player: data.player?.name,
+              move: data.move,
+              turn: data.turn,
+              queueLength: moveQueueRef.current.length,
+            }
+          );
+        }
+
         // Queue moves for delayed animation instead of instant dispatch
         setMoveQueue(prev => [
           ...prev,
@@ -219,6 +122,17 @@ export const GameProvider = ({ children }) => {
 
       eventSource.addEventListener('match:win', event => {
         const data = JSON.parse(event.data);
+
+        // DEBUG: Log match completion
+        if (process.env.LOG_LEVEL === 'debug') {
+          console.log('[DEBUG][GameContext][SSE:match:win] Match completed:', {
+            winner: data.winner?.name,
+            result: data.result,
+            finalBoard: data.finalBoard,
+            winningLine: data.winningLine,
+          });
+        }
+
         dispatch({
           type: 'MATCH_COMPLETE',
           payload: {
@@ -227,6 +141,8 @@ export const GameProvider = ({ children }) => {
             finalBoard: data.finalBoard,
             message: data.message,
             timestamp: data.timestamp,
+            history: data.history || [],
+            result: data.result || 'win',
           },
         });
       });
@@ -255,6 +171,18 @@ export const GameProvider = ({ children }) => {
 
       eventSource.addEventListener('move:removed', event => {
         const data = JSON.parse(event.data);
+
+        // DEBUG: Log infinity mode removal
+        if (process.env.LOG_LEVEL === 'debug') {
+          console.log(
+            '[DEBUG][GameContext][SSE:move:removed] Infinity mode removal:',
+            {
+              position: data.position,
+              player: data.player?.name,
+            }
+          );
+        }
+
         // Add to removal queue for pulsating animation
         setRemovalQueue(prev => [
           ...prev,
@@ -365,7 +293,19 @@ export const GameProvider = ({ children }) => {
       }
 
       // Get delay from game config (default: normal = 1000ms)
-      const delayMs = getDelayForSpeed(state.config?.speed || 'normal');
+      const speed = state.config?.speed || 'normal';
+      const delayMs = getDelayForSpeed(speed);
+
+      // DEBUG: Log move processing
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log('[DEBUG][GameContext][moveQueue] Processing move:', {
+          queueLength: moveQueueRef.current.length,
+          configSpeed: state.config?.speed,
+          effectiveSpeed: speed,
+          delayMs: delayMs,
+          moveType: nextMove.type,
+        });
+      }
 
       setTimeout(() => {
         dispatch({
@@ -392,16 +332,6 @@ export const GameProvider = ({ children }) => {
 
     processNextMove();
   }, [moveQueue.length, isProcessingMoves, state.config?.speed]);
-
-  // Helper function for speed mapping
-  function getDelayForSpeed(speed) {
-    const delays = {
-      slow: 2000,
-      normal: 1000,
-      fast: 200,
-    };
-    return delays[speed] || 1000;
-  }
 
   // Process removal queue (infinity mode)
   useEffect(() => {
@@ -435,6 +365,26 @@ export const GameProvider = ({ children }) => {
   // Acciones del juego
   const startMatch = async (player1, player2, options = {}) => {
     try {
+      // DEBUG: Log game configuration
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log(
+          '[DEBUG][GameContext][startMatch] Starting match with config:',
+          {
+            player1: player1.name,
+            player2: player2.name,
+            speed: options.speed,
+            boardSize: options.boardSize,
+            noTie: options.noTie,
+          }
+        );
+      }
+
+      // Store config FIRST before starting match
+      dispatch({
+        type: 'SET_CONFIG',
+        payload: formatGameConfig(options),
+      });
+
       const requestBody = {
         player1,
         player2,
@@ -543,9 +493,18 @@ export const GameProvider = ({ children }) => {
         throw new Error('No active match found');
       }
 
-      // Determine which player is human and should make the move
-      const currentPlayer = state.currentMatch.players[state.moveCount % 2];
-      const playerId = state.moveCount % 2 === 0 ? 'player1' : 'player2';
+      // Determine player ID for the move
+      const playerId = getPlayerIdForTurn(state.moveCount);
+
+      // DEBUG: Log human move submission
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log('[DEBUG][GameContext][submitMove] Submitting human move:', {
+          matchId: state.currentMatch.matchId,
+          playerId,
+          position,
+          currentMoveCount: state.moveCount,
+        });
+      }
 
       const response = await fetch(
         `/api/match/${state.currentMatch.matchId}/move`,
@@ -563,25 +522,39 @@ export const GameProvider = ({ children }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
+
+        // DEBUG: Log submission error
+        if (process.env.LOG_LEVEL === 'debug') {
+          console.log(
+            '[DEBUG][GameContext][submitMove] Submission failed:',
+            errorData
+          );
+        }
+
         throw new Error(errorData.error || 'Failed to submit move');
       }
 
       const result = await response.json();
 
-      // Update game state with the move result
-      dispatch({
-        type: 'UPDATE_BOARD',
-        payload: {
-          board: result.board,
-          history: result.history || [],
-          moveCount: state.moveCount + 1,
-          currentPlayer: currentPlayer,
-          move: position,
-        },
-      });
+      // DEBUG: Log successful submission
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log(
+          '[DEBUG][GameContext][submitMove] Move accepted by server:',
+          result
+        );
+      }
+
+      // DON'T update board immediately - let SSE event handle it!
+      // The backend will broadcast match:move via SSE after processing
+      // This prevents race conditions and ensures proper game flow
 
       return result;
     } catch (error) {
+      // DEBUG: Log error
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log('[DEBUG][GameContext][submitMove] Error:', error.message);
+      }
+
       // Error submitting move - dispatch to error state
       dispatch({ type: 'SET_ERROR', payload: error.message });
       throw error;

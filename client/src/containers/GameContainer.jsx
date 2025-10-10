@@ -99,6 +99,24 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
 
   // Manejar inicio de juego
   const handleStart = async gameConfig => {
+    // DEBUG: Log game start configuration
+    if (process.env.LOG_LEVEL === 'debug') {
+      console.log(
+        '[DEBUG][GameContainer][handleStart] Starting game with config:',
+        {
+          gameMode: gameConfig.gameMode,
+          players: gameConfig.players?.map(p => ({
+            name: p.name,
+            port: p.port,
+            isHuman: p.isHuman,
+          })),
+          boardSize: gameConfig.boardSize,
+          speed: gameConfig.speed,
+          noTie: gameConfig.noTie,
+        }
+      );
+    }
+
     if (gameConfig.gameMode === 'tournament') {
       // Iniciar torneo
       await startTournament(gameConfig.players, {

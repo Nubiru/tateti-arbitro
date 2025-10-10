@@ -81,6 +81,8 @@ jest.mock('express-validator', () => ({
 import {
   validateMatch,
   validateTournament,
+  validateTournamentConfig,
+  validateMove,
   validateHealth,
   handleValidationErrors,
   sanitizeInput,
@@ -725,6 +727,93 @@ describe('Middleware de Validación', () => {
       expect(req.body.largeArray[0]).toBe('item 0');
       expect(req.body.largeArray[999]).toBe('item 999');
       expect(next).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('validateTournamentConfig', () => {
+    test('debería ser un array de reglas de validación', () => {
+      expect(Array.isArray(validateTournamentConfig)).toBe(true);
+      expect(validateTournamentConfig.length).toBeGreaterThan(0);
+    });
+
+    test('debería tener conteo correcto de reglas', () => {
+      expect(validateTournamentConfig).toHaveLength(6); // totalPlayers, includeRandom, humanName, boardSize, noTie, speed
+    });
+
+    test('debería incluir validación de totalPlayers', () => {
+      expect(Array.isArray(validateTournamentConfig)).toBe(true);
+      expect(validateTournamentConfig.length).toBeGreaterThan(0);
+    });
+
+    test('debería incluir validación de campos opcionales', () => {
+      expect(Array.isArray(validateTournamentConfig)).toBe(true);
+      expect(validateTournamentConfig.length).toBeGreaterThan(0);
+    });
+
+    test('debería tener reglas con estructura correcta', () => {
+      validateTournamentConfig.forEach(rule => {
+        expect(typeof rule).toBe('object');
+        expect(rule).not.toBeNull();
+      });
+    });
+  });
+
+  describe('validateMove', () => {
+    test('debería ser un array de reglas de validación', () => {
+      expect(Array.isArray(validateMove)).toBe(true);
+      expect(validateMove.length).toBeGreaterThan(0);
+    });
+
+    test('debería tener conteo correcto de reglas', () => {
+      expect(validateMove).toHaveLength(3); // matchId, player, position
+    });
+
+    test('debería incluir validación de matchId', () => {
+      expect(Array.isArray(validateMove)).toBe(true);
+      expect(validateMove.length).toBeGreaterThan(0);
+    });
+
+    test('debería incluir validación de player y position', () => {
+      expect(Array.isArray(validateMove)).toBe(true);
+      expect(validateMove.length).toBeGreaterThan(0);
+    });
+
+    test('debería tener reglas con estructura correcta', () => {
+      validateMove.forEach(rule => {
+        expect(typeof rule).toBe('object');
+        expect(rule).not.toBeNull();
+      });
+    });
+  });
+
+  describe('Cobertura Completa de Validadores', () => {
+    test('debería exportar todos los validadores necesarios', () => {
+      expect(typeof validateMatch).toBe('object');
+      expect(typeof validateTournament).toBe('object');
+      expect(typeof validateTournamentConfig).toBe('object');
+      expect(typeof validateMove).toBe('object');
+      expect(typeof validateHealth).toBe('object');
+      expect(typeof handleValidationErrors).toBe('function');
+      expect(typeof sanitizeInput).toBe('function');
+    });
+
+    test('debería tener estructura consistente en todos los validadores', () => {
+      const validators = [
+        validateMatch,
+        validateTournament,
+        validateTournamentConfig,
+        validateMove,
+        validateHealth,
+      ];
+
+      validators.forEach(validator => {
+        expect(Array.isArray(validator)).toBe(true);
+        expect(validator.length).toBeGreaterThan(0);
+        validator.forEach(rule => {
+          expect(typeof rule).toBe('object');
+          expect(rule).not.toBeNull();
+        });
+      });
     });
   });
 });

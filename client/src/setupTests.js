@@ -1,22 +1,59 @@
 /**
  * Archivo de configuración de Jest para pruebas de React
- * @lastModified 2025-10-05
- * @version 2.0.0
+ * @lastModified 2025-10-10
+ * @version 3.0.0
  */
 
 import '@testing-library/jest-dom';
 import { configure } from '@testing-library/react';
 
-// Suprimir advertencias de deprecación de ReactDOMTestUtils.act
+// Comprehensive console suppression for clean test output
 const originalError = console.error;
+const originalWarn = console.warn;
+const originalLog = console.log;
+
+// Suppress console.error unless LOG_LEVEL=debug
 console.error = (...args) => {
-  if (
-    typeof args[0] === 'string' &&
-    args[0].includes('ReactDOMTestUtils.act')
-  ) {
+  if (process.env.LOG_LEVEL === 'debug') {
+    originalError.call(console, ...args);
     return;
   }
+
+  const message = args[0]?.toString() || '';
+
+  // Always suppress these noisy warnings
+  const suppressPatterns = [
+    'ReactDOMTestUtils.act',
+    'Warning: ReactDOM.render',
+    'Warning: useLayoutEffect',
+    'Not implemented: HTMLFormElement.prototype.submit',
+    'Error: Not implemented: HTMLFormElement.prototype.submit',
+    'An update to',
+    'Warning: An update inside a test was not wrapped in act',
+  ];
+
+  if (suppressPatterns.some(pattern => message.includes(pattern))) {
+    return;
+  }
+
+  // Log unexpected errors for debugging
   originalError.call(console, ...args);
+};
+
+// Suppress console.warn unless LOG_LEVEL=debug
+console.warn = (...args) => {
+  if (process.env.LOG_LEVEL === 'debug') {
+    originalWarn.call(console, ...args);
+  }
+  // Suppress all warnings in tests
+};
+
+// Suppress console.log unless LOG_LEVEL=debug
+console.log = (...args) => {
+  if (process.env.LOG_LEVEL === 'debug') {
+    originalLog.call(console, ...args);
+  }
+  // Suppress all logs in tests
 };
 
 // Configurar Testing Library
@@ -35,6 +72,8 @@ configure({
 
 // Simular EventSource para pruebas SSE
 class MockEventSource {
+  static instances = [];
+
   constructor(url) {
     this.url = url;
     this.readyState = 0;
@@ -47,8 +86,18 @@ class MockEventSource {
     this.onclose = null;
     this.listeners = {};
 
+    // Track instances for testing
+    MockEventSource.instances.push(this);
+
     // Simular conexión inmediata para pruebas unitarias
     this.readyState = this.OPEN;
+
+    // Simulate async connection with setTimeout
+    setTimeout(() => {
+      if (this.onopen) {
+        this.onopen();
+      }
+    }, 0);
   }
 
   addEventListener(event, callback) {
@@ -81,6 +130,16 @@ class MockEventSource {
         callback({ data: JSON.stringify(data) });
       });
     }
+  }
+
+  // Alias for simulateEvent for test compatibility
+  trigger(eventType, data) {
+    this.simulateEvent(eventType, data);
+  }
+
+  // Static method to clear instances for test isolation
+  static clearInstances() {
+    MockEventSource.instances = [];
   }
 }
 

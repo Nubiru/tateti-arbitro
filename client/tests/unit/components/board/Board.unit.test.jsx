@@ -84,7 +84,7 @@ describe('Componente Board', () => {
     expect(cells).toHaveLength(25);
   });
 
-  test('debería mostrar números de celdas para celdas vacías', () => {
+  test('debería mostrar celdas vacías sin números', () => {
     const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
     const { container } = render(
       <MockGameProvider>
@@ -94,8 +94,9 @@ describe('Componente Board', () => {
 
     const cellNumbers = container.querySelectorAll('.cellNumber');
     expect(cellNumbers).toHaveLength(9);
-    expect(cellNumbers[0]).toHaveTextContent('0');
-    expect(cellNumbers[8]).toHaveTextContent('8');
+    // Empty cells should not display numbers - only comments
+    expect(cellNumbers[0].textContent.trim()).toBe('');
+    expect(cellNumbers[8].textContent.trim()).toBe('');
   });
 
   test('debería mostrar símbolos de jugador para celdas ocupadas', () => {

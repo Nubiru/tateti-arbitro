@@ -12,9 +12,22 @@ export class PlayerService {
    */
   async discoverBots() {
     try {
+      // DEBUG: Log bot discovery attempt
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log('[DEBUG][PlayerService][discoverBots] Discovering bots...');
+      }
+
       const response = await fetch('/api/bots/available');
 
       if (!response.ok) {
+        // DEBUG: Log discovery failure
+        if (process.env.LOG_LEVEL === 'debug') {
+          console.log(
+            '[DEBUG][PlayerService][discoverBots] Discovery failed:',
+            response.status
+          );
+        }
+
         return {
           success: false,
           bots: [],
@@ -23,12 +36,33 @@ export class PlayerService {
       }
 
       const data = await response.json();
+
+      // DEBUG: Log discovered bots
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log('[DEBUG][PlayerService][discoverBots] Discovered bots:', {
+          count: data.bots?.length || 0,
+          bots: data.bots?.map(b => ({
+            name: b.name,
+            port: b.port,
+            status: b.status,
+          })),
+        });
+      }
+
       return {
         success: true,
         bots: data.bots || [],
         error: null,
       };
     } catch (error) {
+      // DEBUG: Log discovery error
+      if (process.env.LOG_LEVEL === 'debug') {
+        console.log(
+          '[DEBUG][PlayerService][discoverBots] Discovery error:',
+          error.message
+        );
+      }
+
       return {
         success: false,
         bots: [],
