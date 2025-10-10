@@ -459,31 +459,5 @@ describe('POST /api/match - Integration Tests', () => {
       expect(response.status).toBe(500);
       expect(response.body.error).toBeDefined();
     });
-
-    // Skipped: Logger not called in test environment (NODE_ENV=test)
-    test.skip('should log error details on failure', async () => {
-      // Mock arbitrator error
-      const testError = new Error('Test error');
-      mockArbitrator.runMatch.mockRejectedValueOnce(testError);
-
-      await request(app)
-        .post('/api/match')
-        .send({
-          player1: { name: 'Player1', port: 3001 },
-          player2: { name: 'Player2', port: 3002 },
-          boardSize: '3x3',
-        });
-
-      // Verify error was logged
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.any(String),
-        expect.any(String),
-        expect.any(String),
-        expect.objectContaining({
-          error: testError.message,
-        })
-      );
-    });
   });
 });

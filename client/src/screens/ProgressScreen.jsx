@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useGame } from '../context/GameContext';
+import { AnimatedButton } from '../components/ui';
 import styles from './ProgressScreen.module.css';
 import GameOptionsService from '../services/GameOptionsService';
 
 /**
  * Progress Screen Component
  * Game board and real-time updates
- * @lastModified 2025-10-04
- * @version 1.0.0
+ * @lastModified 2025-10-09
+ * @version 1.1.0
  */
 
 const ProgressScreen = ({
@@ -25,6 +26,7 @@ const ProgressScreen = ({
     matchResult,
     currentMatch,
     submitMove,
+    resetGame,
   } = useGame();
 
   // Direct display state (no throttling needed - backend handles delays)
@@ -65,6 +67,14 @@ const ProgressScreen = ({
       await submitMove(position);
     } catch (error) {
       // Error is handled by GameContext
+    }
+  };
+
+  const handleStopMatch = () => {
+    // Stop current match/tournament
+    if (confirm('¿Estás seguro de que deseas detener el juego?')) {
+      resetGame();
+      onBack(); // Return to config screen
     }
   };
 
@@ -236,6 +246,13 @@ const ProgressScreen = ({
             ← Volver
           </button>
           <h1 className={styles.progressTitle}>Partida en Progreso</h1>
+          <AnimatedButton
+            onClick={handleStopMatch}
+            className={styles.stopButton}
+            variant="danger"
+          >
+            ⏹ Detener
+          </AnimatedButton>
         </div>
 
         {renderGameInfo()}

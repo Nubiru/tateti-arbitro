@@ -38,6 +38,21 @@ class GameOptionsService {
     error: 'Error en la Partida',
   };
 
+  // Game rules configuration (Factory Pattern)
+  static GAME_RULES = {
+    infinity: {
+      enabled: true,
+      boardSizes: [3], // Only 3x3 for now
+      description:
+        'No draws - rolling window removes oldest move after 6 moves',
+    },
+    infinity5x5: {
+      enabled: false, // Placeholder for future
+      boardSizes: [5],
+      description: 'Infinity mode for 5x5 boards (NOT IMPLEMENTED)',
+    },
+  };
+
   /**
    * Get speed delay in milliseconds
    * @param {string} speed - Speed setting ('slow', 'normal', 'fast')
@@ -96,6 +111,33 @@ class GameOptionsService {
       noTie:
         config.noTie === true || config.noTie === 'true' || config.noTie === 1,
     };
+  }
+
+  /**
+   * Check if infinity mode can be enabled for given board size
+   * @param {number} boardSize - Board size (3 or 5)
+   * @returns {boolean} True if infinity mode supported
+   */
+  static canEnableInfinity(boardSize) {
+    const size =
+      typeof boardSize === 'number' ? boardSize : parseInt(boardSize);
+    return size === 3; // Only 3x3 for now
+  }
+
+  /**
+   * Get game rule configuration based on noTie setting and board size
+   * @param {boolean} noTie - Whether no-tie mode is enabled
+   * @param {number|string} boardSize - Board size (3 or 5)
+   * @returns {Object} Game rule config with rule name and enabled status
+   */
+  static getGameRuleConfig(noTie, boardSize) {
+    if (!noTie) return { rule: 'classic', enabled: false };
+
+    const size =
+      typeof boardSize === 'string' ? parseInt(boardSize) : boardSize;
+    if (size === 3) return { rule: 'infinity', enabled: true };
+
+    return { rule: 'classic', enabled: false }; // 5x5 infinity not ready
   }
 
   /**

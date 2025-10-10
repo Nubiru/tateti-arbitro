@@ -14,10 +14,14 @@ import {
   isValidMove,
   createInitialBoard,
   createMatchResult,
-  applyRollingWindow,
 } from './arbitrator.core.js';
 import { createHttpAdapter } from './http.adapter.js';
 import { createEventsAdapter } from './events.adapter.js';
+import {
+  shouldRemoveOldestMove,
+  getRemovalPosition,
+  getRemovalPlayer,
+} from './rules/infinity.js';
 import logger from '../../app/logger.js';
 
 /**
@@ -49,6 +53,15 @@ export class ArbitratorCoordinator {
     const noTie = options.noTie ?? false;
     const boardSize = options.boardSize === '5x5' ? 5 : 3;
 
+    // Generate unique matchId for this match
+    const matchId = `match-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    this.currentMatchId = matchId;
+
+    // Initialize pending human moves map
+    if (!this.pendingHumanMoves) {
+      this.pendingHumanMoves = new Map();
+    }
+
     // Validar jugadores usando función pura
     validatePlayers(players);
 
@@ -75,6 +88,7 @@ export class ArbitratorCoordinator {
 
     // Emitir evento de inicio de partida usando adaptador de eventos
     this.eventsAdapter.broadcastMatchStart({
+      matchId: matchId,
       players: normalizedPlayers,
       boardSize: boardSize,
       timestamp: this.clock.now().toISOString(),
@@ -138,6 +152,7 @@ export class ArbitratorCoordinator {
 
         // Emitir evento de error usando adaptador de eventos
         this.eventsAdapter.broadcastMatchError({
+          matchId: matchId,
           error: error,
           player: currentPlayer,
           message: message,
@@ -148,6 +163,36 @@ export class ArbitratorCoordinator {
       }
 
       step.move = move;
+
+      // ROLLING WINDOW: Infinity Mode - Remove oldest move if threshold reached
+      if (noTie && shouldRemoveOldestMove(moveHistory)) {
+        const removalPosition = getRemovalPosition(moveHistory);
+        const removalPlayer = getRemovalPlayer(moveHistory, normalizedPlayers);
+
+        moveHistory.shift(); // Remove from history
+        board[removalPosition] = 0; // Clear from board
+
+        // Emit removal event for frontend visualization
+        this.eventsAdapter.broadcastMoveRemoval({
+          matchId: matchId,
+          position: removalPosition,
+          player: removalPlayer,
+          timestamp: this.clock.now().toISOString(),
+        });
+
+        logger.debug(
+          'ARBITRATOR',
+          'MATCH',
+          'MOVE_REMOVED',
+          'Infinity mode: Oldest move removed',
+          {
+            position: removalPosition,
+            playerId: removalPlayer.id,
+            turn: turn + 1,
+            historyLength: moveHistory.length,
+          }
+        );
+      }
 
       // Validar movimiento usando función pura
       if (!isValidMove(board, move)) {
@@ -183,6 +228,7 @@ export class ArbitratorCoordinator {
 
       // Emitir evento de movimiento usando adaptador de eventos
       this.eventsAdapter.broadcastMatchMove({
+        matchId: matchId,
         player: currentPlayer,
         move: move,
         board: [...board],
@@ -197,11 +243,6 @@ export class ArbitratorCoordinator {
         turn: turn + 1,
         timestamp: this.clock.now(),
       });
-
-      // Aplicar ventana deslizante para modo no-tie usando función pura
-      if (noTie) {
-        applyRollingWindow(board, moveHistory);
-      }
 
       step.boardAfter = [...board];
       history.push(step);
@@ -222,6 +263,7 @@ export class ArbitratorCoordinator {
 
         // Emitir evento de victoria usando adaptador de eventos
         this.eventsAdapter.broadcastMatchWin({
+          matchId: matchId,
           winner: currentPlayer,
           winningLine: winCheck,
           finalBoard: [...board],
@@ -233,20 +275,9 @@ export class ArbitratorCoordinator {
       }
     }
 
-    // Manejar empate o juego incompleto
+    // Manejar empate (solo en modo normal, no-tie nunca tiene empate)
     if (!winner && result !== 'error') {
-      if (noTie) {
-        message = 'La partida no finalizó correctamente.';
-        logger.warn(
-          'ARBITRATOR',
-          'MATCH',
-          'INCOMPLETE',
-          'Partida incompleta en modo no-tie',
-          {
-            turn: history.length,
-          }
-        );
-      } else if (isBoardFull(board)) {
+      if (isBoardFull(board) && !noTie) {
         result = 'draw';
         message = 'Empate.';
         logger.info('ARBITRATOR', 'MATCH', 'DRAW', 'Partida empatada', {
@@ -255,14 +286,17 @@ export class ArbitratorCoordinator {
 
         // Emitir evento de empate usando adaptador de eventos
         this.eventsAdapter.broadcastMatchDraw({
+          matchId: matchId,
           finalBoard: [...board],
           message: message,
           timestamp: this.clock.now().toISOString(),
         });
       } else {
+        // This should never happen in properly implemented games
         message = 'La partida no finalizó correctamente.';
         logger.warn('ARBITRATOR', 'MATCH', 'INCOMPLETE', 'Partida incompleta', {
           turn: history.length,
+          noTie: noTie,
         });
       }
     }
@@ -314,7 +348,7 @@ export class ArbitratorCoordinator {
    */
   async waitForHumanMove(player, board, timeoutMs) {
     return new Promise(resolve => {
-      const matchId = `match-${Date.now()}`;
+      const matchId = this.currentMatchId;
 
       // Initialize pending moves map if not exists
       if (!this.pendingHumanMoves) {
@@ -330,9 +364,6 @@ export class ArbitratorCoordinator {
           resolve({ move: null, error: 'Timeout waiting for human move' });
         }, timeoutMs),
       });
-
-      // Store matchId for this game (needed for submitHumanMove)
-      this.currentMatchId = matchId;
 
       this.logger.debug(
         'ARBITRATOR',

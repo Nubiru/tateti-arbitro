@@ -99,6 +99,19 @@ const gameReducer = (state, action) => {
         error: action.payload,
       };
 
+    case 'REMOVE_MOVE': {
+      // Infinity mode: Remove oldest move from board
+      const newBoard = [...state.board];
+      newBoard[action.payload.position] = 0;
+      return {
+        ...state,
+        board: newBoard,
+        // Track next removal position for pulsating effect
+        nextRemovalPosition:
+          state.moveCount >= 5 ? state.history?.[0]?.move || null : null,
+      };
+    }
+
     default:
       return state;
   }
@@ -116,6 +129,7 @@ const initialState = {
   matchResult: null,
   tournamentResult: null,
   error: null,
+  nextRemovalPosition: null, // For infinity mode pulsating animation
 };
 
 export const GameProvider = ({ children }) => {
@@ -129,11 +143,17 @@ export const GameProvider = ({ children }) => {
   const moveQueueRef = useRef(moveQueue);
   const processingRef = useRef(isProcessingMoves);
 
+  // Removal queue for pulsating animation (infinity mode)
+  const [removalQueue, setRemovalQueue] = useState([]);
+  const [nextRemovalPosition, setNextRemovalPosition] = useState(null);
+  const removalQueueRef = useRef(removalQueue);
+
   // Keep refs in sync
   useEffect(() => {
     moveQueueRef.current = moveQueue;
     processingRef.current = isProcessingMoves;
-  }, [moveQueue, isProcessingMoves]);
+    removalQueueRef.current = removalQueue;
+  }, [moveQueue, isProcessingMoves, removalQueue]);
 
   // manejo de conexión SSE con el servidor
   useEffect(() => {
@@ -231,6 +251,19 @@ export const GameProvider = ({ children }) => {
             timestamp: data.timestamp,
           },
         });
+      });
+
+      eventSource.addEventListener('move:removed', event => {
+        const data = JSON.parse(event.data);
+        // Add to removal queue for pulsating animation
+        setRemovalQueue(prev => [
+          ...prev,
+          {
+            position: data.position,
+            player: data.player,
+            timestamp: Date.now(),
+          },
+        ]);
       });
 
       eventSource.addEventListener('tournament:start', event => {
@@ -369,6 +402,35 @@ export const GameProvider = ({ children }) => {
     };
     return delays[speed] || 1000;
   }
+
+  // Process removal queue (infinity mode)
+  useEffect(() => {
+    if (removalQueue.length === 0) return;
+
+    const processRemoval = () => {
+      const removal = removalQueue[0];
+
+      // Update board state to clear position
+      dispatch({
+        type: 'REMOVE_MOVE',
+        payload: {
+          position: removal.position,
+          player: removal.player,
+        },
+      });
+
+      // Remove from queue after processing
+      setRemovalQueue(prev => prev.slice(1));
+
+      // Update next removal position for pulsating effect
+      // Calculate oldest move position from current move history
+      if (state.moveCount >= 5) {
+        setNextRemovalPosition(state.history?.[0]?.move || null);
+      }
+    };
+
+    processRemoval();
+  }, [removalQueue, state.moveCount, state.history]);
 
   // Acciones del juego
   const startMatch = async (player1, player2, options = {}) => {
@@ -537,6 +599,8 @@ export const GameProvider = ({ children }) => {
     sseConnection,
     moveQueue,
     isProcessingMoves,
+    removalQueue, // Infinity mode removal queue
+    nextRemovalPosition, // Infinity mode pulsating effect
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

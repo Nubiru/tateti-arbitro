@@ -26,6 +26,22 @@
   text-align: center;
 }
 
+.stopButton {
+  background-color: #dc3545;
+  border: 2px solid #c82333;
+  color: white;
+  font-weight: 600;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.stopButton:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+  transform: scale(1.05);
+}
+
 .throttleIndicator {
   background: rgba(255, 193, 7, 0.2);
   border: 1px solid rgba(255, 193, 7, 0.5);

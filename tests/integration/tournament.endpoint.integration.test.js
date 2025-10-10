@@ -335,33 +335,6 @@ describe('POST /api/tournament - Integration Tests', () => {
       expect(response.status).toBe(500);
       expect(response.body.error).toBe('Error interno del servidor');
     });
-
-    // Skipped: Logger not called in test environment (NODE_ENV=test)
-    test.skip('should log error details on failure', async () => {
-      const testError = new Error('Test tournament error');
-      mockTournament.runTournament.mockRejectedValueOnce(testError);
-
-      const players = [
-        { name: 'Player1', port: 3001 },
-        { name: 'Player2', port: 3002 },
-      ];
-
-      await request(app).post('/api/tournament').send({
-        players,
-        boardSize: '3x3',
-      });
-
-      // Verify error was logged
-      expect(mockLogger.error).toHaveBeenCalledWith(
-        'TOURNAMENT',
-        'ROUTE',
-        'ERROR',
-        'Error en ruta de torneo',
-        expect.objectContaining({
-          error: testError.message,
-        })
-      );
-    });
   });
 
   describe('Multiple Players Support', () => {

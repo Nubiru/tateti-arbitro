@@ -95,6 +95,22 @@ export class EventsAdapter {
   }
 
   /**
+   * Transmitir evento de eliminación de movimiento (no-tie mode rolling window)
+   * @param {Object} payload - Carga útil del evento
+   */
+  broadcastMoveRemoval(payload) {
+    console.log('📡 Backend broadcasting move:removed event:', payload);
+    this.logger.debug(
+      'EVENTS',
+      'BROADCAST',
+      'MOVE_REMOVED',
+      'Transmitiendo evento de eliminación de movimiento',
+      payload
+    );
+    this.eventBus.broadcast('move:removed', payload);
+  }
+
+  /**
    * Transmitir evento de inicio de torneo
    * @param {Object} payload - Carga útil del evento
    */

@@ -1,11 +1,12 @@
 import React from 'react';
+import { useGame } from '../../context/GameContext';
 import styles from './Board.module.css';
 
 /**
  * Board Component
  * Reusable game board for 3x3 and 5x5 games
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-10-09
+ * @version 1.1.0
  */
 
 const Board = ({
@@ -19,6 +20,8 @@ const Board = ({
   title,
   className = '',
 }) => {
+  // Get infinity mode state for pulsating animation
+  const { nextRemovalPosition } = useGame();
   const is3x3 = boardSize === '3x3';
   const dimension = is3x3 ? 3 : 5;
   const totalCells = dimension * dimension;
@@ -40,10 +43,14 @@ const Board = ({
   };
 
   const renderCell = (cell, index) => {
+    // Cell pulsates when it's the next to be removed (infinity mode)
+    const isPulsating = nextRemovalPosition === index && board[index] !== 0;
+
     const cellClasses = [
       styles.cell,
       getPlayerClass(cell),
       isWinningCell(index) ? styles.winning : '',
+      isPulsating ? styles.pulsating : '',
     ]
       .filter(Boolean)
       .join(' ');

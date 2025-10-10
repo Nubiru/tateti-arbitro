@@ -60,6 +60,9 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
 
+      // Set matchId as runMatch() would do
+      coordinator.currentMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+
       // Start waiting for move (don't await, we just want to check the Map)
       coordinator.waitForHumanMove(player, board, timeoutMs);
 
@@ -72,7 +75,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
         coordinator.pendingHumanMoves.entries()
       )[0];
 
-      expect(matchId).toMatch(/^match-\d+$/);
+      expect(matchId).toBe(coordinator.currentMatchId);
       expect(pending).toBeDefined();
       expect(pending.player).toBe(player);
       expect(pending.board).toBe(board);
@@ -84,6 +87,10 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
+
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
 
       // Start waiting for move
       const promise = coordinator.waitForHumanMove(player, board, timeoutMs);
@@ -99,8 +106,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(result.error).toBe('Timeout waiting for human move');
 
       // Verify pending move was deleted
-      const matchId = `match-${FIXED_TIMESTAMP}`;
-      expect(coordinator.pendingHumanMoves.has(matchId)).toBe(false);
+      expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(false);
     });
 
     test('should initialize pendingHumanMoves Map if not exists', () => {
@@ -111,6 +117,9 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       // Ensure pendingHumanMoves doesn't exist
       expect(coordinator.pendingHumanMoves).toBeUndefined();
 
+      // Set matchId as runMatch() would do
+      coordinator.currentMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+
       // Start waiting for move
       coordinator.waitForHumanMove(player, board, timeoutMs);
 
@@ -118,16 +127,20 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(coordinator.pendingHumanMoves).toBeInstanceOf(Map);
     });
 
-    test('should store currentMatchId for submission', () => {
+    test('should use currentMatchId from runMatch', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Verify currentMatchId was set (should match format match-<timestamp>)
-      expect(coordinator.currentMatchId).toMatch(/^match-\d+$/);
+      // Verify currentMatchId is still the same (not overwritten)
+      expect(coordinator.currentMatchId).toBe(testMatchId);
 
       // Verify it matches the matchId in pendingHumanMoves
       const [matchId] = Array.from(coordinator.pendingHumanMoves.keys());
@@ -138,6 +151,10 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
+
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
 
       // Start waiting for move
       coordinator.waitForHumanMove(player, board, timeoutMs);
@@ -150,7 +167,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
         'Esperando movimiento humano',
         expect.objectContaining({
           player: player.name,
-          matchId: expect.stringMatching(/^match-\d+$/),
+          matchId: testMatchId,
           timeoutMs: timeoutMs,
         })
       );
@@ -195,15 +212,16 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       // Mock isValidMove to return false
       isValidMove.mockReturnValue(false);
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Get the actual matchId that was generated
-      const [matchId] = Array.from(coordinator.pendingHumanMoves.keys());
-
       // Attempt to submit invalid move
       expect(() => {
-        coordinator.submitHumanMove(matchId, player.name, invalidPosition);
+        coordinator.submitHumanMove(testMatchId, player.name, invalidPosition);
       }).toThrow('Invalid move position');
     });
 
@@ -216,14 +234,15 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       // Mock isValidMove to return true
       isValidMove.mockReturnValue(true);
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       const promise = coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Get the actual matchId that was generated
-      const [matchId] = Array.from(coordinator.pendingHumanMoves.keys());
-
       // Submit move
-      coordinator.submitHumanMove(matchId, player.name, validPosition);
+      coordinator.submitHumanMove(testMatchId, player.name, validPosition);
 
       // Wait for Promise to resolve
       const result = await promise;
@@ -242,19 +261,21 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       // Mock isValidMove to return true
       isValidMove.mockReturnValue(true);
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Get the actual matchId and pending move
-      const [matchId, pending] = Array.from(
-        coordinator.pendingHumanMoves.entries()
-      )[0];
+      // Get pending move
+      const pending = coordinator.pendingHumanMoves.get(testMatchId);
 
       // Spy on clearTimeout
       const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout');
 
       // Submit move
-      coordinator.submitHumanMove(matchId, player.name, validPosition);
+      coordinator.submitHumanMove(testMatchId, player.name, validPosition);
 
       // Verify clearTimeout was called with the timeout ID
       expect(clearTimeoutSpy).toHaveBeenCalledWith(pending.timeout);
@@ -271,20 +292,21 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       // Mock isValidMove to return true
       isValidMove.mockReturnValue(true);
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Get the actual matchId that was generated
-      const [matchId] = Array.from(coordinator.pendingHumanMoves.keys());
-
       // Verify entry exists
-      expect(coordinator.pendingHumanMoves.has(matchId)).toBe(true);
+      expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(true);
 
       // Submit move
-      coordinator.submitHumanMove(matchId, player.name, validPosition);
+      coordinator.submitHumanMove(testMatchId, player.name, validPosition);
 
       // Verify entry was deleted
-      expect(coordinator.pendingHumanMoves.has(matchId)).toBe(false);
+      expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(false);
     });
 
     test('should return success object with move', () => {
@@ -296,15 +318,16 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       // Mock isValidMove to return true
       isValidMove.mockReturnValue(true);
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Get the actual matchId that was generated
-      const [matchId] = Array.from(coordinator.pendingHumanMoves.keys());
-
       // Submit move
       const result = coordinator.submitHumanMove(
-        matchId,
+        testMatchId,
         player.name,
         validPosition
       );
@@ -325,14 +348,15 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       // Mock isValidMove to return true
       isValidMove.mockReturnValue(true);
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Get the actual matchId that was generated
-      const [matchId] = Array.from(coordinator.pendingHumanMoves.keys());
-
       // Submit move
-      coordinator.submitHumanMove(matchId, player.name, validPosition);
+      coordinator.submitHumanMove(testMatchId, player.name, validPosition);
 
       // Verify logger was called
       expect(mockDependencies.logger.info).toHaveBeenCalledWith(
@@ -343,7 +367,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
         expect.objectContaining({
           player: player.name,
           position: validPosition,
-          matchId: expect.stringMatching(/^match-\d+$/),
+          matchId: testMatchId,
         })
       );
     });
@@ -359,15 +383,16 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       // Mock isValidMove to return true
       isValidMove.mockReturnValue(true);
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       const promise = coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Get the actual matchId that was generated
-      const [matchId] = Array.from(coordinator.pendingHumanMoves.keys());
-
       // Simulate user submitting move after 1 second
       jest.advanceTimersByTime(1000);
-      coordinator.submitHumanMove(matchId, player.name, validPosition);
+      coordinator.submitHumanMove(testMatchId, player.name, validPosition);
 
       // Wait for Promise to resolve
       const result = await promise;
@@ -377,7 +402,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(result.error).toBeNull();
 
       // Verify pending move was cleaned up
-      expect(coordinator.pendingHumanMoves.has(matchId)).toBe(false);
+      expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(false);
     });
 
     test('should handle timeout if no move submitted', async () => {
@@ -385,14 +410,15 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
 
+      // Set matchId as runMatch() would do
+      const testMatchId = `match-${FIXED_TIMESTAMP}-abc123`;
+      coordinator.currentMatchId = testMatchId;
+
       // Start waiting for move
       const promise = coordinator.waitForHumanMove(player, board, timeoutMs);
 
-      // Get the actual matchId that was generated
-      const [matchId] = Array.from(coordinator.pendingHumanMoves.keys());
-
       // Verify pending move exists
-      expect(coordinator.pendingHumanMoves.has(matchId)).toBe(true);
+      expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(true);
 
       // Fast-forward time past timeout (no move submitted)
       jest.advanceTimersByTime(timeoutMs + 1000);
@@ -405,7 +431,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(result.error).toBe('Timeout waiting for human move');
 
       // Verify pending move was cleaned up
-      expect(coordinator.pendingHumanMoves.has(matchId)).toBe(false);
+      expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(false);
     });
   });
 });

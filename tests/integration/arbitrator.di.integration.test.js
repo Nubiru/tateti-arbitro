@@ -32,6 +32,7 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
       broadcastMatchWin: jest.fn(),
       broadcastMatchDraw: jest.fn(),
       broadcastMatchError: jest.fn(),
+      broadcastMoveRemoval: jest.fn(), // For infinity mode
     };
 
     // Crear adaptador HTTP simulado con implementación por defecto
@@ -184,7 +185,7 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
       expect(result.finalBoard).toHaveLength(9);
     });
 
-    test.skip('should handle no-tie mode with rolling window', async () => {
+    test('should handle no-tie mode with rolling window', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -207,9 +208,10 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
         noTie: true,
       });
 
-      expect(result.result).toBe('incomplete');
-      expect(result.message).toBe('La partida no finalizó correctamente.');
-      expect(result.history.length).toBe(9); // Exactly board size
+      // With infinity mode (6-move threshold), game continues until win
+      expect(result.result).toBe('win');
+      expect(result.winner).toBeDefined();
+      expect(result.history.length).toBeGreaterThanOrEqual(5); // At least 5 moves to win
     });
   });
 
@@ -240,12 +242,15 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
 
       // Verify error event broadcasting
       expect(mockEventsAdapter.broadcastMatchError).toHaveBeenCalledTimes(1);
-      expect(mockEventsAdapter.broadcastMatchError).toHaveBeenCalledWith({
-        error: 'Connection timeout',
-        player: expect.objectContaining({ name: 'Player1' }),
-        message: expect.any(String),
-        timestamp: '2025-10-03T10:00:00.000Z',
-      });
+      expect(mockEventsAdapter.broadcastMatchError).toHaveBeenCalledWith(
+        expect.objectContaining({
+          matchId: expect.any(String),
+          error: 'Connection timeout',
+          player: expect.objectContaining({ name: 'Player1' }),
+          message: expect.any(String),
+          timestamp: '2025-10-03T10:00:00.000Z',
+        })
+      );
     });
 
     test('debería handle invalid move', async () => {
@@ -399,7 +404,7 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
       expect(result.finalBoard).toHaveLength(9);
     });
 
-    test.skip('should handle no-tie mode', async () => {
+    test('should handle no-tie mode', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -420,9 +425,10 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
         noTie: true,
       });
 
+      // With infinity mode (6-move threshold), game continues until win
       expect(result).toBeDefined();
-      expect(result.result).toBe('incomplete');
-      expect(result.history.length).toBe(9);
+      expect(result.result).toBe('win');
+      expect(result.winner).toBeDefined();
     });
   });
 
@@ -440,14 +446,17 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
 
       await coordinator.runMatch(players, { boardSize: 3 });
 
-      expect(mockEventsAdapter.broadcastMatchStart).toHaveBeenCalledWith({
-        players: expect.arrayContaining([
-          expect.objectContaining({ name: 'Player1', id: 'X' }),
-          expect.objectContaining({ name: 'Player2', id: 'O' }),
-        ]),
-        boardSize: 3,
-        timestamp: '2025-10-03T10:00:00.000Z',
-      });
+      expect(mockEventsAdapter.broadcastMatchStart).toHaveBeenCalledWith(
+        expect.objectContaining({
+          matchId: expect.any(String),
+          players: expect.arrayContaining([
+            expect.objectContaining({ name: 'Player1', id: 'X' }),
+            expect.objectContaining({ name: 'Player2', id: 'O' }),
+          ]),
+          boardSize: 3,
+          timestamp: '2025-10-03T10:00:00.000Z',
+        })
+      );
     });
 
     test('debería broadcast move events with correct data', async () => {
@@ -466,20 +475,28 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
       await coordinator.runMatch(players, { boardSize: 3 });
 
       expect(mockEventsAdapter.broadcastMatchMove).toHaveBeenCalledTimes(2);
-      expect(mockEventsAdapter.broadcastMatchMove).toHaveBeenNthCalledWith(1, {
-        player: expect.objectContaining({ name: 'Player1', id: 'X' }),
-        move: 0,
-        board: expect.any(Array),
-        turn: 1,
-        timestamp: '2025-10-03T10:00:00.000Z',
-      });
-      expect(mockEventsAdapter.broadcastMatchMove).toHaveBeenNthCalledWith(2, {
-        player: expect.objectContaining({ name: 'Player2', id: 'O' }),
-        move: 1,
-        board: expect.any(Array),
-        turn: 2,
-        timestamp: '2025-10-03T10:00:00.000Z',
-      });
+      expect(mockEventsAdapter.broadcastMatchMove).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({
+          matchId: expect.any(String),
+          player: expect.objectContaining({ name: 'Player1', id: 'X' }),
+          move: 0,
+          board: expect.any(Array),
+          turn: 1,
+          timestamp: '2025-10-03T10:00:00.000Z',
+        })
+      );
+      expect(mockEventsAdapter.broadcastMatchMove).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          matchId: expect.any(String),
+          player: expect.objectContaining({ name: 'Player2', id: 'O' }),
+          move: 1,
+          board: expect.any(Array),
+          turn: 2,
+          timestamp: '2025-10-03T10:00:00.000Z',
+        })
+      );
     });
 
     test('debería broadcast win event with correct data', async () => {

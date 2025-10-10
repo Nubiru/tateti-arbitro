@@ -20,6 +20,7 @@
     "**/*.jsx",
     "coverage/**",
     "public/**",
-    "players/**"
+    "players/**",
+    "EXTERNAL_RESOURCE/**"
   ]
 }

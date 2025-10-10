@@ -23,6 +23,16 @@ afterAll(() => {
 
 // Proper cleanup for integration tests
 afterAll(async () => {
+  // Close EventBus to clear setInterval
+  try {
+    const eventBus = (await import('../src/app/event-bus.js')).default;
+    if (eventBus && eventBus.closeAll) {
+      eventBus.closeAll();
+    }
+  } catch (error) {
+    // EventBus might not be loaded in all tests
+  }
+
   // Close any open servers or connections
   if (global.server) {
     await new Promise(resolve => {
