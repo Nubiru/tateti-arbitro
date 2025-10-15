@@ -684,7 +684,16 @@ export function createApp(dependencies = {}) {
   });
 
   // Archivos estáticos (debe ir ANTES del 404 handler)
+  // Environment-agnostic path resolution
   const publicPath = join(process.cwd(), 'public');
+  if (logger && typeof logger.info === 'function') {
+    logger.info(
+      'app',
+      'static',
+      'path-selected',
+      `Static files path: ${publicPath}`
+    );
+  }
   app.use(express.static(publicPath));
 
   // Servir index.html para la ruta raíz

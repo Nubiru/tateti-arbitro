@@ -168,7 +168,7 @@ export class PlayerService {
           players.push({
             name: bot.name,
             port: correctedPort,
-            url: null,
+            // Don't set url for Docker bots - only set port
             isHuman: existingPlayer?.isHuman || false, // Preservar configuración humana
             status: bot.status,
             type: bot.type,
