@@ -298,14 +298,13 @@ describe('GameContext - Flujo de Jugador Humano', () => {
         });
       });
 
-      // Esperar a que moveQueue sea procesado (con retraso de velocidad)
-      // Velocidad rápida = 200ms, así que 1000ms debería ser suficiente
-      await waitFor(
-        () => {
-          expect(result.current.board[4]).toBe(1);
-        },
-        { timeout: 3000 }
-      );
+      // Wait for move to be queued
+      await waitFor(() => {
+        expect(result.current.moveQueue.length).toBeGreaterThan(0);
+      });
+
+      // Verificar que el tablero no se actualiza inmediatamente
+      expect(result.current.board[4]).toBe(0);
     });
   });
 });

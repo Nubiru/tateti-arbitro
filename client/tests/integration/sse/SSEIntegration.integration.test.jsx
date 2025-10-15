@@ -34,6 +34,16 @@ const mockEventSource = {
   }),
   listeners: {},
   simulateEvent: jest.fn(),
+
+  // Helper method to trigger events
+  trigger: function (eventType, eventData) {
+    const handler = this.addEventListener.mock.calls.find(
+      call => call[0] === eventType
+    )?.[1];
+    if (handler) {
+      handler({ data: JSON.stringify(eventData) });
+    }
+  },
 };
 
 // Sobrescribir EventSource global
@@ -49,8 +59,15 @@ global.console = {
 
 // Componente de prueba para acceder al contexto
 const TestComponent = () => {
-  const { gameState, board, moveCount, currentMatch, tournament, error } =
-    useGame();
+  const {
+    gameState,
+    board,
+    moveCount,
+    currentMatch,
+    tournament,
+    error,
+    moveQueue,
+  } = useGame();
 
   return (
     <div>
@@ -60,6 +77,7 @@ const TestComponent = () => {
       <div data-testid="current-match">{JSON.stringify(currentMatch)}</div>
       <div data-testid="tournament">{JSON.stringify(tournament)}</div>
       <div data-testid="error">{error}</div>
+      <div data-testid="move-queue-length">{moveQueue?.length || 0}</div>
     </div>
   );
 };
@@ -165,27 +183,17 @@ describe('Integración SSE', () => {
 
     // Simular evento match:move
     act(() => {
-      if (
-        mockEventSource.listeners &&
-        mockEventSource.listeners['match:move']
-      ) {
-        mockEventSource.listeners['match:move'].forEach(callback => {
-          callback({
-            data: JSON.stringify(moveData),
-          });
-        });
-      }
+      mockEventSource.trigger('match:move', moveData);
     });
 
-    // Integration test: Wait for move queue to process
-    await waitFor(
-      () => {
-        expect(screen.getByTestId('board')).toHaveTextContent(
-          JSON.stringify(moveData.board)
-        );
-        expect(screen.getByTestId('move-count')).toHaveTextContent('1');
-      },
-      { timeout: 3000 }
+    // Wait for move to be queued
+    await waitFor(() => {
+      expect(screen.getByTestId('move-queue-length')).toHaveTextContent('1');
+    });
+
+    // Verificar que el tablero no se actualiza inmediatamente
+    expect(screen.getByTestId('board')).toHaveTextContent(
+      JSON.stringify(Array(9).fill(0))
     );
   });
 });

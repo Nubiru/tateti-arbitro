@@ -11,7 +11,6 @@ import express from 'express';
 import { createApp, attachRateLimiter } from '../../src/app/app.factory.js';
 
 describe('Pruebas de Integración de Rate Limiting', () => {
-  let app;
   let originalEnv;
 
   beforeAll(() => {
@@ -27,14 +26,25 @@ describe('Pruebas de Integración de Rate Limiting', () => {
   });
 
   describe('Limitación de Tasa en Entorno de Producción', () => {
+    let productionApp;
+
     beforeAll(() => {
+      // Save original NODE_ENV
+      const originalNodeEnv = process.env.NODE_ENV;
+
+      // Set production environment
       process.env.NODE_ENV = 'production';
+
+      // Create app in production mode
       const { app: testApp } = createApp();
-      app = testApp;
+      productionApp = testApp;
+
+      // Restore original NODE_ENV
+      process.env.NODE_ENV = originalNodeEnv;
     });
 
     test('debería permitir solicitudes dentro del límite de tasa', async () => {
-      const response = await request(app).get('/api/health');
+      const response = await request(productionApp).get('/api/health');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('status', 'healthy');
@@ -43,7 +53,7 @@ describe('Pruebas de Integración de Rate Limiting', () => {
     test('debería aplicar limitación de tasa a todas las rutas', async () => {
       // Hacer múltiples solicitudes para probar la limitación de tasa
       const requests = Array.from({ length: 5 }, () =>
-        request(app).get('/api/health')
+        request(productionApp).get('/api/health')
       );
 
       const responses = await Promise.all(requests);
@@ -55,7 +65,7 @@ describe('Pruebas de Integración de Rate Limiting', () => {
     });
 
     test('debería handle rate limiting headers', async () => {
-      const response = await request(app).get('/api/health');
+      const response = await request(productionApp).get('/api/health');
 
       expect(response.status).toBe(200);
       // Los encabezados de limitación de tasa serían establecidos por express-rate-limit
@@ -64,16 +74,27 @@ describe('Pruebas de Integración de Rate Limiting', () => {
   });
 
   describe('Limitación de Tasa Deshabilitada en Entorno de Prueba', () => {
+    let testApp;
+
     beforeAll(() => {
+      // Save original NODE_ENV
+      const originalNodeEnv = process.env.NODE_ENV;
+
+      // Set test environment
       process.env.NODE_ENV = 'test';
-      const { app: testApp } = createApp();
-      app = testApp;
+
+      // Create app in test mode
+      const { app: testAppInstance } = createApp();
+      testApp = testAppInstance;
+
+      // Restore original NODE_ENV
+      process.env.NODE_ENV = originalNodeEnv;
     });
 
     test('debería no aplicar limitación de tasa en entorno de prueba', async () => {
       // Hacer muchas solicitudes para verificar que no hay limitación de tasa
       const requests = Array.from({ length: 20 }, () =>
-        request(app).get('/api/health')
+        request(testApp).get('/api/health')
       );
 
       const responses = await Promise.all(requests);
@@ -87,7 +108,7 @@ describe('Pruebas de Integración de Rate Limiting', () => {
     test('debería permitir solicitudes ilimitadas en entorno de prueba', async () => {
       // Hacer un gran número de solicitudes
       const requests = Array.from({ length: 100 }, () =>
-        request(app).get('/api/health')
+        request(testApp).get('/api/health')
       );
 
       const responses = await Promise.all(requests);

@@ -1,29 +1,29 @@
 /**
- * Statistics Service (Frontend)
- * Aggregates and formats game statistics for display
+ * Servicio de Estadísticas (Frontend)
+ * Agrega y formatea estadísticas de juego para visualización
  * @lastModified 2025-10-07
  * @version 1.0.0
  */
 
 class StatisticsService {
   /**
-   * Aggregate match results into statistics format
-   * @param {Object} matchResult - Match result object
-   * @param {Object|null} matchResult.winner - Winner player object or null for draw
-   * @param {Array} matchResult.players - Array of player objects
-   * @param {Array} matchResult.history - Array of move history
-   * @param {number} matchResult.boardSize - Board size (3 or 5)
-   * @param {string} matchResult.gameMode - Game mode ('individual' or 'tournament')
-   * @param {string} matchResult.startTime - ISO timestamp of game start
-   * @param {string} matchResult.endTime - ISO timestamp of game end
-   * @returns {Object} Aggregated statistics object
+   * Agregar resultados de partida en formato de estadísticas
+   * @param {Object} matchResult - Objeto resultado de partida
+   * @param {Object|null} matchResult.winner - Objeto jugador ganador o null para empate
+   * @param {Array} matchResult.players - Array de objetos jugador
+   * @param {Array} matchResult.history - Array de historial de movimientos
+   * @param {number} matchResult.boardSize - Tamaño de tablero (3 o 5)
+   * @param {string} matchResult.gameMode - Modo de juego ('individual' o 'tournament')
+   * @param {string} matchResult.startTime - Marca de tiempo ISO de inicio de juego
+   * @param {string} matchResult.endTime - Marca de tiempo ISO de fin de juego
+   * @returns {Object} Objeto de estadísticas agregadas
    */
   static aggregateMatchStats(matchResult) {
     if (!matchResult || typeof matchResult !== 'object') {
       return this.getEmptyStats();
     }
 
-    // Safely extract data with defaults
+    // Extraer datos de forma segura con valores por defecto
     const winner = matchResult.winner || null;
     const players = Array.isArray(matchResult.players)
       ? matchResult.players
@@ -38,7 +38,7 @@ class StatisticsService {
         ? matchResult.gameMode
         : 'individual';
 
-    // Calculate duration
+    // Calcular duración
     let duration = 0;
     let timestamp = new Date().toISOString();
 
@@ -49,7 +49,7 @@ class StatisticsService {
         duration = endTime.getTime() - startTime.getTime();
         timestamp = matchResult.startTime;
       } catch (error) {
-        // Invalid timestamps, use defaults
+        // Marcas de tiempo inválidas, usar valores por defecto
         duration = 0;
         timestamp = new Date().toISOString();
       }
@@ -67,9 +67,9 @@ class StatisticsService {
   }
 
   /**
-   * Format raw statistics for display
-   * @param {Object} rawStats - Raw statistics object
-   * @returns {Object} Formatted statistics for UI display
+   * Formatear estadísticas en bruto para visualización
+   * @param {Object} rawStats - Objeto de estadísticas en bruto
+   * @returns {Object} Estadísticas formateadas para visualización de UI
    */
   static formatStats(rawStats) {
     if (!rawStats || typeof rawStats !== 'object') {
@@ -117,13 +117,13 @@ class StatisticsService {
   }
 
   /**
-   * Calculate win rates for each player type
-   * @param {Object} stats - Statistics object with totalGames, winsByType, draws
-   * @returns {Object} Win rates as percentages
+   * Calcular tasas de victoria para cada tipo de jugador
+   * @param {Object} stats - Objeto de estadísticas con totalGames, winsByType, draws
+   * @returns {Object} Tasas de victoria como porcentajes
    */
   static calculateWinRates(stats) {
     const { totalGames, winsByType } = stats;
-    // const draws = stats.draws; // Currently not used in UI
+    // const draws = stats.draws; // Actualmente no se usa en UI
 
     if (totalGames === 0) {
       return {
@@ -145,9 +145,9 @@ class StatisticsService {
   }
 
   /**
-   * Format duration in milliseconds to human readable string
-   * @param {number} durationMs - Duration in milliseconds
-   * @returns {string} Formatted duration string
+   * Formatear duración en milisegundos a cadena legible por humanos
+   * @param {number} durationMs - Duración en milisegundos
+   * @returns {string} Cadena de duración formateada
    */
   static formatDuration(durationMs) {
     if (typeof durationMs !== 'number' || durationMs < 0) {
@@ -166,8 +166,8 @@ class StatisticsService {
   }
 
   /**
-   * Get empty statistics object
-   * @returns {Object} Empty statistics object
+   * Obtener objeto de estadísticas vacío
+   * @returns {Object} Objeto de estadísticas vacío
    */
   static getEmptyStats() {
     return {
@@ -182,8 +182,8 @@ class StatisticsService {
   }
 
   /**
-   * Get empty formatted statistics object
-   * @returns {Object} Empty formatted statistics object
+   * Obtener objeto de estadísticas formateadas vacío
+   * @returns {Object} Objeto de estadísticas formateadas vacío
    */
   static getEmptyFormattedStats() {
     return {
@@ -201,9 +201,9 @@ class StatisticsService {
   }
 
   /**
-   * Get player type display name
-   * @param {string} type - Player type ('algorithm', 'random', 'human')
-   * @returns {string} Display name for player type
+   * Obtener nombre de visualización de tipo de jugador
+   * @param {string} type - Tipo de jugador ('algorithm', 'random', 'human')
+   * @returns {string} Nombre de visualización para tipo de jugador
    */
   static getPlayerTypeDisplayName(type) {
     const typeMap = {
@@ -215,9 +215,9 @@ class StatisticsService {
   }
 
   /**
-   * Get game mode display name
-   * @param {string} mode - Game mode ('individual', 'tournament')
-   * @returns {string} Display name for game mode
+   * Obtener nombre de visualización de modo de juego
+   * @param {string} mode - Modo de juego ('individual', 'tournament')
+   * @returns {string} Nombre de visualización para modo de juego
    */
   static getGameModeDisplayName(mode) {
     const modeMap = {
@@ -228,18 +228,18 @@ class StatisticsService {
   }
 
   /**
-   * Get board size display name
-   * @param {number} size - Board size (3 or 5)
-   * @returns {string} Display name for board size
+   * Obtener nombre de visualización de tamaño de tablero
+   * @param {number} size - Tamaño de tablero (3 o 5)
+   * @returns {string} Nombre de visualización para tamaño de tablero
    */
   static getBoardSizeDisplayName(size) {
     return `${size}x${size}`;
   }
 
   /**
-   * Create summary statistics for a single match
-   * @param {Object} matchResult - Match result object
-   * @returns {Object} Summary statistics for the match
+   * Crear estadísticas de resumen para una sola partida
+   * @param {Object} matchResult - Objeto resultado de partida
+   * @returns {Object} Estadísticas de resumen para la partida
    */
   static createMatchSummary(matchResult) {
     const stats = this.aggregateMatchStats(matchResult);

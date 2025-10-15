@@ -5,6 +5,7 @@ import ConfigScreen from '../screens/ConfigScreen';
 import ProgressScreen from '../screens/ProgressScreen';
 import CelebrationScreen from '../screens/CelebrationScreen';
 import BracketView from '../components/BracketView';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 /**
  * Contenedor de Juego
@@ -188,13 +189,15 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
         );
       case 'progress':
         return (
-          <ProgressScreen
-            config={config}
-            onTournamentBracket={handleTournamentBracket}
-            onGameComplete={handleGameComplete}
-            onBack={handleBack}
-            onActivity={handleActivity}
-          />
+          <ErrorBoundary>
+            <ProgressScreen
+              config={config}
+              onTournamentBracket={handleTournamentBracket}
+              onGameComplete={handleGameComplete}
+              onBack={handleBack}
+              onActivity={handleActivity}
+            />
+          </ErrorBoundary>
         );
       case 'bracket':
         return <BracketView tournament={tournament} config={config} />;

@@ -64,8 +64,14 @@ describe('GET /api/bots/available - Pruebas de Integración', () => {
 
     app = testApp;
 
-    // Limpiar mock de fetch
+    // Limpiar mock de fetch y configurar por defecto
     jest.clearAllMocks();
+
+    // Configurar fetch mock por defecto para evitar errores
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ status: 'healthy', name: 'MockBot' }),
+    });
   });
 
   afterEach(() => {
@@ -82,6 +88,11 @@ describe('GET /api/bots/available - Pruebas de Integración', () => {
     // Limpiar todos los temporizadores para evitar cuelgues
     jest.clearAllTimers();
     jest.useRealTimers();
+  });
+
+  afterAll(() => {
+    // Restaurar fetch global
+    global.fetch = undefined;
   });
 
   describe('Verificaciones de Salud Paralelas', () => {

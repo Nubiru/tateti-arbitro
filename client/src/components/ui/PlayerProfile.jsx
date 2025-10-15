@@ -28,7 +28,12 @@ const PlayerProfile = ({
   };
 
   const handleUrlChange = e => {
-    onUpdate(index, 'url', e.target.value);
+    const url = e.target.value;
+    onUpdate(index, 'url', url);
+    // Also update the name field if it contains a URL
+    if (url && url.startsWith('http')) {
+      onUpdate(index, 'name', url);
+    }
   };
 
   const handleHumanChange = e => {
@@ -43,7 +48,9 @@ const PlayerProfile = ({
   };
 
   // Determine if this is a Vercel bot (has URL) or Docker bot (has port)
-  const isVercelBot = player.url && !player.port;
+  // Check for URL in player.url or in player.name (for manual URL entry)
+  const hasUrl = player.url || (player.name && player.name.startsWith('http'));
+  const isVercelBot = hasUrl && !player.port;
   const botSource = player.source || (isVercelBot ? 'vercel' : 'docker');
 
   return (
@@ -93,7 +100,7 @@ const PlayerProfile = ({
           <AnimatedInput
             type="url"
             placeholder="https://bot.vercel.app"
-            value={player.url}
+            value={player.url || player.name}
             onChange={handleUrlChange}
             className={styles.playerUrlInput}
           />

@@ -15,8 +15,8 @@ export const validateMatch = [
     if (typeof value !== 'object') {
       throw new Error('player1 debe ser un objeto');
     }
-    if (!value.name || !value.port) {
-      throw new Error('player1 debe tener name y port');
+    if (!value.name || (!value.port && !value.url)) {
+      throw new Error('player1 debe tener name y (port o url)');
     }
     return true;
   }),
@@ -32,8 +32,13 @@ export const validateMatch = [
       return true;
     }),
   body('player1.port')
+    .optional()
     .isInt({ min: 3000, max: 9999 })
     .withMessage('player1.port debe ser un número entre 3000-9999'),
+  body('player1.url')
+    .optional()
+    .isURL()
+    .withMessage('player1.url debe ser una URL válida'),
   body('player2').custom(value => {
     if (!value) {
       throw new Error('Se necesitan dos jugadores para iniciar la partida.');
@@ -41,8 +46,8 @@ export const validateMatch = [
     if (typeof value !== 'object') {
       throw new Error('player2 debe ser un objeto');
     }
-    if (!value.name || !value.port) {
-      throw new Error('player2 debe tener name y port');
+    if (!value.name || (!value.port && !value.url)) {
+      throw new Error('player2 debe tener name y (port o url)');
     }
     return true;
   }),
@@ -58,8 +63,13 @@ export const validateMatch = [
       return true;
     }),
   body('player2.port')
+    .optional()
     .isInt({ min: 3000, max: 9999 })
     .withMessage('player2.port debe ser un número entre 3000-9999'),
+  body('player2.url')
+    .optional()
+    .isURL()
+    .withMessage('player2.url debe ser una URL válida'),
   body('boardSize')
     .optional()
     .isIn(['3x3', '5x5'])

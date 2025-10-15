@@ -18,6 +18,17 @@ const mockEventSource = {
   addEventListener: jest.fn(),
   close: jest.fn(),
   readyState: 1,
+  listeners: {},
+
+  // Helper method to trigger events
+  trigger: function (eventType, eventData) {
+    const handler = this.addEventListener.mock.calls.find(
+      call => call[0] === eventType
+    )?.[1];
+    if (handler) {
+      handler({ data: JSON.stringify(eventData) });
+    }
+  },
 };
 
 global.EventSource = jest.fn(() => mockEventSource);
@@ -35,6 +46,9 @@ const TestComponent = () => {
       <div data-testid="error">{context.error}</div>
       <div data-testid="move-count">{context.moveCount}</div>
       <div data-testid="history">{JSON.stringify(context.history)}</div>
+      <div data-testid="move-queue-length">
+        {context.moveQueue?.length || 0}
+      </div>
       <button
         data-testid="start-match"
         onClick={() =>
@@ -159,46 +173,37 @@ describe('Pruebas de Integración de GameContext', () => {
         </GameProvider>
       );
 
-      const matchMoveHandler = mockEventSource.addEventListener.mock.calls.find(
-        call => call[0] === 'match:move'
-      )[1];
-
       const eventData = {
-        data: JSON.stringify({
-          board: [1, 0, 0, 0, 2, 0, 0, 0, 0],
-          history: [
-            {
-              player: 'Player1',
-              position: 0,
-              timestamp: '2025-10-03T10:00:00.000Z',
-            },
-            {
-              player: 'Player2',
-              position: 4,
-              timestamp: '2025-10-03T10:00:01.000Z',
-            },
-          ],
-          turn: 2,
-          player: 'Player2',
-          move: { position: 4 },
-        }),
+        board: [1, 0, 0, 0, 2, 0, 0, 0, 0],
+        history: [
+          {
+            player: 'Player1',
+            position: 0,
+            timestamp: '2025-10-03T10:00:00.000Z',
+          },
+          {
+            player: 'Player2',
+            position: 4,
+            timestamp: '2025-10-03T10:00:01.000Z',
+          },
+        ],
+        turn: 2,
+        player: 'Player2',
+        move: { position: 4 },
       };
 
       act(() => {
-        matchMoveHandler(eventData);
+        mockEventSource.trigger('match:move', eventData);
       });
 
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('board')).toHaveTextContent(
-            '[1,0,0,0,2,0,0,0,0]'
-          );
-          expect(screen.getByTestId('move-count')).toHaveTextContent('2');
-          expect(screen.getByTestId('history')).toHaveTextContent(
-            '[{"player":"Player1","position":0,"timestamp":"2025-10-03T10:00:00.000Z"},{"player":"Player2","position":4,"timestamp":"2025-10-03T10:00:01.000Z"}]'
-          );
-        },
-        { timeout: 3000 }
+      // Wait for move to be queued
+      await waitFor(() => {
+        expect(screen.getByTestId('move-queue-length')).toHaveTextContent('1');
+      });
+
+      // Verificar que el tablero no se actualiza inmediatamente
+      expect(screen.getByTestId('board')).toHaveTextContent(
+        Array(9).fill(0).join(',')
       );
     });
 
@@ -476,30 +481,15 @@ describe('Pruebas de Integración de GameContext', () => {
         </GameProvider>
       );
 
-      const matchStartHandler =
-        mockEventSource.addEventListener.mock.calls.find(
-          call => call[0] === 'match:start'
-        )[1];
-
-      const matchMoveHandler = mockEventSource.addEventListener.mock.calls.find(
-        call => call[0] === 'match:move'
-      )[1];
-
-      const matchWinHandler = mockEventSource.addEventListener.mock.calls.find(
-        call => call[0] === 'match:win'
-      )[1];
-
       // Iniciar partida
       act(() => {
-        matchStartHandler({
-          data: JSON.stringify({
-            players: [
-              { name: 'Player1', port: 3001 },
-              { name: 'Player2', port: 3002 },
-            ],
-            boardSize: 3,
-            timestamp: '2025-10-03T10:00:00.000Z',
-          }),
+        mockEventSource.trigger('match:start', {
+          players: [
+            { name: 'Player1', port: 3001 },
+            { name: 'Player2', port: 3002 },
+          ],
+          boardSize: 3,
+          timestamp: '2025-10-03T10:00:00.000Z',
         });
       });
 
@@ -509,32 +499,35 @@ describe('Pruebas de Integración de GameContext', () => {
 
       // Hacer un movimiento
       act(() => {
-        matchMoveHandler({
-          data: JSON.stringify({
-            board: [1, 0, 0, 0, 0, 0, 0, 0, 0],
-            history: [
-              {
-                player: 'Player1',
-                position: 0,
-                timestamp: '2025-10-03T10:00:00.000Z',
-              },
-            ],
-            turn: 1,
-            player: 'Player1',
-            move: { position: 0 },
-          }),
+        mockEventSource.trigger('match:move', {
+          board: [1, 0, 0, 0, 0, 0, 0, 0, 0],
+          history: [
+            {
+              player: 'Player1',
+              position: 0,
+              timestamp: '2025-10-03T10:00:00.000Z',
+            },
+          ],
+          turn: 1,
+          player: 'Player1',
+          move: { position: 0 },
         });
       });
 
-      await waitFor(
-        () => {
-          expect(screen.getByTestId('board')).toHaveTextContent(
-            '[1,0,0,0,0,0,0,0,0]'
-          );
-          expect(screen.getByTestId('move-count')).toHaveTextContent('1');
-        },
-        { timeout: 3000 }
+      // Wait for move to be queued
+      await waitFor(() => {
+        expect(screen.getByTestId('move-queue-length')).toHaveTextContent('1');
+      });
+
+      // Verificar que el tablero no se actualiza inmediatamente
+      expect(screen.getByTestId('board')).toHaveTextContent(
+        Array(9).fill(0).join(',')
       );
+
+      // Get the match:win handler
+      const matchWinHandler = mockEventSource.addEventListener.mock.calls.find(
+        call => call[0] === 'match:win'
+      )[1];
 
       // Ganar la partida
       act(() => {

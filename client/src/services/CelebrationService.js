@@ -1,16 +1,16 @@
 /**
- * CelebrationService
- * Service for celebration screen business logic - countdown, statistics calculation
+ * Servicio de Celebración
+ * Servicio para lógica de negocio de pantalla de celebración - cuenta regresiva, cálculo de estadísticas
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
 
 class CelebrationService {
   /**
-   * Calculate game statistics from match or tournament result
-   * @param {Object|null} matchResult - Match result object
-   * @param {Object|null} tournamentResult - Tournament result object
-   * @returns {Object} Formatted statistics object
+   * Calcular estadísticas de juego desde resultado de partida o torneo
+   * @param {Object|null} matchResult - Objeto resultado de partida
+   * @param {Object|null} tournamentResult - Objeto resultado de torneo
+   * @returns {Object} Objeto de estadísticas formateado
    */
   static calculateGameStatistics(matchResult, tournamentResult) {
     const result = matchResult || tournamentResult;
@@ -24,11 +24,11 @@ class CelebrationService {
     const movesCount = history.length;
     const gameTime = result.gameTime || 'N/A';
 
-    // Per-player move counts
+    // Conteos de movimientos por jugador
     const player1Moves = history.filter(h => h.playerId === 'player1').length;
     const player2Moves = history.filter(h => h.playerId === 'player2').length;
 
-    // Tournament specific
+    // Específico de torneo
     const totalRounds = tournamentResult?.totalRounds || 1;
     const totalMatches = tournamentResult?.totalMatches || 1;
     const averageTime = tournamentResult
@@ -48,9 +48,9 @@ class CelebrationService {
   }
 
   /**
-   * Format player moves from history
-   * @param {Array} history - Game history array
-   * @returns {Object} Per-player move counts
+   * Formatear movimientos de jugadores desde historial
+   * @param {Array} history - Array de historial de juego
+   * @returns {Object} Conteos de movimientos por jugador
    */
   static formatPlayerMoves(history) {
     if (!Array.isArray(history)) {
@@ -64,10 +64,10 @@ class CelebrationService {
   }
 
   /**
-   * Get game metadata from result
-   * @param {Object} result - Match or tournament result
-   * @param {Object|null} tournamentResult - Tournament result (optional)
-   * @returns {Object} Game metadata
+   * Obtener metadatos de juego desde resultado
+   * @param {Object} result - Resultado de partida o torneo
+   * @param {Object|null} tournamentResult - Resultado de torneo (opcional)
+   * @returns {Object} Metadatos de juego
    */
   static getGameMetadata(result, tournamentResult) {
     if (!result) {
@@ -90,11 +90,11 @@ class CelebrationService {
   }
 
   /**
-   * Create countdown timer
-   * @param {number} duration - Duration in seconds
-   * @param {Function} onTick - Called every second with remaining time
-   * @param {Function} onComplete - Called when countdown reaches 0
-   * @returns {Function} Cleanup function to clear the timer
+   * Crear temporizador de cuenta regresiva
+   * @param {number} duration - Duración en segundos
+   * @param {Function} onTick - Llamado cada segundo con tiempo restante
+   * @param {Function} onComplete - Llamado cuando la cuenta regresiva llega a 0
+   * @returns {Function} Función de limpieza para limpiar el temporizador
    */
   static createCountdownTimer(duration, onTick, onComplete) {
     let remaining = duration;
@@ -102,12 +102,12 @@ class CelebrationService {
     const timer = setInterval(() => {
       remaining -= 1;
 
-      // Always call onTick with the new remaining value (including 0)
+      // Siempre llamar onTick con el nuevo valor restante (incluyendo 0)
       if (onTick) {
         onTick(remaining);
       }
 
-      // Check if countdown is complete
+      // Verificar si la cuenta regresiva está completa
       if (remaining <= 0) {
         clearInterval(timer);
         if (onComplete) {
@@ -120,8 +120,8 @@ class CelebrationService {
   }
 
   /**
-   * Get empty statistics object
-   * @returns {Object} Empty statistics
+   * Obtener objeto de estadísticas vacío
+   * @returns {Object} Estadísticas vacías
    */
   static getEmptyStatistics() {
     return {

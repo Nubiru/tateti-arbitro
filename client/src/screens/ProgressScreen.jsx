@@ -82,7 +82,8 @@ const ProgressScreen = ({
     const boardArray = Array(size).fill(0);
 
     // Use board state directly - move queue handles delays
-    board.forEach((cell, index) => {
+    // Add null safety to prevent "Cannot read properties of undefined" error
+    (board || []).forEach((cell, index) => {
       if (index < size) {
         boardArray[index] = cell;
       }

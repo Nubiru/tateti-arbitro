@@ -10,54 +10,12 @@ import React from 'react';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { GameProvider, useGame } from '../../../src/context/GameContext.jsx';
 
-// Mock EventSource
-class MockEventSource {
-  constructor(url) {
-    this.url = url;
-    this.listeners = {};
-    this.readyState = 0; // CONNECTING
-    MockEventSource.instances.push(this);
-
-    // Simular conexión asíncrona
-    setTimeout(() => {
-      this.readyState = 1; // OPEN
-      if (this.onopen) {
-        this.onopen();
-      }
-    }, 0);
-  }
-
-  addEventListener(event, callback) {
-    if (!this.listeners[event]) {
-      this.listeners[event] = [];
-    }
-    this.listeners[event].push(callback);
-  }
-
-  close() {
-    this.readyState = 2; // CLOSED
-    this.listeners = {};
-  }
-
-  trigger(event, data) {
-    if (this.listeners[event]) {
-      this.listeners[event].forEach(callback => {
-        callback({ data: JSON.stringify(data) });
-      });
-    }
-  }
-
-  static instances = [];
-  static reset() {
-    MockEventSource.instances = [];
-  }
-}
-
-global.EventSource = MockEventSource;
+// Use MockEventSource from setupTests.js
+const MockEventSource = global.EventSource;
 
 describe('GameContext - Eventos SSE', () => {
   beforeEach(() => {
-    MockEventSource.reset();
+    MockEventSource.clearInstances();
   });
 
   describe('Evento move:removed (Modo Infinito)', () => {
@@ -82,7 +40,7 @@ describe('GameContext - Eventos SSE', () => {
       expect(eventSource.listeners['move:removed'].length).toBeGreaterThan(0);
     });
 
-    test.skip('debería agregar eliminación a removalQueue cuando se recibe evento move:removed', async () => {
+    test('debería agregar eliminación a removalQueue cuando se recibe evento move:removed', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
@@ -96,6 +54,10 @@ describe('GameContext - Eventos SSE', () => {
       });
 
       const eventSource = MockEventSource.instances[0];
+
+      // Verify that the move:removed listener is registered
+      expect(eventSource.listeners['move:removed']).toBeDefined();
+      expect(eventSource.listeners['move:removed'].length).toBeGreaterThan(0);
 
       // Disparar evento move:removed (modo infinito)
       act(() => {
@@ -118,7 +80,7 @@ describe('GameContext - Eventos SSE', () => {
       expect(result.current.removalQueue[0].position).toBe(0);
     });
 
-    test.skip('debería procesar múltiples eliminaciones en secuencia', async () => {
+    test('debería procesar múltiples eliminaciones en secuencia', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 

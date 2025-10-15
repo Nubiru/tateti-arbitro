@@ -435,7 +435,7 @@ describe('Middleware de Validación', () => {
   describe('Cobertura de Reglas de Validación', () => {
     test('debería probar estructura de reglas de validateMatch', () => {
       // Probar que validateMatch contiene reglas de validación
-      expect(validateMatch).toHaveLength(9); // player1 (4), player2 (4), boardSize (1)
+      expect(validateMatch).toHaveLength(11); // player1 (4), player2 (4), boardSize (1), noTie (1), speed (1)
 
       // Probar que todas las reglas son objetos (objetos express-validator)
       validateMatch.forEach(rule => {
@@ -500,7 +500,7 @@ describe('Middleware de Validación', () => {
 
   describe('Estructura de Reglas de Validación', () => {
     test('debería tener conteo correcto de reglas de validateMatch', () => {
-      expect(validateMatch).toHaveLength(9);
+      expect(validateMatch).toHaveLength(11);
     });
 
     test('debería tener conteo correcto de reglas de validateTournament', () => {

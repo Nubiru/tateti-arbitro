@@ -179,7 +179,9 @@ describe('ErrorBoundary', () => {
 
       // Verificar si la UI del ErrorBoundary está renderizada
       expect(screen.getByText('¡Oops! Algo salió mal')).toBeInTheDocument();
-      expect(screen.getByText('Detalles del Error')).toBeInTheDocument();
+      expect(
+        screen.getByText('Detalles del error (desarrollo)')
+      ).toBeInTheDocument();
 
       // Restaurar
       process.env.NODE_ENV = originalEnv;
@@ -311,7 +313,7 @@ describe('ErrorBoundary', () => {
       );
 
       const errorDetails = screen
-        .getByText('Detalles del Error')
+        .getByText('Detalles del error (desarrollo)')
         .closest('.error-details');
       expect(errorDetails).toHaveClass('error-details');
 
@@ -386,7 +388,7 @@ describe('ErrorBoundary', () => {
         </ErrorBoundary>
       );
 
-      const heading = screen.getByRole('heading', { level: 1 });
+      const heading = screen.getByRole('heading', { level: 3 });
       expect(heading).toHaveTextContent('¡Oops! Algo salió mal');
     });
 

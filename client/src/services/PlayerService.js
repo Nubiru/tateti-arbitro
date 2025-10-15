@@ -1,29 +1,31 @@
 /**
- * PlayerService
- * Service for bot discovery, player generation, and player selection management
+ * Servicio de Jugadores
+ * Servicio para descubrimiento de bots, generación de jugadores y gestión de selección de jugadores
  * @lastModified 2025-01-27
  * @version 2.1.0
  */
 
 export class PlayerService {
   /**
-   * Discover available bots from the API
+   * Descubrir bots disponibles desde la API
    * @returns {Promise<{success: boolean, bots: Array, error: string|null}>}
    */
   async discoverBots() {
     try {
-      // DEBUG: Log bot discovery attempt
+      // DEBUG: Registrar intento de descubrimiento de bots
       if (process.env.LOG_LEVEL === 'debug') {
-        console.log('[DEBUG][PlayerService][discoverBots] Discovering bots...');
+        console.log(
+          '[DEBUG][PlayerService][discoverBots] Descubriendo bots...'
+        );
       }
 
       const response = await fetch('/api/bots/available');
 
       if (!response.ok) {
-        // DEBUG: Log discovery failure
+        // DEBUG: Registrar fallo en descubrimiento
         if (process.env.LOG_LEVEL === 'debug') {
           console.log(
-            '[DEBUG][PlayerService][discoverBots] Discovery failed:',
+            '[DEBUG][PlayerService][discoverBots] Fallo en descubrimiento:',
             response.status
           );
         }
@@ -31,15 +33,15 @@ export class PlayerService {
         return {
           success: false,
           bots: [],
-          error: `Failed to discover bots: ${response.status}`,
+          error: `Error al descubrir bots: ${response.status}`,
         };
       }
 
       const data = await response.json();
 
-      // DEBUG: Log discovered bots
+      // DEBUG: Registrar bots descubiertos
       if (process.env.LOG_LEVEL === 'debug') {
-        console.log('[DEBUG][PlayerService][discoverBots] Discovered bots:', {
+        console.log('[DEBUG][PlayerService][discoverBots] Bots descubiertos:', {
           count: data.bots?.length || 0,
           bots: data.bots?.map(b => ({
             name: b.name,
@@ -57,10 +59,10 @@ export class PlayerService {
         error: null,
       };
     } catch (error) {
-      // DEBUG: Log discovery error
+      // DEBUG: Registrar error de descubrimiento
       if (process.env.LOG_LEVEL === 'debug') {
         console.log(
-          '[DEBUG][PlayerService][discoverBots] Discovery error:',
+          '[DEBUG][PlayerService][discoverBots] Error de descubrimiento:',
           error.message
         );
       }
@@ -74,26 +76,26 @@ export class PlayerService {
   }
 
   /**
-   * Get player count for game mode
-   * @param {string} gameMode - Game mode ('single' or 'tournament')
-   * @param {Object} config - Game configuration
-   * @returns {number} Number of players needed
+   * Obtener número de jugadores para modo de juego
+   * @param {string} gameMode - Modo de juego ('single' o 'tournament')
+   * @param {Object} config - Configuración del juego
+   * @returns {number} Número de jugadores necesarios
    */
   getPlayerCountForMode(gameMode, config = {}) {
     if (gameMode === 'single') {
       return 2;
     }
-    // Tournament mode: use configured player count
+    // Modo torneo: usar número de jugadores configurado
     return config.playerCount || 4;
   }
 
   /**
-   * Populate players for a specific game mode
-   * @param {string} gameMode - Game mode ('single' or 'tournament')
-   * @param {Array} availableBots - Array of available bots
-   * @param {Object} config - Game configuration
-   * @param {Array} existingPlayers - Optional existing players to preserve settings
-   * @returns {Array} Array of player objects
+   * Poblar jugadores para un modo de juego específico
+   * @param {string} gameMode - Modo de juego ('single' o 'tournament')
+   * @param {Array} availableBots - Array de bots disponibles
+   * @param {Object} config - Configuración del juego
+   * @param {Array} existingPlayers - Jugadores existentes opcionales para preservar configuraciones
+   * @returns {Array} Array de objetos jugador
    */
   populatePlayersForMode(
     gameMode,
@@ -104,10 +106,10 @@ export class PlayerService {
     const targetCount = this.getPlayerCountForMode(gameMode, config);
     const healthyBots = this.getHealthyBots(availableBots);
 
-    // DEBUG: Log bot discovery data
+    // DEBUG: Registrar datos de descubrimiento de bots
     if (process.env.LOG_LEVEL === 'debug') {
       console.log(
-        '[DEBUG][PlayerService][populatePlayersForMode] Bot discovery data:',
+        '[DEBUG][PlayerService][populatePlayersForMode] Datos de descubrimiento de bots:',
         {
           availableBots: availableBots.length,
           healthyBots: healthyBots.length,
@@ -123,54 +125,86 @@ export class PlayerService {
       );
     }
 
-    // Sort bots by port for consistent ordering
-    healthyBots.sort((a, b) => a.port - b.port);
+    // Ordenar bots por puerto para orden consistente (bots Docker) o por nombre (bots Vercel)
+    healthyBots.sort((a, b) => {
+      // Los bots Docker tienen puertos, los bots Vercel tienen URLs
+      if (a.port && b.port) {
+        return a.port - b.port;
+      } else if (a.url && b.url) {
+        return a.name.localeCompare(b.name);
+      } else if (a.port) {
+        return -1; // Bots Docker primero
+      } else {
+        return 1; // Bots Vercel después
+      }
+    });
 
     const players = [];
 
     for (let i = 0; i < targetCount; i++) {
-      // Check if we have an existing player to preserve settings
+      // Verificar si tenemos un jugador existente para preservar configuraciones
       const existingPlayer = existingPlayers[i];
 
       if (i < healthyBots.length) {
-        // Use discovered bot but fix port numbers for 4-player tournament
+        // Usar bot descubierto
         const bot = healthyBots[i];
-        const correctedPort = this.getCorrectPortForPlayer(i + 1, bot.port);
-        players.push({
-          name: bot.name,
-          port: correctedPort,
-          isHuman: existingPlayer?.isHuman || false, // Preserve human setting
-          status: bot.status,
-          type: bot.type,
-          capabilities: bot.capabilities,
-        });
 
-        // DEBUG: Log discovered bot usage
+        // Manejar bots Vercel (con URLs) vs bots Docker (con puertos)
+        if (bot.url) {
+          // Bot Vercel - usar URL
+          players.push({
+            name: bot.name,
+            url: bot.url,
+            port: null,
+            isHuman: existingPlayer?.isHuman || false, // Preservar configuración humana
+            status: bot.status,
+            type: bot.type,
+            capabilities: bot.capabilities,
+            source: bot.source,
+          });
+        } else {
+          // Bot Docker - corregir números de puerto para torneo de 4 jugadores
+          const correctedPort = this.getCorrectPortForPlayer(i + 1, bot.port);
+          players.push({
+            name: bot.name,
+            port: correctedPort,
+            url: null,
+            isHuman: existingPlayer?.isHuman || false, // Preservar configuración humana
+            status: bot.status,
+            type: bot.type,
+            capabilities: bot.capabilities,
+            source: bot.source,
+          });
+        }
+
+        // DEBUG: Registrar uso de bot descubierto
         if (process.env.LOG_LEVEL === 'debug') {
           console.log(
-            '[DEBUG][PlayerService][populatePlayersForMode] Using discovered bot:',
+            '[DEBUG][PlayerService][populatePlayersForMode] Usando bot descubierto:',
             {
               index: i,
               name: bot.name,
               type: bot.type,
               port: bot.port,
+              url: bot.url,
+              source: bot.source,
               isHuman: existingPlayer?.isHuman || false,
             }
           );
         }
       } else {
-        // Fallback to generic bot
+        // Respaldo a bot genérico
         const fallbackPlayer = this.createFallbackPlayer(i + 1);
-        // Preserve human setting if existing player was human
+        // Preservar configuración humana si el jugador existente era humano
         if (existingPlayer?.isHuman) {
           fallbackPlayer.isHuman = true;
         }
         players.push(fallbackPlayer);
 
-        // DEBUG: Log fallback usage
+        // DEBUG: Registrar uso de respaldo
         if (process.env.LOG_LEVEL === 'debug') {
           console.log(
-            '[DEBUG][PlayerService][populatePlayersForMode] Using fallback player:',
+            '[DEBUG][PlayerService][populatePlayersForMode] Usando jugador de respaldo:',
             {
               index: i,
               name: fallbackPlayer.name,
@@ -187,13 +221,13 @@ export class PlayerService {
   }
 
   /**
-   * Get the correct port number for a player in 4-player tournament
-   * @param {number} playerNumber - Player number (1-indexed)
-   * @param {number} originalPort - Original port from bot discovery
-   * @returns {number} Corrected port number
+   * Obtener el número de puerto correcto para un jugador en torneo de 4 jugadores
+   * @param {number} playerNumber - Número de jugador (indexado desde 1)
+   * @param {number} originalPort - Puerto original del descubrimiento de bot
+   * @returns {number} Número de puerto corregido
    */
   getCorrectPortForPlayer(playerNumber, originalPort) {
-    // Map player numbers to correct Docker container ports for 4-player tournament
+    // Mapear números de jugador a puertos correctos de contenedores Docker para torneo de 4 jugadores
     const portMapping = {
       1: 3001, // RandomBot1
       2: 3002, // RandomBot2
@@ -205,12 +239,12 @@ export class PlayerService {
   }
 
   /**
-   * Create a fallback player when no bot is available
-   * @param {number} playerNumber - Player number (1-indexed)
-   * @returns {Object} Fallback player object
+   * Crear un jugador de respaldo cuando no hay bot disponible
+   * @param {number} playerNumber - Número de jugador (indexado desde 1)
+   * @returns {Object} Objeto jugador de respaldo
    */
   createFallbackPlayer(playerNumber) {
-    // Map player numbers to correct Docker container ports for 4-player tournament
+    // Mapear números de jugador a puertos correctos de contenedores Docker para torneo de 4 jugadores
     const portMapping = {
       1: 3001, // RandomBot1
       2: 3002, // RandomBot2
@@ -235,10 +269,10 @@ export class PlayerService {
   }
 
   /**
-   * Generate players based on count and available bots
-   * @param {number} count - Number of players to generate
-   * @param {Array} availableBots - Array of available bots
-   * @returns {Array} Array of player objects
+   * Generar jugadores basado en conteo y bots disponibles
+   * @param {number} count - Número de jugadores a generar
+   * @param {Array} availableBots - Array de bots disponibles
+   * @returns {Array} Array de objetos jugador
    */
   generatePlayers(count, availableBots = []) {
     const healthyBots = this.getHealthyBots(availableBots);
@@ -246,7 +280,7 @@ export class PlayerService {
 
     for (let i = 0; i < count; i++) {
       if (i < healthyBots.length) {
-        // Use discovered bot
+        // Usar bot descubierto
         players.push({
           name: healthyBots[i].name,
           port: healthyBots[i].port,
@@ -256,7 +290,7 @@ export class PlayerService {
           capabilities: healthyBots[i].capabilities,
         });
       } else {
-        // Fallback to generic bot
+        // Respaldo a bot genérico
         players.push(this.createFallbackPlayer(i + 1));
       }
     }
@@ -265,10 +299,10 @@ export class PlayerService {
   }
 
   /**
-   * Validate player selection for game mode
-   * @param {Array} players - Array of player objects
-   * @param {string} gameMode - Game mode ('single' or 'tournament')
-   * @returns {Object} Validation result with isValid and errors
+   * Validar selección de jugadores para modo de juego
+   * @param {Array} players - Array de objetos jugador
+   * @param {string} gameMode - Modo de juego ('single' o 'tournament')
+   * @returns {Object} Resultado de validación con isValid y errors
    */
   validatePlayerSelection(players, gameMode) {
     const errors = [];
@@ -291,13 +325,13 @@ export class PlayerService {
       }
     }
 
-    // Validate each player has required fields
+    // Validar que cada jugador tenga campos requeridos
     players.forEach((player, index) => {
       if (!player.name || typeof player.name !== 'string') {
         errors.push(`El jugador ${index + 1} debe tener un nombre válido`);
       }
 
-      // Human players don't need port or url (they have port: 0)
+      // Los jugadores humanos no necesitan puerto o url (tienen port: 0)
       if (!player.isHuman) {
         if (!player.port && !player.url) {
           errors.push(`El jugador ${index + 1} debe tener un puerto o url`);
@@ -318,17 +352,17 @@ export class PlayerService {
   }
 
   /**
-   * Validate player count
-   * @param {number} count - Player count to validate
-   * @returns {boolean} True if valid, false otherwise
+   * Validar número de jugadores
+   * @param {number} count - Número de jugadores a validar
+   * @returns {boolean} Verdadero si es válido, falso en caso contrario
    */
   validatePlayerCount(count) {
     return Number.isInteger(count) && count >= 2 && count <= 16;
   }
 
   /**
-   * Get default players configuration
-   * @returns {Array} Array of default player objects
+   * Obtener configuración de jugadores por defecto
+   * @returns {Array} Array de objetos jugador por defecto
    */
   getDefaultPlayers() {
     return [
@@ -350,27 +384,27 @@ export class PlayerService {
   }
 
   /**
-   * Filter healthy bots from available bots
-   * @param {Array} bots - Array of bot objects
-   * @returns {Array} Array of healthy bots
+   * Filtrar bots saludables de bots disponibles
+   * @param {Array} bots - Array de objetos bot
+   * @returns {Array} Array de bots saludables
    */
   getHealthyBots(bots) {
     if (!Array.isArray(bots)) {
       return [];
     }
-    // For now, include bots with 'offline' status to work around backend issues
+    // Por ahora, incluir bots con estado 'offline' para solucionar problemas del backend
     return bots.filter(
       bot => bot && (bot.status === 'healthy' || bot.status === 'offline')
     );
   }
 
   /**
-   * Update a specific player field
-   * @param {Array} players - Current players array
-   * @param {number} index - Player index to update
-   * @param {string} field - Field to update
-   * @param {*} value - New value
-   * @returns {Array} New players array with update applied
+   * Actualizar un campo específico de jugador
+   * @param {Array} players - Array actual de jugadores
+   * @param {number} index - Índice de jugador a actualizar
+   * @param {string} field - Campo a actualizar
+   * @param {*} value - Nuevo valor
+   * @returns {Array} Nuevo array de jugadores con actualización aplicada
    */
   updatePlayer(players, index, field, value) {
     if (!Array.isArray(players) || index < 0 || index >= players.length) {

@@ -301,11 +301,54 @@ export function createApp(dependencies = {}) {
           },
         ];
 
+        const boardSizeNumber = boardSize === '5x5' ? 5 : 3;
+
+        // Broadcast match:start event
+        eventsAdapter.broadcastMatchStart({
+          matchId: `match-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          players,
+          boardSize: boardSizeNumber,
+          timestamp: new Date().toISOString(),
+        });
+
         const result = await arbitrator.runMatch(players, {
           timeoutMs,
-          boardSize: boardSize === '5x5' ? 5 : 3,
+          boardSize: boardSizeNumber,
           noTie,
         });
+
+        // Broadcast match:move events for each move in history
+        if (result.history && Array.isArray(result.history)) {
+          result.history.forEach(move => {
+            eventsAdapter.broadcastMatchMove({
+              matchId: result.matchId,
+              player: move.player,
+              move: move.move,
+              board: move.board,
+              turn: move.turn,
+              timestamp: move.timestamp,
+            });
+          });
+        }
+
+        // Broadcast match result event
+        if (result.winner) {
+          eventsAdapter.broadcastMatchWin({
+            matchId: result.matchId,
+            winner: result.winner,
+            winningLine: result.winningLine,
+            finalBoard: result.finalBoard,
+            message: result.message,
+            timestamp: new Date().toISOString(),
+          });
+        } else if (result.result === 'draw') {
+          eventsAdapter.broadcastMatchDraw({
+            matchId: result.matchId,
+            finalBoard: result.finalBoard,
+            message: result.message,
+            timestamp: new Date().toISOString(),
+          });
+        }
 
         if (process.env.NODE_ENV !== 'test') {
           console.log('Match result:', result);

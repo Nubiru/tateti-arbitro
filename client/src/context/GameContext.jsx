@@ -24,9 +24,6 @@ import { PlayerService } from '../services/PlayerService';
 const GameContext = createContext();
 
 export const GameProvider = ({ children }) => {
-  console.log(
-    '🎮 [DEBUG][GameContext] GameProvider initialized - CONSOLE LOGGING WORKS!'
-  );
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const [sseConnection, setSseConnection] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting', 'connected', 'disconnected', 'error'
@@ -80,31 +77,18 @@ export const GameProvider = ({ children }) => {
 
       eventSource = new EventSource('/api/stream');
 
-      // DEBUG: Store EventSource globally for debugging
-      window.eventSource = eventSource;
-      console.log('🔌 [DEBUG] EventSource created:', eventSource);
-      console.log('🔌 [DEBUG] EventSource readyState:', eventSource.readyState);
-
       eventSource.onopen = () => {
-        console.log('🔌 [DEBUG] EventSource onopen triggered');
         setSseConnection(eventSource);
         setConnectionStatus('connected');
         isConnecting = false;
         reconnectAttempts = 0; // Reset reconnect attempts on successful connection
       };
 
-      eventSource.onmessage = event => {
-        console.log('🔌 [DEBUG] EventSource onmessage triggered:', event);
-        console.log('🔌 [DEBUG] Event data:', event.data);
+      eventSource.onmessage = _event => {
         // SSE events are handled by specific addEventListener calls below
       };
 
-      eventSource.onerror = error => {
-        console.error('🔌 [DEBUG] EventSource onerror triggered:', error);
-        console.error(
-          '🔌 [DEBUG] EventSource readyState:',
-          eventSource.readyState
-        );
+      eventSource.onerror = _error => {
         setConnectionStatus('error');
         isConnecting = false;
       };
@@ -312,52 +296,47 @@ export const GameProvider = ({ children }) => {
 
     setIsProcessingMoves(true);
 
-    const processNextMove = () => {
-      const nextMove = moveQueueRef.current[0];
-      if (!nextMove) {
-        setIsProcessingMoves(false);
-        return;
-      }
+    const nextMove = moveQueueRef.current[0];
+    if (!nextMove) {
+      setIsProcessingMoves(false);
+      return;
+    }
 
-      // Get delay from game config (default: normal = 1000ms)
-      const speed = state.config?.speed || 'normal';
-      const delayMs = getDelayForSpeed(speed);
+    // Get delay from game config (default: normal = 1000ms)
+    const speed = state.config?.speed || 'normal';
+    const delayMs = getDelayForSpeed(speed);
 
-      // DEBUG: Log move processing
-      console.log('[DEBUG][GameContext][moveQueue] Processing move:', {
-        queueLength: moveQueueRef.current.length,
-        configSpeed: state.config?.speed,
-        effectiveSpeed: speed,
-        delayMs: delayMs,
-        moveType: nextMove.type,
+    // DEBUG: Log move processing
+    console.log('[DEBUG][GameContext][moveQueue] Processing move:', {
+      queueLength: moveQueueRef.current.length,
+      configSpeed: state.config?.speed,
+      effectiveSpeed: speed,
+      delayMs: delayMs,
+      moveType: nextMove.type,
+    });
+
+    const timeoutId = setTimeout(() => {
+      dispatch({
+        type: 'UPDATE_BOARD',
+        payload: {
+          board: nextMove.data?.board || [],
+          history: nextMove.data?.history || [],
+          moveCount: nextMove.data?.turn || 0,
+          currentPlayer: nextMove.data?.player,
+          move: nextMove.data?.move,
+        },
       });
 
-      setTimeout(() => {
-        dispatch({
-          type: 'UPDATE_BOARD',
-          payload: {
-            board: nextMove.data.board,
-            history: nextMove.data.history || [],
-            moveCount: nextMove.data.turn || 0,
-            currentPlayer: nextMove.data.player,
-            move: nextMove.data.move,
-          },
-        });
+      setMoveQueue(prev => {
+        const newQueue = prev.slice(1);
+        return newQueue;
+      });
 
-        setMoveQueue(prev => {
-          const newQueue = prev.slice(1);
-          // Process next move if there are more moves
-          if (newQueue.length > 0) {
-            setTimeout(() => processNextMove(), 0);
-          } else {
-            setIsProcessingMoves(false);
-          }
-          return newQueue;
-        });
-      }, delayMs);
-    };
+      setIsProcessingMoves(false);
+    }, delayMs);
 
-    processNextMove();
+    // Cleanup timeout on unmount or dependency change
+    return () => clearTimeout(timeoutId);
   }, [moveQueue.length, isProcessingMoves, state.config?.speed]);
 
   // Process removal queue (infinity mode)
@@ -386,13 +365,13 @@ export const GameProvider = ({ children }) => {
         setNextRemovalPosition(state.history?.[0]?.move || null);
       }
 
-      // Process next removal if there are more in queue
-      if (removalQueueRef.current.length > 0) {
-        processRemoval();
-      }
+      // Note: Don't call processRemoval() recursively here
+      // The useEffect will automatically trigger again when removalQueue.length changes
     };
 
-    processRemoval();
+    // Add a small delay to allow tests to observe the queue state
+    const timeoutId = setTimeout(processRemoval, 0);
+    return () => clearTimeout(timeoutId);
   }, [removalQueue.length, state.moveCount, state.history]);
 
   // Acciones del juego

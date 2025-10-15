@@ -23,8 +23,15 @@ export const validatePlayers = players => {
       throw new Error(`Jugador ${index + 1} debe tener un nombre válido`);
     }
 
-    if (!player.port || typeof player.port !== 'number' || player.port <= 0) {
-      throw new Error(`Jugador ${index + 1} debe tener un puerto válido`);
+    if (
+      (!player.port || typeof player.port !== 'number' || player.port <= 0) &&
+      (!player.url ||
+        typeof player.url !== 'string' ||
+        player.url.trim() === '')
+    ) {
+      throw new Error(
+        `Jugador ${index + 1} debe tener un puerto válido o una URL válida`
+      );
     }
   });
 };
@@ -33,7 +40,8 @@ export const normalizePlayer = (player, id) => {
   return {
     id: id || player.id || 'X', // Player ID for board representation
     name: player.name.trim(),
-    port: player.port,
+    port: player.port || null,
+    url: player.url || null,
     host: player.host || 'localhost',
     protocol: player.protocol || 'http',
     type: player.type || 'algorithm',

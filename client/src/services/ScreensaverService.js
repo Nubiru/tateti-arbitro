@@ -1,14 +1,14 @@
 /**
- * ScreensaverService
- * Service for screensaver screen business logic - simulated games, cycling
+ * Servicio de Protector de Pantalla
+ * Servicio para lógica de negocio de pantalla de protector de pantalla - juegos simulados, ciclado
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
 
 class ScreensaverService {
   /**
-   * Get simulated games for screensaver display
-   * @returns {Array} Array of simulated game objects
+   * Obtener juegos simulados para visualización de protector de pantalla
+   * @returns {Array} Array de objetos de juego simulados
    */
   static getSimulatedGames() {
     return [
@@ -46,15 +46,15 @@ class ScreensaverService {
   }
 
   /**
-   * Create game cycler that rotates through games
-   * @param {Array} games - Array of game objects
-   * @param {number} interval - Interval in milliseconds
-   * @param {Function} onGameChange - Callback with new game index
-   * @returns {Function} Cleanup function to clear the interval
+   * Crear ciclador de juegos que rota a través de los juegos
+   * @param {Array} games - Array de objetos de juego
+   * @param {number} interval - Intervalo en milisegundos
+   * @param {Function} onGameChange - Callback con nuevo índice de juego
+   * @returns {Function} Función de limpieza para limpiar el intervalo
    */
   static createGameCycler(games, interval, onGameChange) {
     if (!Array.isArray(games) || games.length === 0) {
-      return () => {}; // No-op cleanup
+      return () => {}; // Limpieza sin operación
     }
 
     let currentIndex = 0;
@@ -70,10 +70,10 @@ class ScreensaverService {
   }
 
   /**
-   * Get next game index with wraparound
-   * @param {number} currentIndex - Current game index
-   * @param {number} totalGames - Total number of games
-   * @returns {number} Next game index
+   * Obtener siguiente índice de juego con envoltura
+   * @param {number} currentIndex - Índice actual de juego
+   * @param {number} totalGames - Número total de juegos
+   * @returns {number} Siguiente índice de juego
    */
   static getNextGame(currentIndex, totalGames) {
     if (totalGames === 0) {

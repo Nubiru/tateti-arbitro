@@ -27,12 +27,19 @@ function validatePlayer(player, playerName) {
     errors.push(`${playerName}.name no puede exceder 50 caracteres`);
   }
 
-  // Port is only required for bot players, not human players
+  // Port or URL is required for bot players, not human players
   if (!player.isHuman) {
-    if (!player.port || typeof player.port !== 'number') {
-      errors.push(`${playerName}.port es requerido para jugadores bot`);
-    } else if (player.port < 1 || player.port > 65535) {
+    if (!player.port && !player.url) {
+      errors.push(`${playerName} debe tener port o url para jugadores bot`);
+    } else if (
+      player.port &&
+      (typeof player.port !== 'number' ||
+        player.port < 1 ||
+        player.port > 65535)
+    ) {
       errors.push(`${playerName}.port debe estar entre 1 y 65535`);
+    } else if (player.url && typeof player.url !== 'string') {
+      errors.push(`${playerName}.url debe ser una cadena válida`);
     }
   } else {
     // Human players can have port 0 (indicates no port needed)
@@ -100,7 +107,8 @@ async function createMatch(req, res) {
   // Sanitizar entradas
   const sanitizedPlayer1 = {
     name: player1.name.trim().substring(0, 50),
-    port: Math.floor(player1.port),
+    port: player1.port ? Math.floor(player1.port) : null,
+    url: player1.url ? player1.url.trim() : null,
     host: player1.host ? player1.host.trim() : 'localhost',
     protocol: player1.protocol || 'http',
     isHuman: player1.isHuman || false,
@@ -108,7 +116,8 @@ async function createMatch(req, res) {
 
   const sanitizedPlayer2 = {
     name: player2.name.trim().substring(0, 50),
-    port: Math.floor(player2.port),
+    port: player2.port ? Math.floor(player2.port) : null,
+    url: player2.url ? player2.url.trim() : null,
     host: player2.host ? player2.host.trim() : 'localhost',
     protocol: player2.protocol || 'http',
     isHuman: player2.isHuman || false,

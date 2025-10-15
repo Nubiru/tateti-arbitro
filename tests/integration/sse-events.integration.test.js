@@ -71,18 +71,24 @@ describe('Integración de Eventos SSE', () => {
         finalBoard: [1, 1, 1, 0, 0, 0, 0, 0, 0],
         history: [
           {
-            player: 'Player1',
-            position: 0,
+            player: { name: 'Player1', port: 3001, id: 'X' },
+            move: 0,
+            board: ['X', 0, 0, 0, 0, 0, 0, 0, 0],
+            turn: 1,
             timestamp: '2025-10-03T10:00:00.000Z',
           },
           {
-            player: 'Player2',
-            position: 1,
+            player: { name: 'Player2', port: 3002, id: 'O' },
+            move: 1,
+            board: ['X', 'O', 0, 0, 0, 0, 0, 0, 0],
+            turn: 2,
             timestamp: '2025-10-03T10:00:01.000Z',
           },
           {
-            player: 'Player1',
-            position: 2,
+            player: { name: 'Player1', port: 3001, id: 'X' },
+            move: 2,
+            board: ['X', 'O', 'X', 0, 0, 0, 0, 0, 0],
+            turn: 3,
             timestamp: '2025-10-03T10:00:02.000Z',
           },
         ],
@@ -114,9 +120,12 @@ describe('Integración de Eventos SSE', () => {
         finalBoard: [0, 0, 0, 0, 0, 0, 0, 0, 0],
         history: [
           {
-            player: 'Player1',
-            error: 'Connection failed',
+            player: { name: 'Player1', port: 3001, id: 'X' },
+            move: 0,
+            board: [0, 0, 0, 0, 0, 0, 0, 0, 0],
+            turn: 1,
             timestamp: '2025-10-03T10:00:00.000Z',
+            error: 'Connection failed',
           },
         ],
         players: [
@@ -188,8 +197,10 @@ describe('Integración de Eventos SSE', () => {
         finalBoard: [1, 1, 1, 0, 0, 0, 0, 0, 0],
         history: [
           {
-            player: 'Player1',
-            position: 0,
+            player: { name: 'Player1', port: 3001, id: 'X' },
+            move: 0,
+            board: ['X', 0, 0, 0, 0, 0, 0, 0, 0],
+            turn: 1,
             timestamp: '2025-10-03T10:00:00.000Z',
           },
         ],
@@ -211,7 +222,7 @@ describe('Integración de Eventos SSE', () => {
       expect(response.body.history).toBeInstanceOf(Array);
       expect(response.body.history.length).toBeGreaterThan(0);
       expect(response.body.history[0]).toHaveProperty('player');
-      expect(response.body.history[0]).toHaveProperty('position');
+      expect(response.body.history[0]).toHaveProperty('move');
       expect(response.body.history[0]).toHaveProperty('timestamp');
     });
 

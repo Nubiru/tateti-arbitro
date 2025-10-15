@@ -24,15 +24,34 @@ describe('POST /api/match - Pruebas de Integración', () => {
       { name: 'Player2', port: 3002, id: 'O' },
     ],
     history: [
-      { player: 'Player1', position: 0, symbol: 'X' },
-      { player: 'Player2', position: 1, symbol: 'O' },
-      { player: 'Player1', position: 4, symbol: 'X' },
+      {
+        player: { name: 'Player1', port: 3001, id: 'X' },
+        move: 0,
+        board: ['X', 0, 0, 0, 0, 0, 0, 0, 0],
+        turn: 1,
+        timestamp: '2025-10-03T10:00:00.000Z',
+      },
+      {
+        player: { name: 'Player2', port: 3002, id: 'O' },
+        move: 1,
+        board: ['X', 'O', 0, 0, 0, 0, 0, 0, 0],
+        turn: 2,
+        timestamp: '2025-10-03T10:00:01.000Z',
+      },
+      {
+        player: { name: 'Player1', port: 3001, id: 'X' },
+        move: 4,
+        board: ['X', 'O', 0, 0, 'X', 0, 0, 0, 0],
+        turn: 3,
+        timestamp: '2025-10-03T10:00:02.000Z',
+      },
     ],
     winner: { name: 'Player1', port: 3001, id: 'X' },
     winningLine: [0, 4, 8],
     result: 'win',
     message: 'Player1 ganó.',
     finalBoard: [1, 2, 0, 0, 1, 0, 0, 0, 1],
+    matchId: 'test-match-123',
   };
 
   beforeEach(() => {
@@ -349,7 +368,7 @@ describe('POST /api/match - Pruebas de Integración', () => {
     });
   });
 
-  describe.skip('SSE Event Broadcasting', () => {
+  describe('SSE Event Broadcasting', () => {
     test('debería transmitir evento match:start', async () => {
       await request(app)
         .post('/api/match')

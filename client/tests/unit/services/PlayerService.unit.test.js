@@ -74,7 +74,7 @@ describe('PlayerService', () => {
       expect(result).toEqual({
         success: false,
         bots: [],
-        error: 'Failed to discover bots: 500',
+        error: 'Error al descubrir bots: 500',
       });
     });
   });
