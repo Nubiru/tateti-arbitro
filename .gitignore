@@ -103,6 +103,7 @@ Thumbs.db
 # jugadores
 algoritmo-bot/
 .cursor/
+public/
 old_not_relevant/
 EXTERNAL_RESOURCE/
 .snapshots/
