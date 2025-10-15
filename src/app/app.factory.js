@@ -71,8 +71,7 @@ export function createApp(dependencies = {}) {
     dependencies.eventsAdapter ||
     createEventsAdapter({ eventBus: eventBusInstance, logger });
 
-  console.log('🔌 App Factory: EventsAdapter created:', !!eventsAdapter);
-  console.log('🔌 App Factory: EventBus instance:', !!eventBusInstance);
+  // App Factory: EventsAdapter and EventBus initialized
   const arbitrator =
     dependencies.arbitrator ||
     new ArbitratorCoordinator({

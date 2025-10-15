@@ -14,11 +14,7 @@ export class EventsAdapter {
   constructor({ eventBus, logger }) {
     this.eventBus = eventBus;
     this.logger = logger;
-    console.log('🔌 EventsAdapter created with eventBus:', !!eventBus);
-    console.log(
-      '🔌 EventBus connections:',
-      eventBus?.getConnectionCount?.() || 'N/A'
-    );
+    // EventsAdapter initialized
   }
 
   /**
@@ -26,7 +22,7 @@ export class EventsAdapter {
    * @param {Object} payload - Carga útil del evento
    */
   broadcastMatchStart(payload) {
-    console.log('📡 Backend broadcasting match:start event:', payload);
+    // Broadcasting match:start event
     this.logger.debug(
       'EVENTS',
       'BROADCAST',
@@ -42,11 +38,7 @@ export class EventsAdapter {
    * @param {Object} payload - Carga útil del evento
    */
   broadcastMatchMove(payload) {
-    console.log('📡 Backend broadcasting match:move event:', payload);
-    console.log(
-      '📡 EventBus connections:',
-      this.eventBus.getConnectionCount?.() || 'N/A'
-    );
+    // Broadcasting match:move event
     this.logger.debug(
       'EVENTS',
       'BROADCAST',
@@ -55,7 +47,7 @@ export class EventsAdapter {
       payload
     );
     this.eventBus.broadcast('match:move', payload);
-    console.log('📡 Event broadcast completed');
+    // Event broadcast completed
   }
 
   /**
@@ -63,7 +55,7 @@ export class EventsAdapter {
    * @param {Object} payload - Carga útil del evento
    */
   broadcastMatchWin(payload) {
-    console.log('📡 Backend broadcasting match:win event:', payload);
+    // Broadcasting match:win event
     this.logger.debug(
       'EVENTS',
       'BROADCAST',
@@ -109,7 +101,7 @@ export class EventsAdapter {
    * @param {Object} payload - Carga útil del evento
    */
   broadcastMoveRemoval(payload) {
-    console.log('📡 Backend broadcasting move:removed event:', payload);
+    // Broadcasting move:removed event
     this.logger.debug(
       'EVENTS',
       'BROADCAST',

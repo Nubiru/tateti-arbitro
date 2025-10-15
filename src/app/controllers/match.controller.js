@@ -126,11 +126,7 @@ async function createMatch(req, res) {
   const sanitizedTimeout = timeoutMs ? Math.floor(timeoutMs) : 3000;
 
   try {
-    // DEBUG: Registrar los jugadores sanitizados para ver si isHuman se preserva
-    console.log('[DEBUG][match.controller] Jugadores sanitizados:', {
-      player1: sanitizedPlayer1,
-      player2: sanitizedPlayer2,
-    });
+    // DEBUG: Jugadores sanitizados
 
     const arbitrator = createArbitratorCoordinator();
     const result = await arbitrator.runMatch(

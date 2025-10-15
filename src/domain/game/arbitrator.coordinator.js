@@ -236,21 +236,6 @@ export class ArbitratorCoordinator {
       }
 
       // Emitir evento de movimiento usando adaptador de eventos
-      console.log(
-        '🎮 ArbitratorCoordinator: A punto de emitir evento match:move'
-      );
-      console.log(
-        '🎮 ArbitratorCoordinator: EventsAdapter existe:',
-        !!this.eventsAdapter
-      );
-      console.log('🎮 ArbitratorCoordinator: Datos de movimiento:', {
-        matchId: matchId,
-        player: currentPlayer,
-        move: move,
-        board: [...board],
-        turn: turn + 1,
-        timestamp: this.clock.now().toISOString(),
-      });
 
       if (this.eventsAdapter) {
         this.eventsAdapter.broadcastMatchMove({
@@ -261,9 +246,7 @@ export class ArbitratorCoordinator {
           turn: turn + 1,
           timestamp: this.clock.now().toISOString(),
         });
-        console.log(
-          '🎮 ArbitratorCoordinator: Emisión de evento match:move completada'
-        );
+        // Event emission completed
       } else {
         console.error(
           '🎮 ArbitratorCoordinator: ¡EventsAdapter es null o undefined!'
