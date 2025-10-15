@@ -684,11 +684,12 @@ export function createApp(dependencies = {}) {
   });
 
   // Archivos estáticos (debe ir ANTES del 404 handler)
-  app.use(express.static(join(process.cwd(), 'public')));
+  const publicPath = join(process.cwd(), 'public');
+  app.use(express.static(publicPath));
 
   // Servir index.html para la ruta raíz
   app.get('/', (req, res) => {
-    res.sendFile(join(process.cwd(), 'public', 'index.html'));
+    res.sendFile(join(publicPath, 'index.html'));
   });
 
   // Manejador 404 (debe ir DESPUÉS de static files)
