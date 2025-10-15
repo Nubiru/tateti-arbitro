@@ -1,8 +1,8 @@
 /**
  * Adaptador HTTP para Comunicación con Jugadores
  * Encapsula la lógica de comunicación HTTP con axios para inyección de dependencias
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-01-27
+ * @version 1.1.0
  */
 
 import axios from 'axios';
@@ -14,6 +14,15 @@ import axios from 'axios';
  * @returns {string} URL completa
  */
 export function buildUrl(player, endpoint) {
+  // Vercel bot - use full URL
+  if (player.url) {
+    const baseUrl = player.url.endsWith('/')
+      ? player.url.slice(0, -1)
+      : player.url;
+    return `${baseUrl}${endpoint}`;
+  }
+
+  // Docker bot - use host:port (existing logic)
   const protocol = player.protocol || 'http';
   const host = player.host || 'localhost';
   const port = player.port;

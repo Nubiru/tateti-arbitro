@@ -1,19 +1,19 @@
 /**
- * Game Options Service
- * Centralized service for handling game configuration, speed calculations, and state management
+ * Servicio de Opciones de Juego
+ * Servicio centralizado para manejar configuración de juego, cálculos de velocidad y gestión de estado
  * @lastModified 2025-10-07
  * @version 1.0.0
  */
 
 class GameOptionsService {
-  // Speed configuration constants
+  // Constantes de configuración de velocidad
   static SPEED_DELAYS = {
     slow: 2000,
     normal: 1000,
     fast: 200,
   };
 
-  // Default configuration
+  // Configuración por defecto
   static DEFAULT_CONFIG = {
     boardSize: '3x3',
     speed: 'normal',
@@ -21,16 +21,16 @@ class GameOptionsService {
     noTie: false,
   };
 
-  // Valid board sizes
+  // Tamaños de tablero válidos
   static VALID_BOARD_SIZES = ['3x3', '5x5'];
 
-  // Valid speed settings
+  // Configuraciones de velocidad válidas
   static VALID_SPEEDS = ['slow', 'normal', 'fast'];
 
-  // Valid game modes
+  // Modos de juego válidos
   static VALID_GAME_MODES = ['individual', 'tournament'];
 
-  // Game status text mappings
+  // Mapeo de textos de estado del juego
   static GAME_STATUS_TEXT = {
     playing: 'Partida en Progreso',
     completed: 'Partida Completada',
@@ -38,25 +38,25 @@ class GameOptionsService {
     error: 'Error en la Partida',
   };
 
-  // Game rules configuration (Factory Pattern)
+  // Configuración de reglas de juego (Patrón Factory)
   static GAME_RULES = {
     infinity: {
       enabled: true,
-      boardSizes: [3], // Only 3x3 for now
+      boardSizes: [3], // Solo 3x3 por ahora
       description:
-        'No draws - rolling window removes oldest move after 6 moves',
+        'Sin empates - ventana deslizante elimina el movimiento más antiguo después de 6 movimientos',
     },
     infinity5x5: {
-      enabled: false, // Placeholder for future
+      enabled: false, // Marcador de posición para el futuro
       boardSizes: [5],
-      description: 'Infinity mode for 5x5 boards (NOT IMPLEMENTED)',
+      description: 'Modo infinito para tableros 5x5 (NO IMPLEMENTADO)',
     },
   };
 
   /**
-   * Get speed delay in milliseconds
-   * @param {string} speed - Speed setting ('slow', 'normal', 'fast')
-   * @returns {number} Delay in milliseconds
+   * Obtener retraso de velocidad en milisegundos
+   * @param {string} speed - Configuración de velocidad ('slow', 'normal', 'fast')
+   * @returns {number} Retraso en milisegundos
    */
   static getSpeedDelay(speed) {
     if (!speed || typeof speed !== 'string') {
@@ -66,36 +66,36 @@ class GameOptionsService {
   }
 
   /**
-   * Validate board size
-   * @param {string} boardSize - Board size to validate
-   * @returns {boolean} True if valid
+   * Validar tamaño de tablero
+   * @param {string} boardSize - Tamaño de tablero a validar
+   * @returns {boolean} Verdadero si es válido
    */
   static isValidBoardSize(boardSize) {
     return this.VALID_BOARD_SIZES.includes(boardSize);
   }
 
   /**
-   * Validate speed setting
-   * @param {string} speed - Speed setting to validate
-   * @returns {boolean} True if valid
+   * Validar configuración de velocidad
+   * @param {string} speed - Configuración de velocidad a validar
+   * @returns {boolean} Verdadero si es válido
    */
   static isValidSpeed(speed) {
     return this.VALID_SPEEDS.includes(speed);
   }
 
   /**
-   * Validate game mode
-   * @param {string} gameMode - Game mode to validate
-   * @returns {boolean} True if valid
+   * Validar modo de juego
+   * @param {string} gameMode - Modo de juego a validar
+   * @returns {boolean} Verdadero si es válido
    */
   static isValidGameMode(gameMode) {
     return this.VALID_GAME_MODES.includes(gameMode);
   }
 
   /**
-   * Normalize configuration with defaults and validation
-   * @param {Object} config - Configuration object
-   * @returns {Object} Normalized configuration
+   * Normalizar configuración con valores por defecto y validación
+   * @param {Object} config - Objeto de configuración
+   * @returns {Object} Configuración normalizada
    */
   static normalizeConfig(config = {}) {
     return {
@@ -114,21 +114,21 @@ class GameOptionsService {
   }
 
   /**
-   * Check if infinity mode can be enabled for given board size
-   * @param {number} boardSize - Board size (3 or 5)
-   * @returns {boolean} True if infinity mode supported
+   * Verificar si el modo infinito puede ser habilitado para el tamaño de tablero dado
+   * @param {number} boardSize - Tamaño de tablero (3 o 5)
+   * @returns {boolean} Verdadero si el modo infinito es soportado
    */
   static canEnableInfinity(boardSize) {
     const size =
       typeof boardSize === 'number' ? boardSize : parseInt(boardSize);
-    return size === 3; // Only 3x3 for now
+    return size === 3; // Solo 3x3 por ahora
   }
 
   /**
-   * Get game rule configuration based on noTie setting and board size
-   * @param {boolean} noTie - Whether no-tie mode is enabled
-   * @param {number|string} boardSize - Board size (3 or 5)
-   * @returns {Object} Game rule config with rule name and enabled status
+   * Obtener configuración de reglas de juego basada en configuración noTie y tamaño de tablero
+   * @param {boolean} noTie - Si el modo sin empates está habilitado
+   * @param {number|string} boardSize - Tamaño de tablero (3 o 5)
+   * @returns {Object} Configuración de reglas de juego con nombre de regla y estado habilitado
    */
   static getGameRuleConfig(noTie, boardSize) {
     if (!noTie) return { rule: 'classic', enabled: false };
@@ -137,22 +137,22 @@ class GameOptionsService {
       typeof boardSize === 'string' ? parseInt(boardSize) : boardSize;
     if (size === 3) return { rule: 'infinity', enabled: true };
 
-    return { rule: 'classic', enabled: false }; // 5x5 infinity not ready
+    return { rule: 'classic', enabled: false }; // 5x5 infinito no está listo
   }
 
   /**
-   * Determine if speed throttling is needed
-   * @param {string} speed - Speed setting
-   * @returns {boolean} True if throttling needed
+   * Determinar si se necesita limitación de velocidad
+   * @param {string} speed - Configuración de velocidad
+   * @returns {boolean} Verdadero si se necesita limitación
    */
   static shouldThrottle(speed) {
     return speed !== 'fast';
   }
 
   /**
-   * Create throttle configuration object
-   * @param {string} speed - Speed setting
-   * @returns {Object} Throttle configuration
+   * Crear objeto de configuración de limitación
+   * @param {string} speed - Configuración de velocidad
+   * @returns {Object} Configuración de limitación
    */
   static createThrottleConfig(speed) {
     const delay = this.getSpeedDelay(speed);
@@ -166,36 +166,36 @@ class GameOptionsService {
   }
 
   /**
-   * Check if game is in progress
-   * @param {string} gameState - Current game state
-   * @returns {boolean} True if game is playing
+   * Verificar si el juego está en progreso
+   * @param {string} gameState - Estado actual del juego
+   * @returns {boolean} Verdadero si el juego está en progreso
    */
   static isGameInProgress(gameState) {
     return gameState === 'playing';
   }
 
   /**
-   * Check if game is completed
-   * @param {string} gameState - Current game state
-   * @returns {boolean} True if game is completed
+   * Verificar si el juego está completado
+   * @param {string} gameState - Estado actual del juego
+   * @returns {boolean} Verdadero si el juego está completado
    */
   static isGameCompleted(gameState) {
     return gameState === 'completed';
   }
 
   /**
-   * Get game status display text
-   * @param {string} gameState - Current game state
-   * @returns {string} Display text for game status
+   * Obtener texto de visualización del estado del juego
+   * @param {string} gameState - Estado actual del juego
+   * @returns {string} Texto de visualización para el estado del juego
    */
   static getGameStatusText(gameState) {
     return this.GAME_STATUS_TEXT[gameState] || 'Estado Desconocido';
   }
 
   /**
-   * Format winning line for display
-   * @param {Array|boolean|null|undefined} winningLine - Winning line data
-   * @returns {string} Formatted winning line text
+   * Formatear línea ganadora para visualización
+   * @param {Array|boolean|null|undefined} winningLine - Datos de línea ganadora
+   * @returns {string} Texto de línea ganadora formateado
    */
   static formatWinningLine(winningLine) {
     if (Array.isArray(winningLine)) {
@@ -217,26 +217,26 @@ class GameOptionsService {
       return 'N/A';
     }
 
-    // Handle other types (strings, numbers, etc.)
+    // Manejar otros tipos (cadenas, números, etc.)
     return 'Línea ganadora';
   }
 
   /**
-   * Extract player name safely
-   * @param {Object|null|undefined} player - Player object
-   * @returns {string} Player name or 'Unknown'
+   * Extraer nombre del jugador de forma segura
+   * @param {Object|null|undefined} player - Objeto jugador
+   * @returns {string} Nombre del jugador o 'Desconocido'
    */
   static getPlayerName(player) {
     if (!player || typeof player !== 'object') {
-      return 'Unknown';
+      return 'Desconocido';
     }
-    return player.name || 'Unknown';
+    return player.name || 'Desconocido';
   }
 
   /**
-   * Check if player is human
-   * @param {Object|null|undefined} player - Player object
-   * @returns {boolean} True if player is human
+   * Verificar si el jugador es humano
+   * @param {Object|null|undefined} player - Objeto jugador
+   * @returns {boolean} Verdadero si el jugador es humano
    */
   static isHumanPlayer(player) {
     if (!player || typeof player !== 'object') {
@@ -246,9 +246,9 @@ class GameOptionsService {
   }
 
   /**
-   * Create game configuration for API calls
-   * @param {Object} config - Configuration object
-   * @returns {Object} API-ready configuration
+   * Crear configuración de juego para llamadas API
+   * @param {Object} config - Objeto de configuración
+   * @returns {Object} Configuración lista para API
    */
   static createApiConfig(config) {
     const normalized = this.normalizeConfig(config);
@@ -261,29 +261,29 @@ class GameOptionsService {
   }
 
   /**
-   * Validate complete game setup
-   * @param {Object} config - Game configuration
-   * @param {Array} players - Players array
-   * @returns {Object} Validation result
+   * Validar configuración completa del juego
+   * @param {Object} config - Configuración del juego
+   * @param {Array} players - Array de jugadores
+   * @returns {Object} Resultado de validación
    */
   static validateGameSetup(config, players) {
     const normalizedConfig = this.normalizeConfig(config);
     const errors = [];
 
     if (!this.isValidBoardSize(normalizedConfig.boardSize)) {
-      errors.push('Invalid board size');
+      errors.push('Tamaño de tablero inválido');
     }
 
     if (!this.isValidSpeed(normalizedConfig.speed)) {
-      errors.push('Invalid speed setting');
+      errors.push('Configuración de velocidad inválida');
     }
 
     if (!this.isValidGameMode(normalizedConfig.gameMode)) {
-      errors.push('Invalid game mode');
+      errors.push('Modo de juego inválido');
     }
 
     if (!Array.isArray(players) || players.length < 2) {
-      errors.push('Invalid players configuration');
+      errors.push('Configuración de jugadores inválida');
     }
 
     return {
@@ -294,9 +294,9 @@ class GameOptionsService {
   }
 
   /**
-   * Create display configuration for UI components
-   * @param {Object} config - Raw configuration
-   * @returns {Object} UI-ready configuration
+   * Crear configuración de visualización para componentes UI
+   * @param {Object} config - Configuración cruda
+   * @returns {Object} Configuración lista para UI
    */
   static createDisplayConfig(config) {
     const normalized = this.normalizeConfig(config);
@@ -314,9 +314,9 @@ class GameOptionsService {
   }
 
   /**
-   * Get speed display text
-   * @param {string} speed - Speed setting
-   * @returns {string} Display text
+   * Obtener texto de visualización de velocidad
+   * @param {string} speed - Configuración de velocidad
+   * @returns {string} Texto de visualización
    */
   static getSpeedDisplayText(speed) {
     const speedTexts = {
@@ -328,18 +328,18 @@ class GameOptionsService {
   }
 
   /**
-   * Get board size display text
-   * @param {string} boardSize - Board size
-   * @returns {string} Display text
+   * Obtener texto de visualización del tamaño de tablero
+   * @param {string} boardSize - Tamaño de tablero
+   * @returns {string} Texto de visualización
    */
   static getBoardSizeDisplayText(boardSize) {
     return boardSize.toUpperCase();
   }
 
   /**
-   * Get game mode display text
-   * @param {string} gameMode - Game mode
-   * @returns {string} Display text
+   * Obtener texto de visualización del modo de juego
+   * @param {string} gameMode - Modo de juego
+   * @returns {string} Texto de visualización
    */
   static getGameModeDisplayText(gameMode) {
     const modeTexts = {

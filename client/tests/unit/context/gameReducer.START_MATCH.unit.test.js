@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - START_MATCH action
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción START_MATCH
+ * Pruebas de función pura - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - START_MATCH', () => {
-  test('should initialize 3x3 board and set playing state', () => {
+  test('debería inicializar tablero 3x3 y establecer estado playing', () => {
     const state = { ...initialState };
     const action = {
       type: 'START_MATCH',
@@ -28,7 +28,7 @@ describe('gameReducer - START_MATCH', () => {
     expect(result.moveCount).toBe(0);
   });
 
-  test('should initialize 5x5 board', () => {
+  test('debería inicializar tablero 5x5', () => {
     const state = { ...initialState };
     const action = {
       type: 'START_MATCH',
@@ -45,7 +45,7 @@ describe('gameReducer - START_MATCH', () => {
     expect(result.board.length).toBe(25);
   });
 
-  test('should reset history and moveCount', () => {
+  test('debería reiniciar history y moveCount', () => {
     const state = {
       ...initialState,
       history: [{ move: 0, player: 1 }],
@@ -67,7 +67,7 @@ describe('gameReducer - START_MATCH', () => {
     expect(result.moveCount).toBe(0);
   });
 
-  test('should store all match payload data', () => {
+  test('debería almacenar todos los datos del payload de partida', () => {
     const state = { ...initialState };
     const matchData = {
       matchId: 'match-abc',

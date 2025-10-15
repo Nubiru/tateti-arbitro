@@ -1,11 +1,11 @@
 /**
- * Unit Tests for getHostForPort Logic
- * Tests Docker service name mapping based on DOCKER_DISCOVERY environment variable
+ * Pruebas Unitarias para Lógica getHostForPort
+ * Pruebas de mapeo de nombres de servicios Docker basado en variable de entorno DOCKER_DISCOVERY
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
 
-describe('getHostForPort Logic', () => {
+describe('Lógica getHostForPort', () => {
   let originalEnv;
   let getHostForPort;
 
@@ -34,93 +34,93 @@ describe('getHostForPort Logic', () => {
     process.env = originalEnv;
   });
 
-  describe('Docker Discovery Enabled', () => {
+  describe('Descubrimiento Docker Habilitado', () => {
     beforeEach(() => {
       process.env.DOCKER_DISCOVERY = 'true';
     });
 
-    test('should map port 3001 to random-bot-1', () => {
+    test('debería mapear puerto 3001 a random-bot-1', () => {
       expect(getHostForPort(3001)).toBe('random-bot-1');
     });
 
-    test('should map port 3002 to random-bot-2', () => {
+    test('debería mapear puerto 3002 a random-bot-2', () => {
       expect(getHostForPort(3002)).toBe('random-bot-2');
     });
 
-    test('should map port 3005 to algo-bot-1', () => {
+    test('debería mapear puerto 3005 a algo-bot-1', () => {
       expect(getHostForPort(3005)).toBe('algo-bot-1');
     });
 
-    test('should map port 3008 to algo-bot-4', () => {
+    test('debería mapear puerto 3008 a algo-bot-4', () => {
       expect(getHostForPort(3008)).toBe('algo-bot-4');
     });
 
-    test('should return localhost for unmapped ports', () => {
+    test('debería retornar localhost para puertos no mapeados', () => {
       expect(getHostForPort(9999)).toBe('localhost');
     });
 
-    test('should return localhost for null port', () => {
+    test('debería retornar localhost para puerto null', () => {
       expect(getHostForPort(null)).toBe('localhost');
     });
 
-    test('should return localhost for undefined port', () => {
+    test('debería retornar localhost para puerto undefined', () => {
       expect(getHostForPort(undefined)).toBe('localhost');
     });
   });
 
-  describe('Docker Discovery Disabled', () => {
+  describe('Descubrimiento Docker Deshabilitado', () => {
     beforeEach(() => {
       process.env.DOCKER_DISCOVERY = 'false';
     });
 
-    test('should return localhost for port 3001', () => {
+    test('debería retornar localhost para puerto 3001', () => {
       expect(getHostForPort(3001)).toBe('localhost');
     });
 
-    test('should return localhost for port 3002', () => {
+    test('debería retornar localhost para puerto 3002', () => {
       expect(getHostForPort(3002)).toBe('localhost');
     });
 
-    test('should return localhost for all mapped ports', () => {
+    test('debería retornar localhost para todos los puertos mapeados', () => {
       expect(getHostForPort(3001)).toBe('localhost');
       expect(getHostForPort(3005)).toBe('localhost');
       expect(getHostForPort(3008)).toBe('localhost');
     });
   });
 
-  describe('Docker Discovery Not Set', () => {
+  describe('Descubrimiento Docker No Establecido', () => {
     beforeEach(() => {
       delete process.env.DOCKER_DISCOVERY;
     });
 
-    test('should return localhost when DOCKER_DISCOVERY is undefined', () => {
+    test('debería retornar localhost cuando DOCKER_DISCOVERY es undefined', () => {
       expect(getHostForPort(3001)).toBe('localhost');
     });
 
-    test('should return localhost for all ports', () => {
+    test('debería retornar localhost para todos los puertos', () => {
       expect(getHostForPort(3001)).toBe('localhost');
       expect(getHostForPort(3002)).toBe('localhost');
       expect(getHostForPort(9999)).toBe('localhost');
     });
   });
 
-  describe('Edge Cases', () => {
-    test('should handle string "true" correctly', () => {
+  describe('Casos Extremos', () => {
+    test('debería manejar string "true" correctamente', () => {
       process.env.DOCKER_DISCOVERY = 'true';
       expect(getHostForPort(3001)).toBe('random-bot-1');
     });
 
-    test('should not match boolean true', () => {
+    test('debería no coincidir con boolean true', () => {
       process.env.DOCKER_DISCOVERY = true;
       expect(getHostForPort(3001)).toBe('localhost');
     });
 
-    test('should handle empty string as false', () => {
+    test('debería manejar string vacío como false', () => {
       process.env.DOCKER_DISCOVERY = '';
       expect(getHostForPort(3001)).toBe('localhost');
     });
 
-    test('should handle "TRUE" (uppercase) as false', () => {
+    test('debería manejar "TRUE" (mayúsculas) como false', () => {
       process.env.DOCKER_DISCOVERY = 'TRUE';
       expect(getHostForPort(3001)).toBe('localhost');
     });

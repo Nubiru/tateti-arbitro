@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - REMOVE_MOVE action (Infinity Mode)
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción REMOVE_MOVE (Modo Infinito)
+ * Pruebas de funciones puras - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - REMOVE_MOVE (Infinity Mode)', () => {
-  test('should clear board position', () => {
+  test('debería limpiar posición del tablero', () => {
     const state = {
       ...initialState,
       board: [1, 2, 1, 2, 0, 0, 0, 0, 0],
@@ -23,11 +23,11 @@ describe('gameReducer - REMOVE_MOVE (Infinity Mode)', () => {
     const result = gameReducer(state, action);
 
     expect(result.board[0]).toBe(0);
-    expect(result.board[1]).toBe(2); // Other positions unchanged
+    expect(result.board[1]).toBe(2); // Otras posiciones sin cambios
     expect(result.board[2]).toBe(1);
   });
 
-  test('should set nextRemovalPosition when moveCount >= 5', () => {
+  test('debería establecer nextRemovalPosition cuando moveCount >= 5', () => {
     const state = {
       ...initialState,
       board: [1, 2, 1, 2, 1, 0, 0, 0, 0],
@@ -48,7 +48,7 @@ describe('gameReducer - REMOVE_MOVE (Infinity Mode)', () => {
     expect(result.nextRemovalPosition).toBe(1);
   });
 
-  test('should not set nextRemovalPosition when moveCount < 5', () => {
+  test('no debería establecer nextRemovalPosition cuando moveCount < 5', () => {
     const state = {
       ...initialState,
       board: [1, 2, 1, 0, 0, 0, 0, 0, 0],
@@ -66,7 +66,7 @@ describe('gameReducer - REMOVE_MOVE (Infinity Mode)', () => {
     expect(result.nextRemovalPosition).toBeNull();
   });
 
-  test('should handle removal from any position', () => {
+  test('debería manejar eliminación desde cualquier posición', () => {
     const state = {
       ...initialState,
       board: [1, 2, 1, 2, 1, 2, 0, 0, 0],
@@ -81,11 +81,11 @@ describe('gameReducer - REMOVE_MOVE (Infinity Mode)', () => {
     const result = gameReducer(state, action);
 
     expect(result.board[4]).toBe(0);
-    expect(result.board[0]).toBe(1); // Others unchanged
+    expect(result.board[0]).toBe(1); // Otros sin cambios
     expect(result.board[5]).toBe(2);
   });
 
-  test('should not mutate original board', () => {
+  test('no debería mutar el tablero original', () => {
     const state = {
       ...initialState,
       board: [1, 2, 1, 2, 0, 0, 0, 0, 0],

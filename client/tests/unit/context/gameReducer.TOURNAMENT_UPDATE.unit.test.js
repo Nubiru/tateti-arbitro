@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - TOURNAMENT_UPDATE action
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción TOURNAMENT_UPDATE
+ * Pruebas de funciones puras - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - TOURNAMENT_UPDATE', () => {
-  test('should update tournament data', () => {
+  test('debería actualizar datos del torneo', () => {
     const state = {
       ...initialState,
       gameState: 'tournament',
@@ -39,7 +39,7 @@ describe('gameReducer - TOURNAMENT_UPDATE', () => {
     expect(result.tournament.rounds.length).toBe(1);
   });
 
-  test('should preserve other state properties', () => {
+  test('debería preservar otras propiedades del estado', () => {
     const state = {
       ...initialState,
       gameState: 'tournament',
@@ -66,7 +66,7 @@ describe('gameReducer - TOURNAMENT_UPDATE', () => {
     expect(result.gameState).toBe('tournament');
   });
 
-  test('should handle partial tournament updates', () => {
+  test('debería manejar actualizaciones parciales del torneo', () => {
     const state = {
       ...initialState,
       tournament: {
@@ -94,7 +94,7 @@ describe('gameReducer - TOURNAMENT_UPDATE', () => {
     expect(result.tournament.bracket.semifinals.length).toBe(1);
   });
 
-  test('should completely replace tournament data', () => {
+  test('debería reemplazar completamente los datos del torneo', () => {
     const state = {
       ...initialState,
       tournament: {

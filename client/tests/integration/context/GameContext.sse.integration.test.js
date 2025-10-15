@@ -1,6 +1,6 @@
 /**
- * Integration Tests: GameContext - SSE Events
- * Tests Server-Sent Events handling with full Context (move:removed, etc.)
+ * Pruebas de Integración: GameContext - Eventos SSE
+ * Pruebas de manejo de Server-Sent Events con Context completo (move:removed, etc.)
  * @lastModified 2025-10-10
  * @version 1.1.0
  * @testType integration
@@ -18,7 +18,7 @@ class MockEventSource {
     this.readyState = 0; // CONNECTING
     MockEventSource.instances.push(this);
 
-    // Simulate async connection
+    // Simular conexión asíncrona
     setTimeout(() => {
       this.readyState = 1; // OPEN
       if (this.onopen) {
@@ -55,38 +55,38 @@ class MockEventSource {
 
 global.EventSource = MockEventSource;
 
-describe('GameContext - SSE Events', () => {
+describe('GameContext - Eventos SSE', () => {
   beforeEach(() => {
     MockEventSource.reset();
   });
 
-  describe('move:removed Event (Infinity Mode)', () => {
-    test('should listen for move:removed event (not match:remove)', async () => {
+  describe('Evento move:removed (Modo Infinito)', () => {
+    test('debería escuchar evento move:removed (no match:remove)', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
 
-      // Wait for EventSource to be created
+      // Esperar a que EventSource sea creado
       await waitFor(() => {
         expect(MockEventSource.instances.length).toBe(1);
       });
 
       const eventSource = MockEventSource.instances[0];
 
-      // Assert: Should have listener for 'move:removed'
+      // Afirmar: Debería tener listener para 'move:removed'
       expect(eventSource.listeners['move:removed']).toBeDefined();
       expect(eventSource.listeners['move:removed'].length).toBeGreaterThan(0);
     });
 
-    test.skip('should add removal to removalQueue when move:removed event is received', async () => {
+    test.skip('debería agregar eliminación a removalQueue cuando se recibe evento move:removed', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -97,7 +97,7 @@ describe('GameContext - SSE Events', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger move:removed event (infinity mode)
+      // Disparar evento move:removed (modo infinito)
       act(() => {
         eventSource.trigger('move:removed', {
           position: 0,
@@ -106,8 +106,8 @@ describe('GameContext - SSE Events', () => {
         });
       });
 
-      // Assert: Removal should be added to removalQueue
-      // Increase timeout as state updates may take longer
+      // Afirmar: La eliminación debería ser agregada a removalQueue
+      // Aumentar timeout ya que las actualizaciones de estado pueden tomar más tiempo
       await waitFor(
         () => {
           expect(result.current.removalQueue.length).toBeGreaterThanOrEqual(1);
@@ -118,11 +118,11 @@ describe('GameContext - SSE Events', () => {
       expect(result.current.removalQueue[0].position).toBe(0);
     });
 
-    test.skip('should process multiple removals in sequence', async () => {
+    test.skip('debería procesar múltiples eliminaciones en secuencia', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -133,7 +133,7 @@ describe('GameContext - SSE Events', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger multiple removal events
+      // Disparar múltiples eventos de eliminación
       act(() => {
         eventSource.trigger('move:removed', {
           position: 0,
@@ -148,19 +148,19 @@ describe('GameContext - SSE Events', () => {
         });
       });
 
-      // Assert: Both removals should be queued
+      // Afirmar: Ambas eliminaciones deberían estar en cola
       await waitFor(() => {
         expect(result.current.removalQueue.length).toBeGreaterThan(0);
       });
     });
   });
 
-  describe('match:move Event', () => {
-    test('should queue moves for delayed processing', async () => {
+  describe('Evento match:move', () => {
+    test('debería encolar movimientos para procesamiento retrasado', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -171,7 +171,7 @@ describe('GameContext - SSE Events', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger match:move event
+      // Disparar evento match:move
       act(() => {
         eventSource.trigger('match:move', {
           player: { name: 'Player1', id: 1 },
@@ -181,17 +181,17 @@ describe('GameContext - SSE Events', () => {
         });
       });
 
-      // Assert: Move should be queued (not immediately applied)
+      // Afirmar: El movimiento debería estar en cola (no aplicado inmediatamente)
       expect(result.current.moveQueue.length).toBeGreaterThan(0);
     });
   });
 
-  describe('match:win Event', () => {
-    test('should dispatch MATCH_COMPLETE with full data', async () => {
+  describe('Evento match:win', () => {
+    test('debería despachar MATCH_COMPLETE con datos completos', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -202,7 +202,7 @@ describe('GameContext - SSE Events', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger match:win event
+      // Disparar evento match:win
       act(() => {
         eventSource.trigger('match:win', {
           winner: { name: 'Player1', id: 1 },
@@ -220,7 +220,7 @@ describe('GameContext - SSE Events', () => {
         });
       });
 
-      // Assert: Match should be completed
+      // Afirmar: La partida debería estar completada
       await waitFor(() => {
         expect(result.current.gameState).toBe('completed');
         expect(result.current.matchResult).toBeDefined();
@@ -232,12 +232,12 @@ describe('GameContext - SSE Events', () => {
     });
   });
 
-  describe('match:error Event', () => {
-    test('should set error state on match error', async () => {
+  describe('Evento match:error', () => {
+    test('debería establecer estado de error en error de partida', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -248,7 +248,7 @@ describe('GameContext - SSE Events', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger error event
+      // Disparar evento de error
       act(() => {
         eventSource.trigger('match:error', {
           message: 'Player timeout',
@@ -256,7 +256,7 @@ describe('GameContext - SSE Events', () => {
         });
       });
 
-      // Assert: Error state should be set
+      // Afirmar: El estado de error debería estar establecido
       await waitFor(() => {
         expect(result.current.gameState).toBe('error');
         expect(result.current.error).toBe('Player timeout');
@@ -264,12 +264,12 @@ describe('GameContext - SSE Events', () => {
     });
   });
 
-  describe('match:draw Event', () => {
-    test('should complete match with draw result', async () => {
+  describe('Evento match:draw', () => {
+    test('debería completar partida con empate', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -280,7 +280,7 @@ describe('GameContext - SSE Events', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger draw event
+      // Disparar evento de empate
       act(() => {
         eventSource.trigger('match:draw', {
           finalBoard: [1, 2, 1, 1, 2, 2, 2, 1, 1],
@@ -288,7 +288,7 @@ describe('GameContext - SSE Events', () => {
         });
       });
 
-      // Assert: Match completed as draw
+      // Afirmar: Partida completada como empate
       await waitFor(() => {
         expect(result.current.gameState).toBe('completed');
         expect(result.current.matchResult).toBeDefined();
@@ -297,28 +297,28 @@ describe('GameContext - SSE Events', () => {
     });
   });
 
-  describe('Connection Management', () => {
-    test('should establish SSE connection on mount', async () => {
+  describe('Gestión de Conexión', () => {
+    test('debería establecer conexión SSE al montar', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
 
-      // Assert: EventSource should be created
+      // Afirmar: EventSource debería ser creado
       await waitFor(() => {
         expect(MockEventSource.instances.length).toBe(1);
         expect(MockEventSource.instances[0].url).toBe('/api/stream');
       });
     });
 
-    test('should set connection status to connected', async () => {
+    test('debería establecer estado de conexión a conectado', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -329,14 +329,14 @@ describe('GameContext - SSE Events', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Simulate onopen
+      // Simular onopen
       act(() => {
         if (eventSource.onopen) {
           eventSource.onopen();
         }
       });
 
-      // Assert: Connection status should be connected
+      // Afirmar: El estado de conexión debería ser conectado
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });

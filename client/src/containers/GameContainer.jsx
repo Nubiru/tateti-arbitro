@@ -30,6 +30,18 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
 
   // Manejar transiciones de pantalla basadas en el estado del juego
   useEffect(() => {
+    // DEBUG: Log screen routing decisions
+    console.log(
+      '[DEBUG][GameContainer][ScreenRouting] Screen routing decision:',
+      {
+        currentScreen,
+        gameState,
+        tournament: !!tournament,
+        moveQueueLength: moveQueue.length,
+        isProcessingMoves,
+      }
+    );
+
     // No cambiar automáticamente si estamos en la pantalla de presentación
     if (currentScreen === 'presentation' && gameState === 'idle') {
       return;
@@ -44,6 +56,16 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
       return;
     }
 
+    // Tournament-specific routing: Show individual match progress with delays
+    if (tournament && gameState === 'playing') {
+      // During tournament, show individual match progress with delays
+      console.log(
+        '[DEBUG][GameContainer][ScreenRouting] Tournament match detected, switching to progress screen'
+      );
+      setCurrentScreen('progress');
+      return;
+    }
+
     switch (gameState) {
       case 'idle':
         setCurrentScreen('config');
@@ -52,7 +74,12 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
         setCurrentScreen('progress');
         break;
       case 'completed':
-        setCurrentScreen('celebration');
+        // If we're in a tournament and match completed, show bracket
+        if (tournament) {
+          setCurrentScreen('bracket');
+        } else {
+          setCurrentScreen('celebration');
+        }
         break;
       case 'tournament':
         setCurrentScreen('bracket');
@@ -69,7 +96,13 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
           setCurrentScreen('config');
         }
     }
-  }, [gameState, currentScreen, moveQueue.length, isProcessingMoves]);
+  }, [
+    gameState,
+    currentScreen,
+    moveQueue.length,
+    isProcessingMoves,
+    tournament,
+  ]);
 
   // Manejar navegación hacia atrás
   const handleBack = () => {
@@ -100,22 +133,20 @@ const GameContainer = ({ visualTheme, onVisualThemeChange }) => {
   // Manejar inicio de juego
   const handleStart = async gameConfig => {
     // DEBUG: Log game start configuration
-    if (process.env.LOG_LEVEL === 'debug') {
-      console.log(
-        '[DEBUG][GameContainer][handleStart] Starting game with config:',
-        {
-          gameMode: gameConfig.gameMode,
-          players: gameConfig.players?.map(p => ({
-            name: p.name,
-            port: p.port,
-            isHuman: p.isHuman,
-          })),
-          boardSize: gameConfig.boardSize,
-          speed: gameConfig.speed,
-          noTie: gameConfig.noTie,
-        }
-      );
-    }
+    console.log(
+      '[DEBUG][GameContainer][handleStart] Starting game with config:',
+      {
+        gameMode: gameConfig.gameMode,
+        players: gameConfig.players?.map(p => ({
+          name: p.name,
+          port: p.port,
+          isHuman: p.isHuman,
+        })),
+        boardSize: gameConfig.boardSize,
+        speed: gameConfig.speed,
+        noTie: gameConfig.noTie,
+      }
+    );
 
     if (gameConfig.gameMode === 'tournament') {
       // Iniciar torneo

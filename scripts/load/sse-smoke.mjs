@@ -1,11 +1,11 @@
 /**
- * SSE Load Test Script
- * Tests SSE connection capacity and message throughput
+ * Script de Prueba de Carga SSE
+ * Prueba la capacidad de conexión SSE y el rendimiento de mensajes
  * @lastModified 2025-10-05
  * @version 2.0.0
- * @todo Senior software engineer attention - optimized for Node.js 22 LTS
+ * @todo Atención de ingeniero de software senior - optimizado para Node.js 22 LTS
  *
- * Note: Console statements are intentional for CLI output per @code-standard.md
+ * Nota: Las declaraciones de consola son intencionales para salida CLI según @code-standard.md
  */
 
 /* eslint-disable no-console */
@@ -14,80 +14,80 @@ import EventSource from 'eventsource';
 
 const SSE_URL = process.env.SSE_URL || 'http://localhost:4000/api/stream';
 const CONNECTION_COUNT = parseInt(process.env.CONNECTION_COUNT) || 10;
-const TEST_DURATION = parseInt(process.env.TEST_DURATION) || 30000; // 30 seconds
+const TEST_DURATION = parseInt(process.env.TEST_DURATION) || 30000; // 30 segundos
 
 const connections = [];
 let messageCount = 0;
 let errorCount = 0;
 const startTime = Date.now();
 
-console.log(`🚀 Starting SSE load test with ${CONNECTION_COUNT} connections`);
-console.log(`📡 SSE URL: ${SSE_URL}`);
-console.log(`⏱️  Test duration: ${TEST_DURATION}ms`);
+console.log(`🚀 Iniciando prueba de carga SSE con ${CONNECTION_COUNT} conexiones`);
+console.log(`📡 URL SSE: ${SSE_URL}`);
+console.log(`⏱️  Duración de prueba: ${TEST_DURATION}ms`);
 
-// Create connections with proper error handling
+// Crear conexiones con manejo adecuado de errores
 for (let i = 0; i < CONNECTION_COUNT; i++) {
   const eventSource = new EventSource(SSE_URL);
 
   eventSource.onopen = () => {
-    console.log(`✅ Connection ${i + 1} opened`);
+    console.log(`✅ Conexión ${i + 1} abierta`);
   };
 
   eventSource.onmessage = () => {
     messageCount++;
     if (messageCount % 100 === 0) {
-      console.log(`📨 Messages received: ${messageCount}`);
+      console.log(`📨 Mensajes recibidos: ${messageCount}`);
     }
   };
 
   eventSource.onerror = (error) => {
     errorCount++;
     console.error(
-      `❌ Connection ${i + 1} error:`,
-      error.type || 'Unknown error'
+      `❌ Error de conexión ${i + 1}:`,
+      error.type || 'Error desconocido'
     );
   };
 
   connections.push(eventSource);
 }
 
-// Monitor performance
+// Monitorear rendimiento
 const monitor = setInterval(() => {
   const elapsed = Date.now() - startTime;
   const messagesPerSecond = (messageCount / (elapsed / 1000)).toFixed(2);
 
-  console.log(`📊 Stats after ${Math.floor(elapsed / 1000)}s:`);
-  console.log(`   Messages: ${messageCount}`);
-  console.log(`   Errors: ${errorCount}`);
-  console.log(`   Messages/sec: ${messagesPerSecond}`);
+  console.log(`📊 Estadísticas después de ${Math.floor(elapsed / 1000)}s:`);
+  console.log(`   Mensajes: ${messageCount}`);
+  console.log(`   Errores: ${errorCount}`);
+  console.log(`   Mensajes/seg: ${messagesPerSecond}`);
   console.log(
-    `   Active connections: ${
+    `   Conexiones activas: ${
       connections.filter((conn) => conn.readyState === 1).length
     }`
   );
 }, 5000);
 
-// Cleanup after test duration
+// Limpiar después de la duración de prueba
 setTimeout(() => {
-  console.log('\n🏁 Test completed, cleaning up...');
+  console.log('\n🏁 Prueba completada, limpiando...');
 
   clearInterval(monitor);
 
   connections.forEach((conn, index) => {
     conn.close();
-    console.log(`🔌 Connection ${index + 1} closed`);
+    console.log(`🔌 Conexión ${index + 1} cerrada`);
   });
 
   const totalTime = Date.now() - startTime;
   const avgMessagesPerSecond = (messageCount / (totalTime / 1000)).toFixed(2);
 
-  console.log('\n📈 Final Results:');
-  console.log(`   Total messages: ${messageCount}`);
-  console.log(`   Total errors: ${errorCount}`);
-  console.log(`   Test duration: ${Math.floor(totalTime / 1000)}s`);
-  console.log(`   Average messages/sec: ${avgMessagesPerSecond}`);
+  console.log('\n📈 Resultados Finales:');
+  console.log(`   Total de mensajes: ${messageCount}`);
+  console.log(`   Total de errores: ${errorCount}`);
+  console.log(`   Duración de prueba: ${Math.floor(totalTime / 1000)}s`);
+  console.log(`   Promedio mensajes/seg: ${avgMessagesPerSecond}`);
   console.log(
-    `   Error rate: ${(
+    `   Tasa de error: ${(
       (errorCount / (messageCount + errorCount)) *
       100
     ).toFixed(2)}%`
@@ -96,9 +96,9 @@ setTimeout(() => {
   process.exit(0);
 }, TEST_DURATION);
 
-// Handle process termination
+// Manejar terminación del proceso
 process.on('SIGINT', () => {
-  console.log('\n🛑 Test interrupted by user');
+  console.log('\n🛑 Prueba interrumpida por el usuario');
   connections.forEach((conn) => conn.close());
   process.exit(0);
 });

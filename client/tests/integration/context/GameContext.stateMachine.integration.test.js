@@ -1,6 +1,6 @@
 /**
- * Unit Tests for GameContext State Machine
- * Tests proper state transitions and SSE event handling
+ * Pruebas Unitarias para Máquina de Estado de GameContext
+ * Pruebas de transiciones de estado correctas y manejo de eventos SSE
  * @lastModified 2025-10-07
  * @version 1.0.0
  */
@@ -43,7 +43,7 @@ class MockEventSource {
     this.readyState = 3; // CLOSED
   }
 
-  // Helper method to simulate events
+  // Método auxiliar para simular eventos
   simulateEvent(event, data) {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => {
@@ -55,7 +55,7 @@ class MockEventSource {
 
 global.EventSource = MockEventSource;
 
-describe('GameContext State Machine', () => {
+describe('Máquina de Estado de GameContext', () => {
   let mockFetch;
 
   beforeEach(() => {
@@ -64,8 +64,8 @@ describe('GameContext State Machine', () => {
     global.fetch = mockFetch;
   });
 
-  describe('startMatch() State Transitions', () => {
-    test('should dispatch START_MATCH immediately before API call', async () => {
+  describe('Transiciones de Estado de startMatch()', () => {
+    test('debería despachar START_MATCH inmediatamente antes de la llamada API', async () => {
       const TestComponent = () => {
         const { gameState, startMatch } = React.useContext(GameContext);
         const [stateHistory, setStateHistory] = React.useState([]);
@@ -93,7 +93,7 @@ describe('GameContext State Machine', () => {
         );
       };
 
-      // Mock successful API response
+      // Mock respuesta exitosa de API
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -115,15 +115,15 @@ describe('GameContext State Machine', () => {
         </GameProvider>
       );
 
-      // Initial state should be idle
+      // Estado inicial debería ser idle
       expect(screen.getByTestId('game-state')).toHaveTextContent('idle');
 
-      // Click start match
+      // Hacer clic en iniciar partida
       await act(async () => {
         screen.getByText('Start Match').click();
       });
 
-      // Should immediately transition to playing state
+      // Debería transicionar inmediatamente al estado playing
       await waitFor(() => {
         const stateHistory = JSON.parse(
           screen.getByTestId('state-history').textContent
@@ -131,7 +131,7 @@ describe('GameContext State Machine', () => {
         expect(stateHistory).toContain('playing');
       });
 
-      // Verify API was called
+      // Verificar que API fue llamada
       expect(mockFetch).toHaveBeenCalledWith('/api/match', {
         method: 'POST',
         headers: {
@@ -141,7 +141,7 @@ describe('GameContext State Machine', () => {
       });
     });
 
-    test('should handle human player matches correctly', async () => {
+    test('debería manejar partidas de jugador humano correctamente', async () => {
       const TestComponent = () => {
         const { gameState, startMatch } = React.useContext(GameContext);
         const [stateHistory, setStateHistory] = React.useState([]);
@@ -169,7 +169,7 @@ describe('GameContext State Machine', () => {
         );
       };
 
-      // Mock API response for human player
+      // Mock respuesta de API para jugador humano
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -191,12 +191,12 @@ describe('GameContext State Machine', () => {
         </GameProvider>
       );
 
-      // Click start match
+      // Hacer clic en iniciar partida
       await act(async () => {
         screen.getByText('Start Match').click();
       });
 
-      // Should transition to playing state and wait for human input
+      // Debería transicionar al estado playing y esperar entrada humana
       await waitFor(() => {
         const stateHistory = JSON.parse(
           screen.getByTestId('state-history').textContent
@@ -207,7 +207,7 @@ describe('GameContext State Machine', () => {
       expect(screen.getByTestId('game-state')).toHaveTextContent('playing');
     });
 
-    test('should handle API errors gracefully', async () => {
+    test('debería manejar errores de API de forma elegante', async () => {
       const TestComponent = () => {
         const { gameState, startMatch, error } = React.useContext(GameContext);
 
@@ -228,7 +228,7 @@ describe('GameContext State Machine', () => {
         );
       };
 
-      // Mock API error
+      // Mock error de API
       mockFetch.mockRejectedValueOnce(new Error('API Error'));
 
       render(
@@ -237,12 +237,12 @@ describe('GameContext State Machine', () => {
         </GameProvider>
       );
 
-      // Click start match
+      // Hacer clic en iniciar partida
       await act(async () => {
         screen.getByText('Start Match').click();
       });
 
-      // Should transition to error state
+      // Debería transicionar al estado de error
       await waitFor(() => {
         expect(screen.getByTestId('game-state')).toHaveTextContent('error');
         expect(screen.getByTestId('error')).toHaveTextContent('API Error');
@@ -250,9 +250,9 @@ describe('GameContext State Machine', () => {
     });
   });
 
-  describe('State Machine Actions', () => {
-    test('should handle state transitions correctly', async () => {
-      // Mock successful API response
+  describe('Acciones de Máquina de Estado', () => {
+    test('debería manejar transiciones de estado correctamente', async () => {
+      // Mock respuesta exitosa de API
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
@@ -297,24 +297,24 @@ describe('GameContext State Machine', () => {
         </GameProvider>
       );
 
-      // Initial state should be idle
+      // Estado inicial debería ser idle
       expect(screen.getByTestId('game-state')).toHaveTextContent('idle');
 
-      // Simulate START_MATCH action by clicking the button
+      // Simular acción START_MATCH haciendo clic en el botón
       await act(async () => {
         const button = screen.getByText('Start Match');
         button.click();
       });
 
-      // Should transition to playing state
+      // Debería transicionar al estado playing
       await waitFor(() => {
         expect(screen.getByTestId('game-state')).toHaveTextContent('playing');
       });
     });
   });
 
-  describe('State Transition Edge Cases', () => {
-    test('should not change state if already in presentation screen', async () => {
+  describe('Casos Límite de Transición de Estado', () => {
+    test('no debería cambiar estado si ya está en pantalla de presentación', async () => {
       const TestComponent = () => {
         const { gameState } = React.useContext(GameContext);
 
@@ -331,11 +331,11 @@ describe('GameContext State Machine', () => {
         </GameProvider>
       );
 
-      // Initial state should be idle
+      // Estado inicial debería ser idle
       expect(screen.getByTestId('game-state')).toHaveTextContent('idle');
     });
 
-    test('should handle multiple rapid state changes', async () => {
+    test('debería manejar múltiples cambios de estado rápidos', async () => {
       const TestComponent = () => {
         const { gameState, startMatch } = React.useContext(GameContext);
         const [stateHistory, setStateHistory] = React.useState([]);
@@ -345,7 +345,7 @@ describe('GameContext State Machine', () => {
         }, [gameState]);
 
         const handleRapidCalls = async () => {
-          // Make multiple rapid calls
+          // Hacer múltiples llamadas rápidas
           startMatch(
             { name: 'Bot1', type: 'algorithm' },
             { name: 'Bot2', type: 'random' }
@@ -367,7 +367,7 @@ describe('GameContext State Machine', () => {
         );
       };
 
-      // Mock API responses
+      // Mock respuestas de API
       mockFetch.mockResolvedValue({
         ok: true,
         json: async () => ({
@@ -389,12 +389,12 @@ describe('GameContext State Machine', () => {
         </GameProvider>
       );
 
-      // Click rapid calls
+      // Hacer clic en llamadas rápidas
       await act(async () => {
         screen.getByText('Rapid Calls').click();
       });
 
-      // Should handle rapid calls gracefully
+      // Debería manejar llamadas rápidas de forma elegante
       await waitFor(() => {
         const stateHistory = JSON.parse(
           screen.getByTestId('state-history').textContent

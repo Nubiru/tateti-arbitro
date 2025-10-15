@@ -7,14 +7,19 @@ Sistema que detecta automáticamente bots disponibles sin configuración manual.
 - **Descubrimiento Automático**: Detecta bots sin configuración
 - **Escalabilidad**: Soporte para 2-16 jugadores
 - **Docker Native**: Integración con Docker API
+- **Vercel Support**: Soporte para bots alojados en Vercel
 - **Health Checks**: Verificación en tiempo real
 - **Caching**: 30 segundos TTL para optimización
 - **Fallback**: Funciona en localhost sin Docker
+- **Hybrid Discovery**: Combina Docker y Vercel bots
 
 ## 🏗️ Arquitectura
 
 ```
 Bot Registry ◄──► Bot Discovery ◄──► Docker API
+                       │                    │
+                       │                    ▼
+                       │              Vercel API
                        │
                        ▼
               /api/bots/available
@@ -28,12 +33,19 @@ Bot Registry ◄──► Bot Discovery ◄──► Docker API
 
 ### Variables de Entorno
 
+#### Docker Discovery
 ```bash
-DOCKER_DISCOVERY=true         # Habilitar descubrimiento
+DOCKER_DISCOVERY=true         # Habilitar descubrimiento Docker
 DOCKER_ENV=true               # Indicar ambiente Docker
 DOCKER_HOST=unix:///var/run/docker.sock
 DISCOVERY_CACHE_TTL=30000     # 30 segundos
 DISCOVERY_TIMEOUT=2000        # 2 segundos
+```
+
+#### Vercel Bot Discovery
+```bash
+VERCEL_BOTS_ENABLED=true      # Habilitar bots de Vercel
+VERCEL_BOT_URLS=https://ta-te-ti-bemg.vercel.app,https://another-bot.vercel.app
 ```
 
 ### Bot Registry
@@ -137,17 +149,63 @@ const stats = discoveryService.getDiscoveryStats();
 // }
 ```
 
+## 🌐 Vercel Bot Deployment
+
+### Deploying Bots to Vercel
+
+1. **Create a Vercel project** with your bot logic
+2. **Implement required endpoints**:
+   - `GET /health` - Health check
+   - `GET /move?board=[...]` - Move endpoint
+   - `GET /info` - Bot metadata (optional)
+
+3. **Set environment variables** in your arbitrator:
+   ```bash
+   VERCEL_BOTS_ENABLED=true
+   VERCEL_BOT_URLS=https://your-bot.vercel.app
+   ```
+
+### Example Vercel Bot Structure
+
+```javascript
+// api/health.js
+export default function handler(req, res) {
+  res.status(200).json({ 
+    status: 'healthy', 
+    name: 'MyBot',
+    version: '1.0.0' 
+  });
+}
+
+// api/move.js
+export default function handler(req, res) {
+  const { board } = req.query;
+  const boardArray = JSON.parse(board);
+  
+  // Your bot logic here
+  const move = calculateMove(boardArray);
+  
+  res.status(200).json({ move });
+}
+```
+
 ## 🔧 Verificación
 
 ```bash
-# Health check de bot
+# Health check de bot Docker
 curl http://localhost:3001/health
+
+# Health check de bot Vercel
+curl https://ta-te-ti-bemg.vercel.app/health
 
 # Metadata de bot
 curl http://localhost:3001/info
 
 # Docker
 docker ps | grep bot
+
+# Vercel bots
+curl http://localhost:3000/api/bots/available
 ```
 
 ## 🚀 Escalabilidad

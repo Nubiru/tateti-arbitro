@@ -1,11 +1,11 @@
 /**
- * Unit Tests for Player ID Assignment Logic
- * Tests X/O symbol assignment to players
+ * Pruebas Unitarias para Lógica de Asignación de ID de Jugador
+ * Pruebas de asignación de símbolos X/O a jugadores
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
 
-describe('Player ID Assignment Logic', () => {
+describe('Lógica de Asignación de ID de Jugador', () => {
   let assignPlayerIds;
 
   beforeEach(() => {
@@ -19,8 +19,8 @@ describe('Player ID Assignment Logic', () => {
     };
   });
 
-  describe('Two Player Assignment', () => {
-    test('should assign X to first player', () => {
+  describe('Asignación de Dos Jugadores', () => {
+    test('debería asignar X al primer jugador', () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -32,7 +32,7 @@ describe('Player ID Assignment Logic', () => {
       expect(result[0].symbol).toBe('X');
     });
 
-    test('should assign O to second player', () => {
+    test('debería asignar O al segundo jugador', () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -44,7 +44,7 @@ describe('Player ID Assignment Logic', () => {
       expect(result[1].symbol).toBe('O');
     });
 
-    test('should preserve original player data', () => {
+    test('debería preservar datos originales del jugador', () => {
       const players = [
         { name: 'Player1', port: 3001, isHuman: true },
         { name: 'Player2', port: 3002, isHuman: false },
@@ -70,8 +70,8 @@ describe('Player ID Assignment Logic', () => {
     });
   });
 
-  describe('Symbol Consistency', () => {
-    test('should use X and O symbols consistently', () => {
+  describe('Consistencia de Símbolos', () => {
+    test('debería usar símbolos X y O consistentemente', () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -84,7 +84,7 @@ describe('Player ID Assignment Logic', () => {
       expect(result1[1].id).toBe(result2[1].id);
     });
 
-    test('should assign different symbols to each player', () => {
+    test('debería asignar símbolos diferentes a cada jugador', () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -96,8 +96,8 @@ describe('Player ID Assignment Logic', () => {
     });
   });
 
-  describe('Edge Cases', () => {
-    test('should handle players with minimal data', () => {
+  describe('Casos Extremos', () => {
+    test('debería manejar jugadores con datos mínimos', () => {
       const players = [{ name: 'P1' }, { name: 'P2' }];
 
       const result = assignPlayerIds(players);
@@ -106,7 +106,7 @@ describe('Player ID Assignment Logic', () => {
       expect(result[1].id).toBe('O');
     });
 
-    test('should handle players with extra properties', () => {
+    test('debería manejar jugadores con propiedades extra', () => {
       const players = [
         { name: 'Player1', port: 3001, host: 'localhost', protocol: 'http' },
         { name: 'Player2', port: 3002, host: 'localhost', protocol: 'http' },
@@ -120,7 +120,7 @@ describe('Player ID Assignment Logic', () => {
       expect(result[1]).toHaveProperty('protocol', 'http');
     });
 
-    test('should not mutate original players array', () => {
+    test('debería no mutar el array original de jugadores', () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -133,8 +133,8 @@ describe('Player ID Assignment Logic', () => {
     });
   });
 
-  describe('Symbol Properties', () => {
-    test('should set both id and symbol properties', () => {
+  describe('Propiedades de Símbolos', () => {
+    test('debería establecer propiedades id y symbol', () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -148,7 +148,7 @@ describe('Player ID Assignment Logic', () => {
       expect(result[1]).toHaveProperty('symbol');
     });
 
-    test('should have matching id and symbol values', () => {
+    test('debería tener valores id y symbol coincidentes', () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -161,8 +161,8 @@ describe('Player ID Assignment Logic', () => {
     });
   });
 
-  describe('Array Handling', () => {
-    test('should return array of same length', () => {
+  describe('Manejo de Arrays', () => {
+    test('debería retornar array de la misma longitud', () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -173,7 +173,7 @@ describe('Player ID Assignment Logic', () => {
       expect(result).toHaveLength(2);
     });
 
-    test('should maintain player order', () => {
+    test('debería mantener orden de jugadores', () => {
       const players = [
         { name: 'First', port: 3001 },
         { name: 'Second', port: 3002 },

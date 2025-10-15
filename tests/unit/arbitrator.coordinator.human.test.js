@@ -1,6 +1,6 @@
 /**
- * Unit Tests for ArbitratorCoordinator - Human Player Methods
- * Tests for waitForHumanMove and submitHumanMove methods
+ * Pruebas Unitarias para ArbitratorCoordinator - Métodos de Jugador Humano
+ * Pruebas para waitForHumanMove y submitHumanMove methods
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
@@ -19,7 +19,7 @@ jest.mock('../../src/domain/game/arbitrator.core.js', () => ({
   isValidMove: jest.fn(),
 }));
 
-describe('ArbitratorCoordinator - Human Player Methods', () => {
+describe('ArbitratorCoordinator - Métodos de Jugador Humano', () => {
   let coordinator;
   let mockDependencies;
   let mockPlayers;
@@ -55,7 +55,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
   });
 
   describe('waitForHumanMove', () => {
-    test('should create pending move entry with correct data', () => {
+    test('debería crear entrada de movimiento pendiente con datos correctos', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -83,7 +83,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(pending.timeout).toBeDefined();
     });
 
-    test('should resolve with error when timeout expires', async () => {
+    test('debería resolver con error cuando el timeout expira', async () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -109,7 +109,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(false);
     });
 
-    test('should initialize pendingHumanMoves Map if not exists', () => {
+    test('debería inicializar Map pendingHumanMoves si no existe', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -127,7 +127,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(coordinator.pendingHumanMoves).toBeInstanceOf(Map);
     });
 
-    test('should use currentMatchId from runMatch', () => {
+    test('debería usar currentMatchId de runMatch', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -147,7 +147,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(coordinator.currentMatchId).toBe(matchId);
     });
 
-    test('should call logger.debug with correct params', () => {
+    test('debería llamar logger.debug con parámetros correctos', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -175,7 +175,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
   });
 
   describe('submitHumanMove', () => {
-    test('should throw error if pendingHumanMoves is undefined', () => {
+    test('debería lanzar error si pendingHumanMoves es undefined', () => {
       const matchId = 'match-123';
       const player = 'Player1';
       const position = 4;
@@ -189,7 +189,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       }).toThrow('No pending move for this match');
     });
 
-    test('should throw error if matchId not found', () => {
+    test('debería lanzar error si matchId no se encuentra', () => {
       const matchId = 'match-nonexistent';
       const player = 'Player1';
       const position = 4;
@@ -203,7 +203,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       }).toThrow('No pending move for this match');
     });
 
-    test('should throw error if move is invalid', () => {
+    test('debería lanzar error si el movimiento es inválido', () => {
       const player = mockPlayers[0];
       const board = [1, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -225,7 +225,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       }).toThrow('Invalid move position');
     });
 
-    test('should resolve Promise with valid move', async () => {
+    test('debería resolver Promise con movimiento válido', async () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -252,7 +252,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(result.error).toBeNull();
     });
 
-    test('should clear timeout when move submitted', () => {
+    test('debería limpiar timeout cuando se envía movimiento', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -283,7 +283,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       clearTimeoutSpy.mockRestore();
     });
 
-    test('should delete pending move entry', () => {
+    test('debería eliminar entrada de movimiento pendiente', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -309,7 +309,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(false);
     });
 
-    test('should return success object with move', () => {
+    test('debería retornar objeto de éxito con movimiento', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -339,7 +339,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       });
     });
 
-    test('should call logger.info with correct params', () => {
+    test('debería llamar logger.info con parámetros correctos', () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -374,7 +374,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
   });
 
   describe('Integration: waitForHumanMove + submitHumanMove', () => {
-    test('should resolve Promise when move submitted before timeout', async () => {
+    test('debería resolver Promise cuando se envía movimiento antes del timeout', async () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;
@@ -405,7 +405,7 @@ describe('ArbitratorCoordinator - Human Player Methods', () => {
       expect(coordinator.pendingHumanMoves.has(testMatchId)).toBe(false);
     });
 
-    test('should handle timeout if no move submitted', async () => {
+    test('debería manejar timeout si no se envía movimiento', async () => {
       const player = mockPlayers[0];
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const timeoutMs = 30000;

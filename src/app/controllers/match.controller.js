@@ -27,10 +27,25 @@ function validatePlayer(player, playerName) {
     errors.push(`${playerName}.name no puede exceder 50 caracteres`);
   }
 
-  if (!player.port || typeof player.port !== 'number') {
-    errors.push(`${playerName}.port es requerido y debe ser un número`);
-  } else if (player.port < 1 || player.port > 65535) {
-    errors.push(`${playerName}.port debe estar entre 1 y 65535`);
+  // Port is only required for bot players, not human players
+  if (!player.isHuman) {
+    if (!player.port || typeof player.port !== 'number') {
+      errors.push(`${playerName}.port es requerido para jugadores bot`);
+    } else if (player.port < 1 || player.port > 65535) {
+      errors.push(`${playerName}.port debe estar entre 1 y 65535`);
+    }
+  } else {
+    // Human players can have port 0 (indicates no port needed)
+    if (
+      player.port !== undefined &&
+      (typeof player.port !== 'number' ||
+        player.port < 0 ||
+        player.port > 65535)
+    ) {
+      errors.push(
+        `${playerName}.port debe ser un número válido entre 0 y 65535 para jugadores humanos`
+      );
+    }
   }
 
   if (player.host && typeof player.host !== 'string') {
@@ -88,6 +103,7 @@ async function createMatch(req, res) {
     port: Math.floor(player1.port),
     host: player1.host ? player1.host.trim() : 'localhost',
     protocol: player1.protocol || 'http',
+    isHuman: player1.isHuman || false,
   };
 
   const sanitizedPlayer2 = {
@@ -95,11 +111,18 @@ async function createMatch(req, res) {
     port: Math.floor(player2.port),
     host: player2.host ? player2.host.trim() : 'localhost',
     protocol: player2.protocol || 'http',
+    isHuman: player2.isHuman || false,
   };
 
   const sanitizedTimeout = timeoutMs ? Math.floor(timeoutMs) : 3000;
 
   try {
+    // DEBUG: Registrar los jugadores sanitizados para ver si isHuman se preserva
+    console.log('[DEBUG][match.controller] Jugadores sanitizados:', {
+      player1: sanitizedPlayer1,
+      player2: sanitizedPlayer2,
+    });
+
     const arbitrator = createArbitratorCoordinator();
     const result = await arbitrator.runMatch(
       [sanitizedPlayer1, sanitizedPlayer2],

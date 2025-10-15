@@ -178,7 +178,7 @@ describe('StatisticsService (Frontend)', () => {
       });
     });
 
-    test('should handle zero games gracefully', () => {
+    test('debería manejar cero juegos de manera elegante', () => {
       const rawStats = {
         totalGames: 0,
         winsByType: {
@@ -208,7 +208,7 @@ describe('StatisticsService (Frontend)', () => {
       expect(formattedStats.averageDuration).toBe('0ms');
     });
 
-    test('should format durations correctly', () => {
+    test('debería formatear duraciones correctamente', () => {
       const rawStats = {
         totalGames: 1,
         winsByType: { algorithm: 1, random: 0, human: 0 },
@@ -226,7 +226,7 @@ describe('StatisticsService (Frontend)', () => {
       expect(formattedStats.totalDuration).toBe('500ms');
     });
 
-    test('should format longer durations correctly', () => {
+    test('debería formatear duraciones largas correctamente', () => {
       const rawStats = {
         totalGames: 1,
         winsByType: { algorithm: 1, random: 0, human: 0 },
@@ -246,7 +246,7 @@ describe('StatisticsService (Frontend)', () => {
   });
 
   describe('calculateWinRates()', () => {
-    test('should calculate win rates correctly', () => {
+    test('debería calcular tasas de victoria correctamente', () => {
       const rawStats = {
         totalGames: 20,
         winsByType: {
@@ -266,7 +266,7 @@ describe('StatisticsService (Frontend)', () => {
       });
     });
 
-    test('should handle draws in win rate calculation', () => {
+    test('debería manejar empates en el cálculo de tasa de victoria', () => {
       const rawStats = {
         totalGames: 10,
         winsByType: {
@@ -286,7 +286,7 @@ describe('StatisticsService (Frontend)', () => {
       });
     });
 
-    test('should handle zero games', () => {
+    test('debería manejar cero juegos', () => {
       const rawStats = {
         totalGames: 0,
         winsByType: {
@@ -308,30 +308,30 @@ describe('StatisticsService (Frontend)', () => {
   });
 
   describe('formatDuration()', () => {
-    test('should format milliseconds correctly', () => {
+    test('debería formatear milisegundos correctamente', () => {
       expect(StatisticsService.formatDuration(500)).toBe('500ms');
       expect(StatisticsService.formatDuration(999)).toBe('999ms');
     });
 
-    test('should format seconds correctly', () => {
+    test('debería formatear segundos correctamente', () => {
       expect(StatisticsService.formatDuration(1000)).toBe('1.0s');
       expect(StatisticsService.formatDuration(2500)).toBe('2.5s');
       expect(StatisticsService.formatDuration(59999)).toBe('60.0s');
     });
 
-    test('should format minutes and seconds correctly', () => {
+    test('debería formatear minutos y segundos correctamente', () => {
       expect(StatisticsService.formatDuration(60000)).toBe('1m 0s');
       expect(StatisticsService.formatDuration(65000)).toBe('1m 5s');
       expect(StatisticsService.formatDuration(125000)).toBe('2m 5s');
     });
 
-    test('should handle zero duration', () => {
+    test('debería manejar duración cero', () => {
       expect(StatisticsService.formatDuration(0)).toBe('0ms');
     });
   });
 
-  describe('Error Handling', () => {
-    test('should handle malformed match results gracefully', () => {
+  describe('Manejo de Errores', () => {
+    test('debería manejar resultados de partida malformados de manera elegante', () => {
       const malformedResult = {
         winner: 'invalid',
         players: 'not an array',
@@ -347,7 +347,7 @@ describe('StatisticsService (Frontend)', () => {
       expect(stats.duration).toBe(0);
     });
 
-    test('should handle empty match results', () => {
+    test('debería manejar resultados de partida vacíos', () => {
       expect(() => {
         StatisticsService.aggregateMatchStats({});
       }).not.toThrow();
@@ -357,7 +357,7 @@ describe('StatisticsService (Frontend)', () => {
       expect(stats.duration).toBe(0);
     });
 
-    test('should handle malformed raw stats gracefully', () => {
+    test('debería manejar estadísticas crudas malformadas de manera elegante', () => {
       const malformedStats = {
         totalGames: 'not a number',
         winsByType: 'not an object',

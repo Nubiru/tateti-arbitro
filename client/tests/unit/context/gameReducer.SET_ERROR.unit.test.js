@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - SET_ERROR action
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción SET_ERROR
+ * Pruebas de función pura - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - SET_ERROR', () => {
-  test('should set gameState to error and store error message', () => {
+  test('debería establecer gameState a error y almacenar mensaje de error', () => {
     const state = {
       ...initialState,
       gameState: 'playing',
@@ -30,7 +30,7 @@ describe('gameReducer - SET_ERROR', () => {
     expect(result.error).toEqual(errorPayload);
   });
 
-  test('should handle string error payload', () => {
+  test('debería manejar payload de error como string', () => {
     const state = { ...initialState };
 
     const action = {
@@ -44,7 +44,7 @@ describe('gameReducer - SET_ERROR', () => {
     expect(result.error).toBe('Simple error message');
   });
 
-  test('should handle error object with stack trace', () => {
+  test('debería manejar objeto de error con stack trace', () => {
     const state = {
       ...initialState,
       gameState: 'playing',
@@ -67,7 +67,7 @@ describe('gameReducer - SET_ERROR', () => {
     expect(result.error.stack).toBeDefined();
   });
 
-  test('should preserve other state properties', () => {
+  test('debería preservar otras propiedades del estado', () => {
     const state = {
       ...initialState,
       gameState: 'playing',
@@ -91,7 +91,7 @@ describe('gameReducer - SET_ERROR', () => {
     expect(result.moveCount).toBe(2);
   });
 
-  test('should overwrite previous error', () => {
+  test('debería sobrescribir error anterior', () => {
     const state = {
       ...initialState,
       gameState: 'error',
@@ -115,7 +115,7 @@ describe('gameReducer - SET_ERROR', () => {
     expect(result.error.code).toBe('ERR_NEW');
   });
 
-  test('should handle network errors', () => {
+  test('debería manejar errores de red', () => {
     const state = {
       ...initialState,
       gameState: 'playing',
@@ -137,7 +137,7 @@ describe('gameReducer - SET_ERROR', () => {
     expect(result.error.url).toBe('/api/match');
   });
 
-  test('should handle validation errors', () => {
+  test('debería manejar errores de validación', () => {
     const state = {
       ...initialState,
       gameState: 'idle',
@@ -159,7 +159,7 @@ describe('gameReducer - SET_ERROR', () => {
     expect(result.error.value).toBe('7x7');
   });
 
-  test('should work from any game state', () => {
+  test('debería funcionar desde cualquier estado del juego', () => {
     const states = ['idle', 'playing', 'completed', 'tournament', 'error'];
 
     states.forEach(gameState => {

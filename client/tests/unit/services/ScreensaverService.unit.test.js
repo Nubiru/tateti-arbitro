@@ -1,6 +1,6 @@
 /**
- * Unit Tests for ScreensaverService
- * Tests simulated game data generation and cycling logic for idle screen entertainment
+ * Pruebas Unitarias para ScreensaverService
+ * Pruebas de generación de datos de juego simulados y lógica de ciclado para entretenimiento de pantalla inactiva
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
@@ -18,14 +18,14 @@ describe('ScreensaverService', () => {
   });
 
   describe('getSimulatedGames', () => {
-    test('should return array of simulated game results', () => {
+    test('debería retornar array de resultados de juegos simulados', () => {
       const games = ScreensaverService.getSimulatedGames();
 
       expect(Array.isArray(games)).toBe(true);
       expect(games.length).toBeGreaterThan(0);
     });
 
-    test('should return games with required properties', () => {
+    test('debería retornar juegos con propiedades requeridas', () => {
       const games = ScreensaverService.getSimulatedGames();
 
       games.forEach(game => {
@@ -40,14 +40,14 @@ describe('ScreensaverService', () => {
       });
     });
 
-    test('should return consistent data on multiple calls', () => {
+    test('debería retornar datos consistentes en múltiples llamadas', () => {
       const games1 = ScreensaverService.getSimulatedGames();
       const games2 = ScreensaverService.getSimulatedGames();
 
       expect(games1).toEqual(games2);
     });
 
-    test('should include Bot Alpha vs Bot Beta game', () => {
+    test('debería incluir juego Bot Alpha vs Bot Beta', () => {
       const games = ScreensaverService.getSimulatedGames();
       const botAlphaGame = games.find(
         game =>
@@ -60,7 +60,7 @@ describe('ScreensaverService', () => {
       expect(botAlphaGame.winner).toBeTruthy();
     });
 
-    test('should include AI Master vs Code Warrior game', () => {
+    test('debería incluir juego AI Master vs Code Warrior', () => {
       const games = ScreensaverService.getSimulatedGames();
       const aiMasterGame = games.find(
         game =>
@@ -74,7 +74,7 @@ describe('ScreensaverService', () => {
       expect(aiMasterGame.winner).toBeDefined();
     });
 
-    test('should have valid move counts (5-9 moves for 3x3 game)', () => {
+    test('debería tener conteos de movimientos válidos (5-9 movimientos para juego 3x3)', () => {
       const games = ScreensaverService.getSimulatedGames();
 
       games.forEach(game => {
@@ -83,7 +83,7 @@ describe('ScreensaverService', () => {
       });
     });
 
-    test('should have winner from one of the two players', () => {
+    test('debería tener ganador de uno de los dos jugadores', () => {
       const games = ScreensaverService.getSimulatedGames();
 
       games.forEach(game => {
@@ -91,7 +91,7 @@ describe('ScreensaverService', () => {
       });
     });
 
-    test('should return at least 5 simulated games', () => {
+    test('debería retornar al menos 5 juegos simulados', () => {
       const games = ScreensaverService.getSimulatedGames();
 
       expect(games.length).toBeGreaterThanOrEqual(5);
@@ -99,35 +99,35 @@ describe('ScreensaverService', () => {
   });
 
   describe('createGameCycler', () => {
-    test('should call onGameChange with next index after interval', () => {
+    test('debería llamar onGameChange con siguiente índice después del intervalo', () => {
       const games = [{ id: 1 }, { id: 2 }, { id: 3 }];
       const onGameChange = jest.fn();
 
       ScreensaverService.createGameCycler(games, 1000, onGameChange);
 
-      // Initial state - no call yet
+      // Estado inicial - aún no se ha llamado
       expect(onGameChange).not.toHaveBeenCalled();
 
-      // After 1 second - should cycle to index 1
+      // Después de 1 segundo - debería ciclar al índice 1
       jest.advanceTimersByTime(1000);
       expect(onGameChange).toHaveBeenCalledWith(1);
 
-      // After 2 seconds - should cycle to index 2
+      // Después de 2 segundos - debería ciclar al índice 2
       jest.advanceTimersByTime(1000);
       expect(onGameChange).toHaveBeenCalledWith(2);
 
-      // After 3 seconds - should wrap to index 0
+      // Después de 3 segundos - debería envolver al índice 0
       jest.advanceTimersByTime(1000);
       expect(onGameChange).toHaveBeenCalledWith(0);
     });
 
-    test('should cycle through all games continuously', () => {
+    test('debería ciclar a través de todos los juegos continuamente', () => {
       const games = [{ id: 1 }, { id: 2 }];
       const onGameChange = jest.fn();
 
       ScreensaverService.createGameCycler(games, 500, onGameChange);
 
-      // Cycle through 5 times
+      // Ciclar 5 veces
       jest.advanceTimersByTime(2500);
 
       expect(onGameChange).toHaveBeenCalledTimes(5);
@@ -138,7 +138,7 @@ describe('ScreensaverService', () => {
       expect(onGameChange).toHaveBeenNthCalledWith(5, 1);
     });
 
-    test('should return cleanup function that stops cycling', () => {
+    test('debería retornar función de limpieza que detiene el ciclado', () => {
       const games = [{ id: 1 }, { id: 2 }, { id: 3 }];
       const onGameChange = jest.fn();
 
@@ -148,25 +148,25 @@ describe('ScreensaverService', () => {
         onGameChange
       );
 
-      // Advance 2 seconds
+      // Avanzar 2 segundos
       jest.advanceTimersByTime(2000);
       expect(onGameChange).toHaveBeenCalledTimes(2);
 
-      // Call cleanup
+      // Llamar limpieza
       cleanup();
 
-      // Advance more time - should not call onGameChange anymore
+      // Avanzar más tiempo - no debería llamar onGameChange más
       jest.advanceTimersByTime(5000);
-      expect(onGameChange).toHaveBeenCalledTimes(2); // Still only 2 calls
+      expect(onGameChange).toHaveBeenCalledTimes(2); // Aún solo 2 llamadas
     });
 
-    test('should handle single game array', () => {
+    test('debería manejar array de un solo juego', () => {
       const games = [{ id: 1 }];
       const onGameChange = jest.fn();
 
       ScreensaverService.createGameCycler(games, 1000, onGameChange);
 
-      // Should always return to index 0
+      // Debería siempre retornar al índice 0
       jest.advanceTimersByTime(1000);
       expect(onGameChange).toHaveBeenCalledWith(0);
 
@@ -174,22 +174,22 @@ describe('ScreensaverService', () => {
       expect(onGameChange).toHaveBeenCalledWith(0);
     });
 
-    test('should handle custom interval', () => {
+    test('debería manejar intervalo personalizado', () => {
       const games = [{ id: 1 }, { id: 2 }];
       const onGameChange = jest.fn();
 
       ScreensaverService.createGameCycler(games, 3000, onGameChange);
 
-      // Should not call before interval
+      // No debería llamar antes del intervalo
       jest.advanceTimersByTime(2999);
       expect(onGameChange).not.toHaveBeenCalled();
 
-      // Should call after interval
+      // Debería llamar después del intervalo
       jest.advanceTimersByTime(1);
       expect(onGameChange).toHaveBeenCalledTimes(1);
     });
 
-    test('should handle empty games array gracefully', () => {
+    test('debería manejar array de juegos vacío de forma elegante', () => {
       const games = [];
       const onGameChange = jest.fn();
 
@@ -206,7 +206,7 @@ describe('ScreensaverService', () => {
       expect(onGameChange).not.toHaveBeenCalled();
     });
 
-    test('should handle null callback gracefully', () => {
+    test('debería manejar callback null de forma elegante', () => {
       const games = [{ id: 1 }, { id: 2 }];
 
       expect(() => {
@@ -218,36 +218,36 @@ describe('ScreensaverService', () => {
   });
 
   describe('getNextGame', () => {
-    test('should return next index in sequence', () => {
+    test('debería retornar siguiente índice en secuencia', () => {
       expect(ScreensaverService.getNextGame(0, 3)).toBe(1);
       expect(ScreensaverService.getNextGame(1, 3)).toBe(2);
     });
 
-    test('should wrap to 0 at end of sequence', () => {
+    test('debería envolver a 0 al final de la secuencia', () => {
       expect(ScreensaverService.getNextGame(2, 3)).toBe(0);
       expect(ScreensaverService.getNextGame(4, 5)).toBe(0);
     });
 
-    test('should handle single game', () => {
+    test('debería manejar un solo juego', () => {
       expect(ScreensaverService.getNextGame(0, 1)).toBe(0);
     });
 
-    test('should handle edge cases', () => {
-      // Last index wraps to 0
+    test('debería manejar casos límite', () => {
+      // Último índice se envuelve a 0
       expect(ScreensaverService.getNextGame(9, 10)).toBe(0);
 
-      // First index goes to 1
+      // Primer índice va a 1
       expect(ScreensaverService.getNextGame(0, 10)).toBe(1);
     });
 
-    test('should handle zero total games', () => {
-      // With 0 games, service returns 0 (not NaN)
+    test('debería manejar cero juegos totales', () => {
+      // Con 0 juegos, el servicio retorna 0 (no NaN)
       const result = ScreensaverService.getNextGame(0, 0);
       expect(result).toBe(0);
     });
 
-    test('should be deterministic', () => {
-      // Same inputs should always produce same output
+    test('debería ser determinístico', () => {
+      // Las mismas entradas siempre deberían producir la misma salida
       const result1 = ScreensaverService.getNextGame(5, 10);
       const result2 = ScreensaverService.getNextGame(5, 10);
       expect(result1).toBe(result2);
@@ -255,25 +255,25 @@ describe('ScreensaverService', () => {
     });
   });
 
-  describe('Integration: Full Cycle with Real Simulated Games', () => {
-    test('should cycle through simulated games using getNextGame logic', () => {
+  describe('Integración: Ciclo Completo con Juegos Simulados Reales', () => {
+    test('debería ciclar a través de juegos simulados usando lógica getNextGame', () => {
       const games = ScreensaverService.getSimulatedGames();
       const onGameChange = jest.fn();
 
       ScreensaverService.createGameCycler(games, 1000, onGameChange);
 
-      // Cycle through all games
+      // Ciclar a través de todos los juegos
       const totalGames = games.length;
       jest.advanceTimersByTime(totalGames * 1000);
 
-      // Should have called onGameChange for each game
+      // Debería haber llamado onGameChange para cada juego
       expect(onGameChange).toHaveBeenCalledTimes(totalGames);
 
-      // Last call should wrap back to index 0
+      // Última llamada debería envolver de vuelta al índice 0
       expect(onGameChange).toHaveBeenLastCalledWith(0);
     });
 
-    test('should maintain correct cycling order', () => {
+    test('debería mantener orden de ciclado correcto', () => {
       const games = [{ id: 'A' }, { id: 'B' }, { id: 'C' }];
       const onGameChange = jest.fn();
 
@@ -281,7 +281,7 @@ describe('ScreensaverService', () => {
 
       jest.advanceTimersByTime(600);
 
-      // Verify exact order: 1, 2, 0, 1, 2, 0
+      // Verificar orden exacto: 1, 2, 0, 1, 2, 0
       expect(onGameChange).toHaveBeenNthCalledWith(1, 1);
       expect(onGameChange).toHaveBeenNthCalledWith(2, 2);
       expect(onGameChange).toHaveBeenNthCalledWith(3, 0);

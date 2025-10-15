@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - MATCH_COMPLETE action
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción MATCH_COMPLETE
+ * Pruebas de funciones puras - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - MATCH_COMPLETE', () => {
-  test('should set gameState to completed and store match result', () => {
+  test('debería establecer gameState a completed y almacenar resultado de partida', () => {
     const state = {
       ...initialState,
       gameState: 'playing',
@@ -35,7 +35,7 @@ describe('gameReducer - MATCH_COMPLETE', () => {
     expect(result.board).toEqual(matchResult.finalBoard);
   });
 
-  test('should preserve current board if finalBoard not provided', () => {
+  test('debería preservar tablero actual si finalBoard no se proporciona', () => {
     const state = {
       ...initialState,
       gameState: 'playing',
@@ -59,7 +59,7 @@ describe('gameReducer - MATCH_COMPLETE', () => {
     expect(result.matchResult).toEqual(matchResult);
   });
 
-  test('should handle draw result', () => {
+  test('debería manejar resultado de empate', () => {
     const state = {
       ...initialState,
       gameState: 'playing',
@@ -84,7 +84,7 @@ describe('gameReducer - MATCH_COMPLETE', () => {
     expect(result.matchResult.reason).toBe('Draw');
   });
 
-  test('should preserve other state properties', () => {
+  test('debería preservar otras propiedades del estado', () => {
     const state = {
       ...initialState,
       gameState: 'playing',

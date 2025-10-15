@@ -126,16 +126,18 @@ describe('PlayerService', () => {
         type: 'algorithm',
       });
       expect(result[2]).toEqual({
-        name: 'Bot3',
-        port: 3003,
+        name: 'RandomBot3',
+        port: 3005,
         isHuman: false,
         status: 'unknown',
+        type: 'bot',
       });
       expect(result[3]).toEqual({
-        name: 'Bot4',
-        port: 3004,
+        name: 'SmartBot2',
+        port: 3006,
         isHuman: false,
         status: 'unknown',
+        type: 'bot',
       });
     });
 
@@ -151,16 +153,18 @@ describe('PlayerService', () => {
 
       expect(result).toHaveLength(2);
       expect(result[0]).toEqual({
-        name: 'Bot1',
+        name: 'RandomBot1',
         port: 3001,
         isHuman: false,
         status: 'unknown',
+        type: 'bot',
       });
       expect(result[1]).toEqual({
-        name: 'Bot2',
+        name: 'RandomBot2',
         port: 3002,
         isHuman: false,
         status: 'unknown',
+        type: 'bot',
       });
     });
   });
@@ -187,8 +191,20 @@ describe('PlayerService', () => {
       const result = playerService.getDefaultPlayers();
 
       expect(result).toEqual([
-        { name: 'Bot1', port: 3001, isHuman: false, status: 'unknown' },
-        { name: 'Bot2', port: 3002, isHuman: false, status: 'unknown' },
+        {
+          name: 'Bot1',
+          port: 3001,
+          isHuman: false,
+          status: 'unknown',
+          type: 'bot',
+        },
+        {
+          name: 'Bot2',
+          port: 3002,
+          isHuman: false,
+          status: 'unknown',
+          type: 'bot',
+        },
       ]);
     });
   });

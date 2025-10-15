@@ -6,9 +6,9 @@ import styles from './PlayerProfile.module.css';
 
 /**
  * PlayerProfile Component
- * Individual player input card with name, port, and human checkbox
- * @lastModified 2025-10-06
- * @version 1.0.0
+ * Individual player input card with name, port/url, and human checkbox
+ * @lastModified 2025-01-27
+ * @version 1.1.0
  */
 
 const PlayerProfile = ({
@@ -27,9 +27,24 @@ const PlayerProfile = ({
     onUpdate(index, 'port', parseInt(e.target.value) || 0);
   };
 
-  const handleHumanChange = e => {
-    onUpdate(index, 'isHuman', e.target.checked);
+  const handleUrlChange = e => {
+    onUpdate(index, 'url', e.target.value);
   };
+
+  const handleHumanChange = e => {
+    const isHuman = e.target.checked;
+    onUpdate(index, 'isHuman', isHuman);
+
+    // KISS solution: When human is checked, set port to 0 and name to default
+    if (isHuman) {
+      onUpdate(index, 'port', 0);
+      onUpdate(index, 'name', 'Tú nombre?');
+    }
+  };
+
+  // Determine if this is a Vercel bot (has URL) or Docker bot (has port)
+  const isVercelBot = player.url && !player.port;
+  const botSource = player.source || (isVercelBot ? 'vercel' : 'docker');
 
   return (
     <Card
@@ -43,10 +58,16 @@ const PlayerProfile = ({
       <div className={styles.playerHeader}>
         <span className={styles.playerNumber}>#{index + 1}</span>
         <div className={styles.headerRight}>
+          {!player.isHuman && (
+            <div className={styles.botSource}>
+              <div className={`${styles.sourceIcon} ${styles[botSource]}`}>
+                {botSource === 'vercel' ? 'V' : 'D'}
+              </div>
+            </div>
+          )}
           {isConnected && (
             <div className={styles.connectionStatus}>
               <div className={styles.statusDot}></div>
-              <span className={styles.statusText}>Conectado</span>
             </div>
           )}
           <label className={styles.humanLabel}>
@@ -54,7 +75,7 @@ const PlayerProfile = ({
               checked={player.isHuman || false}
               onChange={handleHumanChange}
             />
-            <span>Humano</span>
+            <span>{player.isHuman ? 'Humano' : player.type || 'Bot'}</span>
           </label>
         </div>
       </div>
@@ -68,15 +89,25 @@ const PlayerProfile = ({
           className={styles.playerNameInput}
         />
 
-        <AnimatedInput
-          type="number"
-          placeholder="Puerto"
-          value={player.port}
-          onChange={handlePortChange}
-          className={styles.playerPortInput}
-          min="3000"
-          max="9999"
-        />
+        {isVercelBot ? (
+          <AnimatedInput
+            type="url"
+            placeholder="https://bot.vercel.app"
+            value={player.url}
+            onChange={handleUrlChange}
+            className={styles.playerUrlInput}
+          />
+        ) : (
+          <AnimatedInput
+            type="number"
+            placeholder="Puerto"
+            value={player.port}
+            onChange={handlePortChange}
+            className={styles.playerPortInput}
+            min="3000"
+            max="9999"
+          />
+        )}
       </div>
     </Card>
   );

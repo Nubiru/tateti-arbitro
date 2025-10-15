@@ -1,7 +1,7 @@
 /**
  * Reglas de validación puras para validación de solicitudes
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-01-27
+ * @version 1.1.0
  */
 
 /**
@@ -25,10 +25,10 @@ export function validatePlayerShape(player, playerName) {
     };
   }
 
-  if (!player.name || !player.port) {
+  if (!player.name || (!player.port && !player.url)) {
     return {
       isValid: false,
-      error: `${playerName} debe tener name y port`,
+      error: `${playerName} debe tener name y (port o url)`,
     };
   }
 

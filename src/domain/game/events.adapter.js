@@ -14,6 +14,11 @@ export class EventsAdapter {
   constructor({ eventBus, logger }) {
     this.eventBus = eventBus;
     this.logger = logger;
+    console.log('🔌 EventsAdapter created with eventBus:', !!eventBus);
+    console.log(
+      '🔌 EventBus connections:',
+      eventBus?.getConnectionCount?.() || 'N/A'
+    );
   }
 
   /**
@@ -38,6 +43,10 @@ export class EventsAdapter {
    */
   broadcastMatchMove(payload) {
     console.log('📡 Backend broadcasting match:move event:', payload);
+    console.log(
+      '📡 EventBus connections:',
+      this.eventBus.getConnectionCount?.() || 'N/A'
+    );
     this.logger.debug(
       'EVENTS',
       'BROADCAST',
@@ -46,6 +55,7 @@ export class EventsAdapter {
       payload
     );
     this.eventBus.broadcast('match:move', payload);
+    console.log('📡 Event broadcast completed');
   }
 
   /**

@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - TOURNAMENT_COMPLETE action
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción TOURNAMENT_COMPLETE
+ * Pruebas de funciones puras - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - TOURNAMENT_COMPLETE', () => {
-  test('should set gameState to completed and store tournament result', () => {
+  test('debería establecer gameState a completed y almacenar resultado del torneo', () => {
     const state = {
       ...initialState,
       gameState: 'tournament',
@@ -41,7 +41,7 @@ describe('gameReducer - TOURNAMENT_COMPLETE', () => {
     expect(result.tournamentResult).toEqual(tournamentResult);
   });
 
-  test('should preserve tournament data in both tournament and tournamentResult', () => {
+  test('debería preservar datos del torneo en tournament y tournamentResult', () => {
     const state = {
       ...initialState,
       gameState: 'tournament',
@@ -68,7 +68,7 @@ describe('gameReducer - TOURNAMENT_COMPLETE', () => {
     expect(result.tournament).toBe(result.tournamentResult);
   });
 
-  test('should preserve other state properties', () => {
+  test('debería preservar otras propiedades del estado', () => {
     const state = {
       ...initialState,
       gameState: 'tournament',
@@ -90,7 +90,7 @@ describe('gameReducer - TOURNAMENT_COMPLETE', () => {
     expect(result.board).toEqual(state.board);
   });
 
-  test('should handle 8-player tournament result', () => {
+  test('debería manejar resultado de torneo de 8 jugadores', () => {
     const state = {
       ...initialState,
       gameState: 'tournament',

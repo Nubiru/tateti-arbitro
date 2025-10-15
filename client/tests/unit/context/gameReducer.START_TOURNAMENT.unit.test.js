@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - START_TOURNAMENT action
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción START_TOURNAMENT
+ * Pruebas de funciones puras - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - START_TOURNAMENT', () => {
-  test('should set gameState to tournament and initialize tournament data', () => {
+  test('debería establecer gameState a tournament e inicializar datos del torneo', () => {
     const state = { ...initialState };
 
     const tournamentData = {
@@ -32,7 +32,7 @@ describe('gameReducer - START_TOURNAMENT', () => {
     expect(result.moveCount).toBe(0);
   });
 
-  test('should initialize 5x5 board when boardSize is 5', () => {
+  test('debería inicializar tablero 5x5 cuando boardSize es 5', () => {
     const state = { ...initialState };
 
     const action = {
@@ -50,7 +50,7 @@ describe('gameReducer - START_TOURNAMENT', () => {
     expect(result.board.length).toBe(25);
   });
 
-  test('should initialize 3x3 board when boardSize is 3', () => {
+  test('debería inicializar tablero 3x3 cuando boardSize es 3', () => {
     const state = { ...initialState };
 
     const action = {
@@ -68,7 +68,7 @@ describe('gameReducer - START_TOURNAMENT', () => {
     expect(result.board.length).toBe(9);
   });
 
-  test('should clear previous match data', () => {
+  test('debería limpiar datos de partida anterior', () => {
     const state = {
       ...initialState,
       currentMatch: {
@@ -95,7 +95,7 @@ describe('gameReducer - START_TOURNAMENT', () => {
     expect(result.moveCount).toBe(0);
   });
 
-  test('should preserve config when starting tournament', () => {
+  test('debería preservar configuración al iniciar torneo', () => {
     const state = {
       ...initialState,
       config: { speed: 'fast', boardSize: '3x3', noTie: true },

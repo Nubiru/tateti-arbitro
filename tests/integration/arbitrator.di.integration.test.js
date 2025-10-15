@@ -185,7 +185,7 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
       expect(result.finalBoard).toHaveLength(9);
     });
 
-    test('should handle no-tie mode with rolling window', async () => {
+    test('debería manejar modo sin empates con ventana deslizante', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -404,7 +404,7 @@ describe('Pruebas de Integración de Arbitrator DI - runMatch', () => {
       expect(result.finalBoard).toHaveLength(9);
     });
 
-    test('should handle no-tie mode', async () => {
+    test('debería manejar modo sin empates', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },

@@ -1,10 +1,10 @@
 /**
- * API Benchmark Script
- * Tests API endpoint performance using autocannon
+ * Script de Benchmark de API
+ * Prueba el rendimiento de endpoints de API usando autocannon
  * @lastModified 2025-10-03
  * @version 1.0.0
  *
- * Note: Console statements are intentional for CLI output per @code-standard.md
+ * Nota: Las declaraciones de consola son intencionales para salida CLI según @code-standard.md
  */
 
 /* eslint-disable no-console */
@@ -15,7 +15,7 @@ import { promisify } from 'util';
 const run = promisify(autocannon);
 
 const API_URL = process.env.API_URL || 'http://localhost:4000';
-const DURATION = parseInt(process.env.DURATION) || 10; // 10 seconds
+const DURATION = parseInt(process.env.DURATION) || 10; // 10 segundos
 const CONNECTIONS = parseInt(process.env.CONNECTIONS) || 10;
 const PIPELINING = parseInt(process.env.PIPELINING) || 1;
 
@@ -35,14 +35,14 @@ const matchPayload = {
   timeoutMs: 1000
 };
 
-console.log('🚀 Starting API benchmark...');
-console.log(`📡 API URL: ${API_URL}`);
-console.log(`⏱️  Duration: ${DURATION}s`);
-console.log(`🔗 Connections: ${CONNECTIONS}`);
+console.log('🚀 Iniciando benchmark de API...');
+console.log(`📡 URL de API: ${API_URL}`);
+console.log(`⏱️  Duración: ${DURATION}s`);
+console.log(`🔗 Conexiones: ${CONNECTIONS}`);
 console.log(`📦 Pipelining: ${PIPELINING}`);
 
 async function benchmarkEndpoint(endpoint, payload, name) {
-  console.log(`\n📊 Benchmarking ${name}...`);
+  console.log(`\n📊 Ejecutando benchmark de ${name}...`);
 
   try {
     const result = await run({
@@ -57,24 +57,24 @@ async function benchmarkEndpoint(endpoint, payload, name) {
       duration: DURATION
     });
 
-    console.log(`✅ ${name} Results:`);
-    console.log(`   Requests: ${result.requests.total}`);
-    console.log(`   Latency (avg): ${result.latency.average}ms`);
+    console.log(`✅ Resultados de ${name}:`);
+    console.log(`   Solicitudes: ${result.requests.total}`);
+    console.log(`   Latencia (prom): ${result.latency.average}ms`);
     console.log(`   Latency (p95): ${result.latency.p95}ms`);
     console.log(`   Latency (p99): ${result.latency.p99}ms`);
-    console.log(`   Throughput: ${result.throughput.average} req/sec`);
-    console.log(`   Errors: ${result.errors}`);
+    console.log(`   Rendimiento: ${result.throughput.average} req/seg`);
+    console.log(`   Errores: ${result.errors}`);
     console.log(`   Timeouts: ${result.timeouts}`);
 
     return result;
   } catch (error) {
-    console.error(`❌ Error benchmarking ${name}:`, error.message);
+    console.error(`❌ Error ejecutando benchmark de ${name}:`, error.message);
     return null;
   }
 }
 
 async function runBenchmarks() {
-  console.log('🏁 Starting comprehensive API benchmark...\n');
+  console.log('🏁 Iniciando benchmark completo de API...\n');
 
   // Test health endpoint
   try {
@@ -86,16 +86,16 @@ async function runBenchmarks() {
       duration: DURATION
     });
 
-    console.log('✅ Health Endpoint Results:');
-    console.log(`   Requests: ${healthResult.requests.total}`);
-    console.log(`   Latency (avg): ${healthResult.latency.average}ms`);
-    console.log(`   Throughput: ${healthResult.throughput.average} req/sec`);
+    console.log('✅ Resultados del Endpoint de Salud:');
+    console.log(`   Solicitudes: ${healthResult.requests.total}`);
+    console.log(`   Latencia (prom): ${healthResult.latency.average}ms`);
+    console.log(`   Rendimiento: ${healthResult.throughput.average} req/seg`);
   } catch (error) {
-    console.error('❌ Error benchmarking health endpoint:', error.message);
+    console.error('❌ Error ejecutando benchmark del endpoint de salud:', error.message);
   }
 
   // Test match endpoint
-  await benchmarkEndpoint('/api/match', matchPayload, 'Match Endpoint');
+  await benchmarkEndpoint('/api/match', matchPayload, 'Endpoint de Partida');
 
   // Test SSE status endpoint
   try {
@@ -107,15 +107,15 @@ async function runBenchmarks() {
       duration: DURATION
     });
 
-    console.log('\n✅ SSE Status Endpoint Results:');
-    console.log(`   Requests: ${sseResult.requests.total}`);
-    console.log(`   Latency (avg): ${sseResult.latency.average}ms`);
-    console.log(`   Throughput: ${sseResult.throughput.average} req/sec`);
+    console.log('\n✅ Resultados del Endpoint de Estado SSE:');
+    console.log(`   Solicitudes: ${sseResult.requests.total}`);
+    console.log(`   Latencia (prom): ${sseResult.latency.average}ms`);
+    console.log(`   Rendimiento: ${sseResult.throughput.average} req/seg`);
   } catch (error) {
-    console.error('❌ Error benchmarking SSE status endpoint:', error.message);
+    console.error('❌ Error ejecutando benchmark del endpoint de estado SSE:', error.message);
   }
 
-  console.log('\n🏁 Benchmark completed!');
+  console.log('\n🏁 ¡Benchmark completado!');
 }
 
 // Run benchmarks

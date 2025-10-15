@@ -1,8 +1,8 @@
 /**
  * Fábrica de Aplicación para Inyección de Dependencias
  * Crea aplicación Express con dependencias inyectadas para pruebas y producción
- * @lastModified 2025-10-03
- * @version 1.0.0
+ * @lastModified 2025-01-27
+ * @version 1.1.0
  */
 
 import express from 'express';
@@ -37,10 +37,42 @@ import {
 export function createApp(dependencies = {}) {
   // Crear dependencias por defecto si no se proporcionan
   const eventBusInstance = dependencies.eventBus || eventBus;
+
+  /**
+   * Load named Vercel bots from individual environment variables
+   * @returns {Array} Array of bot configurations
+   */
+  const loadNamedVercelBots = () => {
+    const namedBots = [];
+
+    // Support up to 10 named Vercel bots
+    for (let i = 1; i <= 10; i++) {
+      const nameKey = `VERCEL_BOT_${i}_NAME`;
+      const urlKey = `VERCEL_BOT_${i}_URL`;
+
+      const name = process.env[nameKey];
+      const url = process.env[urlKey];
+
+      if (name && url) {
+        namedBots.push({
+          name: name.trim(),
+          url: url.trim(),
+          type: 'vercel',
+          capabilities: ['3x3', '5x5'],
+          source: 'vercel',
+        });
+      }
+    }
+
+    return namedBots;
+  };
   const httpAdapter = dependencies.httpAdapter || createHttpAdapter({ logger });
   const eventsAdapter =
     dependencies.eventsAdapter ||
     createEventsAdapter({ eventBus: eventBusInstance, logger });
+
+  console.log('🔌 App Factory: EventsAdapter created:', !!eventsAdapter);
+  console.log('🔌 App Factory: EventBus instance:', !!eventBusInstance);
   const arbitrator =
     dependencies.arbitrator ||
     new ArbitratorCoordinator({
@@ -253,16 +285,18 @@ export function createApp(dependencies = {}) {
         const players = [
           {
             name: player1.name,
-            port: player1.port,
-            host: getHostForPort(player1.port),
-            protocol: 'http',
+            port: player1.port || null,
+            url: player1.url || null,
+            host: player1.url ? null : getHostForPort(player1.port),
+            protocol: player1.url ? null : 'http',
             isHuman: player1.isHuman || false,
           },
           {
             name: player2.name,
-            port: player2.port,
-            host: getHostForPort(player2.port),
-            protocol: 'http',
+            port: player2.port || null,
+            url: player2.url || null,
+            host: player2.url ? null : getHostForPort(player2.port),
+            protocol: player2.url ? null : 'http',
             isHuman: player2.isHuman || false,
           },
         ];
@@ -418,7 +452,7 @@ export function createApp(dependencies = {}) {
     try {
       const availableBots = [];
 
-      // Define bot configurations
+      // Define bot configurations - match docker-compose.4player.yml ports
       const botConfigs = [
         {
           name: 'RandomBot1',
@@ -434,54 +468,81 @@ export function createApp(dependencies = {}) {
         },
         {
           name: 'RandomBot3',
-          port: 3003,
+          port: 3005, // Fixed: was 3003, now matches docker-compose.4player.yml
           type: 'random',
           capabilities: ['3x3', '5x5'],
         },
         {
-          name: 'RandomBot4',
-          port: 3004,
-          type: 'random',
+          name: 'SmartBot2',
+          port: 3006, // Fixed: was RandomBot4/3004, now matches docker-compose.4player.yml
+          type: 'algorithm',
           capabilities: ['3x3', '5x5'],
         },
         {
           name: 'AlgoBot1',
-          port: 3005,
+          port: 3007, // Shifted down to avoid conflicts
           type: 'algorithm',
           capabilities: ['3x3', '5x5'],
         },
         {
           name: 'AlgoBot2',
-          port: 3006,
+          port: 3008, // Shifted down to avoid conflicts
           type: 'algorithm',
           capabilities: ['3x3', '5x5'],
         },
         {
           name: 'AlgoBot3',
-          port: 3007,
+          port: 3009, // Shifted down to avoid conflicts
           type: 'algorithm',
           capabilities: ['3x3', '5x5'],
         },
         {
           name: 'AlgoBot4',
-          port: 3008,
+          port: 3010, // Shifted down to avoid conflicts
           type: 'algorithm',
           capabilities: ['3x3', '5x5'],
         },
       ];
 
+      // Load Vercel bots from environment
+      const vercelBotConfigs = [];
+      if (process.env.VERCEL_BOTS_ENABLED === 'true') {
+        // Method 1: Individual named bots (preferred)
+        const namedBots = loadNamedVercelBots();
+        if (namedBots.length > 0) {
+          vercelBotConfigs.push(...namedBots);
+        } else if (process.env.VERCEL_BOT_URLS) {
+          // Method 2: Comma-separated URLs (fallback)
+          const urls = process.env.VERCEL_BOT_URLS.split(',').map(u =>
+            u.trim()
+          );
+          urls.forEach((url, index) => {
+            vercelBotConfigs.push({
+              name: `VercelBot${index + 1}`,
+              url: url,
+              type: 'vercel',
+              capabilities: ['3x3', '5x5'],
+              source: 'vercel',
+            });
+          });
+        }
+      }
+
+      // Combine all bot configs
+      const allBotConfigs = [...botConfigs, ...vercelBotConfigs];
+
       const getHostForPort = port => {
         if (process.env.DOCKER_DISCOVERY === 'true') {
-          // Map ports to Docker service names for 8-player support
+          // Map ports to Docker service names - match docker-compose.4player.yml
           const portToService = {
             3001: 'random-bot-1',
             3002: 'random-bot-2',
-            3003: 'random-bot-3',
-            3004: 'random-bot-4',
-            3005: 'algo-bot-1',
-            3006: 'algo-bot-2',
-            3007: 'algo-bot-3',
-            3008: 'algo-bot-4',
+            3005: 'random-bot-3', // Fixed: was 3003, now matches docker-compose.4player.yml
+            3006: 'smart-bot-2', // Fixed: was 3004/algo-bot-1, now matches docker-compose.4player.yml
+            3007: 'algo-bot-1', // Shifted down to avoid conflicts
+            3008: 'algo-bot-2', // Shifted down to avoid conflicts
+            3009: 'algo-bot-3', // Shifted down to avoid conflicts
+            3010: 'algo-bot-4', // Shifted down to avoid conflicts
           };
           return portToService[port] || 'localhost';
         }
@@ -489,10 +550,18 @@ export function createApp(dependencies = {}) {
       };
 
       // Check health of each bot (PARALLEL for speed)
-      const healthCheckPromises = botConfigs.map(async bot => {
+      const healthCheckPromises = allBotConfigs.map(async bot => {
         try {
-          const host = getHostForPort(bot.port);
-          const healthUrl = `http://${host}:${bot.port}/health`;
+          let healthUrl;
+
+          if (bot.url) {
+            // Vercel bot - use full URL
+            healthUrl = `${bot.url}/health`;
+          } else {
+            // Docker bot - use host:port
+            const host = getHostForPort(bot.port);
+            healthUrl = `http://${host}:${bot.port}/health`;
+          }
 
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 500); // 500ms timeout
@@ -508,20 +577,24 @@ export function createApp(dependencies = {}) {
             await response.json(); // Consume response but don't use data
             return {
               name: bot.name,
-              port: bot.port,
+              port: bot.port || null,
+              url: bot.url || null,
               type: bot.type,
               capabilities: bot.capabilities,
               status: 'healthy',
+              source: bot.source || 'docker',
               lastSeen: new Date().toISOString(),
               isHuman: false,
             };
           } else {
             return {
               name: bot.name,
-              port: bot.port,
+              port: bot.port || null,
+              url: bot.url || null,
               type: bot.type,
               capabilities: bot.capabilities,
               status: 'unhealthy',
+              source: bot.source || 'docker',
               lastSeen: null,
               isHuman: false,
             };
@@ -529,10 +602,12 @@ export function createApp(dependencies = {}) {
         } catch (error) {
           return {
             name: bot.name,
-            port: bot.port,
+            port: bot.port || null,
+            url: bot.url || null,
             type: bot.type,
             capabilities: bot.capabilities,
             status: 'offline',
+            source: bot.source || 'docker',
             lastSeen: null,
             isHuman: false,
           };

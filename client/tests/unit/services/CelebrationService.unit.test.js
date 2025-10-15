@@ -1,6 +1,6 @@
 /**
- * Unit Tests for CelebrationService
- * Tests celebration logic, countdown timers, and statistics formatting
+ * Pruebas Unitarias para CelebrationService
+ * Pruebas de lógica de celebración, temporizadores de cuenta regresiva y formateo de estadísticas
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
@@ -18,7 +18,7 @@ describe('CelebrationService', () => {
   });
 
   describe('calculateGameStatistics', () => {
-    test('should calculate statistics for individual match with real game data', () => {
+    test('debería calcular estadísticas para partida individual con datos reales del juego', () => {
       const matchResult = {
         winner: { name: 'Player1', symbol: 'X' },
         history: [
@@ -46,7 +46,7 @@ describe('CelebrationService', () => {
       expect(stats.player2Moves).toBe(1);
     });
 
-    test('should calculate statistics for tournament with real tournament data', () => {
+    test('debería calcular estadísticas para torneo con datos reales del torneo', () => {
       const tournamentResult = {
         winner: { name: 'Player1' },
         totalRounds: 2,
@@ -65,7 +65,7 @@ describe('CelebrationService', () => {
       expect(stats.averageTime).toBe(30000);
     });
 
-    test('should handle match with no history', () => {
+    test('debería manejar partida sin historial', () => {
       const matchResult = {
         winner: { name: 'Player1' },
         players: [{ name: 'Player1' }, { name: 'Player2' }],
@@ -81,17 +81,17 @@ describe('CelebrationService', () => {
       expect(stats.player2Moves).toBe(0);
     });
 
-    test('should handle null/undefined inputs by returning empty statistics', () => {
+    test('debería manejar entradas null/undefined retornando estadísticas vacías', () => {
       const stats = CelebrationService.calculateGameStatistics(null, null);
 
       expect(stats.winner).toBeNull();
       expect(stats.movesCount).toBe(0);
-      expect(stats.gameTime).toBe('N/A'); // Service returns 'N/A' string, not 0
+      expect(stats.gameTime).toBe('N/A'); // El servicio retorna string 'N/A', no 0
     });
   });
 
   describe('getGameMetadata', () => {
-    test('should extract metadata from match result', () => {
+    test('debería extraer metadatos del resultado de la partida', () => {
       const result = {
         gameMode: 'individual',
         boardSize: '3x3',
@@ -109,22 +109,22 @@ describe('CelebrationService', () => {
       expect(metadata.winningLine).toEqual([0, 1, 2]);
     });
 
-    test('should provide default values for missing properties', () => {
+    test('debería proporcionar valores por defecto para propiedades faltantes', () => {
       const result = {};
 
       const metadata = CelebrationService.getGameMetadata(result);
 
-      expect(metadata.gameMode).toBe('Individual'); // Service returns capitalized
+      expect(metadata.gameMode).toBe('Individual'); // El servicio retorna capitalizado
       expect(metadata.boardSize).toBe('3x3');
       expect(metadata.speed).toBe('normal');
       expect(metadata.noTie).toBe(false);
       expect(metadata.winningLine).toBeNull();
     });
 
-    test('should handle null input', () => {
+    test('debería manejar entrada null', () => {
       const metadata = CelebrationService.getGameMetadata(null);
 
-      expect(metadata.gameMode).toBe('Individual'); // Service returns capitalized
+      expect(metadata.gameMode).toBe('Individual'); // El servicio retorna capitalizado
       expect(metadata.boardSize).toBe('3x3');
       expect(metadata.speed).toBe('normal');
       expect(metadata.noTie).toBe(false);
@@ -133,41 +133,41 @@ describe('CelebrationService', () => {
   });
 
   describe('createCountdownTimer', () => {
-    test('should call onTick every second with remaining time', () => {
+    test('debería llamar onTick cada segundo con tiempo restante', () => {
       const onTick = jest.fn();
       const onComplete = jest.fn();
 
       CelebrationService.createCountdownTimer(5, onTick, onComplete);
 
-      // Advance 1 second
+      // Avanzar 1 segundo
       jest.advanceTimersByTime(1000);
       expect(onTick).toHaveBeenCalledWith(4);
 
-      // Advance 1 more second
+      // Avanzar 1 segundo más
       jest.advanceTimersByTime(1000);
       expect(onTick).toHaveBeenCalledWith(3);
 
       expect(onComplete).not.toHaveBeenCalled();
     });
 
-    test('should call onTick with 0 before calling onComplete', () => {
+    test('debería llamar onTick con 0 antes de llamar onComplete', () => {
       const onTick = jest.fn();
       const onComplete = jest.fn();
 
       CelebrationService.createCountdownTimer(2, onTick, onComplete);
 
-      // Advance to 1 second remaining
+      // Avanzar a 1 segundo restante
       jest.advanceTimersByTime(1000);
       expect(onTick).toHaveBeenCalledWith(1);
       expect(onComplete).not.toHaveBeenCalled();
 
-      // Advance to 0 seconds remaining
+      // Avanzar a 0 segundos restantes
       jest.advanceTimersByTime(1000);
-      expect(onTick).toHaveBeenCalledWith(0); // ✅ CRITICAL: Must call onTick(0)
+      expect(onTick).toHaveBeenCalledWith(0); // ✅ CRÍTICO: Debe llamar onTick(0)
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 
-    test('should call onComplete when countdown reaches 0', () => {
+    test('debería llamar onComplete cuando la cuenta regresiva llega a 0', () => {
       const onTick = jest.fn();
       const onComplete = jest.fn();
 
@@ -178,21 +178,21 @@ describe('CelebrationService', () => {
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 
-    test('should stop calling onTick after countdown completes', () => {
+    test('debería dejar de llamar onTick después de que la cuenta regresiva se complete', () => {
       const onTick = jest.fn();
       const onComplete = jest.fn();
 
       CelebrationService.createCountdownTimer(2, onTick, onComplete);
 
       jest.advanceTimersByTime(2000);
-      expect(onTick).toHaveBeenCalledTimes(2); // Called at 1 and 0
+      expect(onTick).toHaveBeenCalledTimes(2); // Llamado en 1 y 0
 
-      // Advance more time - should not call onTick again
+      // Avanzar más tiempo - no debería llamar onTick de nuevo
       jest.advanceTimersByTime(5000);
-      expect(onTick).toHaveBeenCalledTimes(2); // Still only 2 calls
+      expect(onTick).toHaveBeenCalledTimes(2); // Aún solo 2 llamadas
     });
 
-    test('should handle null onTick callback', () => {
+    test('debería manejar callback onTick null', () => {
       const onComplete = jest.fn();
 
       expect(() => {
@@ -203,7 +203,7 @@ describe('CelebrationService', () => {
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 
-    test('should handle null onComplete callback', () => {
+    test('debería manejar callback onComplete null', () => {
       const onTick = jest.fn();
 
       expect(() => {
@@ -214,7 +214,7 @@ describe('CelebrationService', () => {
       expect(onTick).toHaveBeenCalledWith(0);
     });
 
-    test('should return cleanup function that clears interval', () => {
+    test('debería retornar función de limpieza que borra el intervalo', () => {
       const onTick = jest.fn();
       const onComplete = jest.fn();
 
@@ -224,20 +224,20 @@ describe('CelebrationService', () => {
         onComplete
       );
 
-      // Advance 2 seconds
+      // Avanzar 2 segundos
       jest.advanceTimersByTime(2000);
       expect(onTick).toHaveBeenCalledTimes(2);
 
-      // Call cleanup
+      // Llamar limpieza
       cleanup();
 
-      // Advance more time - should not call onTick anymore
+      // Avanzar más tiempo - no debería llamar onTick más
       jest.advanceTimersByTime(10000);
-      expect(onTick).toHaveBeenCalledTimes(2); // Still only 2 calls
+      expect(onTick).toHaveBeenCalledTimes(2); // Aún solo 2 llamadas
       expect(onComplete).not.toHaveBeenCalled();
     });
 
-    test('should handle duration of 1 second', () => {
+    test('debería manejar duración de 1 segundo', () => {
       const onTick = jest.fn();
       const onComplete = jest.fn();
 
@@ -249,7 +249,7 @@ describe('CelebrationService', () => {
       expect(onComplete).toHaveBeenCalledTimes(1);
     });
 
-    test('should handle duration of 0 seconds', () => {
+    test('debería manejar duración de 0 segundos', () => {
       const onTick = jest.fn();
       const onComplete = jest.fn();
 
@@ -263,7 +263,7 @@ describe('CelebrationService', () => {
   });
 
   describe('getEmptyStatistics', () => {
-    test('should return empty statistics object', () => {
+    test('debería retornar objeto de estadísticas vacío', () => {
       const stats = CelebrationService.getEmptyStatistics();
 
       expect(stats).toEqual({
@@ -278,7 +278,7 @@ describe('CelebrationService', () => {
       });
     });
 
-    test('should return new object each time', () => {
+    test('debería retornar nuevo objeto cada vez', () => {
       const stats1 = CelebrationService.getEmptyStatistics();
       const stats2 = CelebrationService.getEmptyStatistics();
 

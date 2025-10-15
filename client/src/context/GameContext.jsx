@@ -5,6 +5,7 @@ import React, {
   useEffect,
   useState,
   useRef,
+  useCallback,
 } from 'react';
 import { gameReducer, initialState } from './gameReducer';
 import {
@@ -12,6 +13,7 @@ import {
   getPlayerIdForTurn,
   formatGameConfig,
 } from './gameHelpers';
+import { PlayerService } from '../services/PlayerService';
 
 /**
  * Contexto de Juego para gestión centralizada de estado
@@ -22,9 +24,20 @@ import {
 const GameContext = createContext();
 
 export const GameProvider = ({ children }) => {
+  console.log(
+    '🎮 [DEBUG][GameContext] GameProvider initialized - CONSOLE LOGGING WORKS!'
+  );
   const [state, dispatch] = useReducer(gameReducer, initialState);
   const [sseConnection, setSseConnection] = useState(null);
   const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting', 'connected', 'disconnected', 'error'
+
+  // Player management
+  const playerService = useRef(new PlayerService());
+
+  // State refs for accessing current state in callbacks
+  const stateRef = useRef(state);
+  const playersRef = useRef(state.players);
+  const availableBotsRef = useRef(state.availableBots);
 
   // Move queue for animation
   const [moveQueue, setMoveQueue] = useState([]);
@@ -39,10 +52,13 @@ export const GameProvider = ({ children }) => {
 
   // Keep refs in sync
   useEffect(() => {
+    stateRef.current = state;
+    playersRef.current = state.players;
+    availableBotsRef.current = state.availableBots;
     moveQueueRef.current = moveQueue;
     processingRef.current = isProcessingMoves;
     removalQueueRef.current = removalQueue;
-  }, [moveQueue, isProcessingMoves, removalQueue]);
+  }, [state, moveQueue, isProcessingMoves, removalQueue]);
 
   // manejo de conexión SSE con el servidor
   useEffect(() => {
@@ -64,20 +80,33 @@ export const GameProvider = ({ children }) => {
 
       eventSource = new EventSource('/api/stream');
 
+      // DEBUG: Store EventSource globally for debugging
+      window.eventSource = eventSource;
+      console.log('🔌 [DEBUG] EventSource created:', eventSource);
+      console.log('🔌 [DEBUG] EventSource readyState:', eventSource.readyState);
+
       eventSource.onopen = () => {
+        console.log('🔌 [DEBUG] EventSource onopen triggered');
         setSseConnection(eventSource);
         setConnectionStatus('connected');
         isConnecting = false;
         reconnectAttempts = 0; // Reset reconnect attempts on successful connection
       };
 
-      eventSource.onmessage = () => {
-        try {
-          // const data = JSON.parse(event.data);
-          // handleSSEEvent(data);
-        } catch (error) {
-          // Error parsing SSE message - could be logged in development
-        }
+      eventSource.onmessage = event => {
+        console.log('🔌 [DEBUG] EventSource onmessage triggered:', event);
+        console.log('🔌 [DEBUG] Event data:', event.data);
+        // SSE events are handled by specific addEventListener calls below
+      };
+
+      eventSource.onerror = error => {
+        console.error('🔌 [DEBUG] EventSource onerror triggered:', error);
+        console.error(
+          '🔌 [DEBUG] EventSource readyState:',
+          eventSource.readyState
+        );
+        setConnectionStatus('error');
+        isConnecting = false;
       };
 
       eventSource.addEventListener('match:start', event => {
@@ -97,17 +126,15 @@ export const GameProvider = ({ children }) => {
         const data = JSON.parse(event.data);
 
         // DEBUG: Log move event received
-        if (process.env.LOG_LEVEL === 'debug') {
-          console.log(
-            '[DEBUG][GameContext][SSE:match:move] Received move event:',
-            {
-              player: data.player?.name,
-              move: data.move,
-              turn: data.turn,
-              queueLength: moveQueueRef.current.length,
-            }
-          );
-        }
+        console.log(
+          '[DEBUG][GameContext][SSE:match:move] Received move event:',
+          {
+            player: data.player?.name,
+            move: data.move,
+            turn: data.turn,
+            queueLength: moveQueueRef.current.length,
+          }
+        );
 
         // Queue moves for delayed animation instead of instant dispatch
         setMoveQueue(prev => [
@@ -297,15 +324,13 @@ export const GameProvider = ({ children }) => {
       const delayMs = getDelayForSpeed(speed);
 
       // DEBUG: Log move processing
-      if (process.env.LOG_LEVEL === 'debug') {
-        console.log('[DEBUG][GameContext][moveQueue] Processing move:', {
-          queueLength: moveQueueRef.current.length,
-          configSpeed: state.config?.speed,
-          effectiveSpeed: speed,
-          delayMs: delayMs,
-          moveType: nextMove.type,
-        });
-      }
+      console.log('[DEBUG][GameContext][moveQueue] Processing move:', {
+        queueLength: moveQueueRef.current.length,
+        configSpeed: state.config?.speed,
+        effectiveSpeed: speed,
+        delayMs: delayMs,
+        moveType: nextMove.type,
+      });
 
       setTimeout(() => {
         dispatch({
@@ -319,14 +344,16 @@ export const GameProvider = ({ children }) => {
           },
         });
 
-        setMoveQueue(prev => prev.slice(1));
-
-        // Process next move
-        if (moveQueueRef.current.length > 1) {
-          processNextMove();
-        } else {
-          setIsProcessingMoves(false);
-        }
+        setMoveQueue(prev => {
+          const newQueue = prev.slice(1);
+          // Process next move if there are more moves
+          if (newQueue.length > 0) {
+            setTimeout(() => processNextMove(), 0);
+          } else {
+            setIsProcessingMoves(false);
+          }
+          return newQueue;
+        });
       }, delayMs);
     };
 
@@ -338,7 +365,8 @@ export const GameProvider = ({ children }) => {
     if (removalQueue.length === 0) return;
 
     const processRemoval = () => {
-      const removal = removalQueue[0];
+      const removal = removalQueueRef.current[0];
+      if (!removal) return;
 
       // Update board state to clear position
       dispatch({
@@ -357,27 +385,30 @@ export const GameProvider = ({ children }) => {
       if (state.moveCount >= 5) {
         setNextRemovalPosition(state.history?.[0]?.move || null);
       }
+
+      // Process next removal if there are more in queue
+      if (removalQueueRef.current.length > 0) {
+        processRemoval();
+      }
     };
 
     processRemoval();
-  }, [removalQueue, state.moveCount, state.history]);
+  }, [removalQueue.length, state.moveCount, state.history]);
 
   // Acciones del juego
   const startMatch = async (player1, player2, options = {}) => {
     try {
       // DEBUG: Log game configuration
-      if (process.env.LOG_LEVEL === 'debug') {
-        console.log(
-          '[DEBUG][GameContext][startMatch] Starting match with config:',
-          {
-            player1: player1.name,
-            player2: player2.name,
-            speed: options.speed,
-            boardSize: options.boardSize,
-            noTie: options.noTie,
-          }
-        );
-      }
+      console.log(
+        '[DEBUG][GameContext][startMatch] Starting match with config:',
+        {
+          player1: player1.name,
+          player2: player2.name,
+          speed: options.speed,
+          boardSize: options.boardSize,
+          noTie: options.noTie,
+        }
+      );
 
       // Store config FIRST before starting match
       dispatch({
@@ -391,6 +422,12 @@ export const GameProvider = ({ children }) => {
         ...options,
       };
 
+      // DEBUG: Log the exact request body being sent
+      console.log(
+        '[DEBUG][GameContext][startMatch] Request body:',
+        JSON.stringify(requestBody, null, 2)
+      );
+
       // Dispatch START_MATCH immediately to set state to 'playing'
       // This ensures the ProgressScreen is shown while the API call is in progress
       dispatch({
@@ -400,7 +437,7 @@ export const GameProvider = ({ children }) => {
           players: [player1, player2],
           boardSize: options.boardSize || 3,
           currentPlayer: player1,
-          waitingForHuman: player1.type === 'human' || player2.type === 'human',
+          waitingForHuman: player1.isHuman || player2.isHuman,
         },
       });
 
@@ -433,9 +470,7 @@ export const GameProvider = ({ children }) => {
             boardSize: result.boardSize || options.boardSize || 3,
             currentPlayer: result.currentPlayer || player1,
             waitingForHuman:
-              result.waitingForHuman ||
-              player1.type === 'human' ||
-              player2.type === 'human',
+              result.waitingForHuman || player1.isHuman || player2.isHuman,
           },
         });
       }
@@ -451,6 +486,39 @@ export const GameProvider = ({ children }) => {
 
   const startTournament = async (players, options = {}) => {
     try {
+      // DEBUG: Log tournament configuration
+      console.log(
+        '[DEBUG][GameContext][startTournament] Starting tournament with config:',
+        {
+          players: players.map(p => ({
+            name: p.name,
+            port: p.port,
+            isHuman: p.isHuman,
+          })),
+          speed: options.speed,
+          boardSize: options.boardSize,
+          noTie: options.noTie,
+        }
+      );
+
+      // Store config FIRST before starting tournament
+      dispatch({
+        type: 'SET_CONFIG',
+        payload: formatGameConfig(options),
+      });
+
+      // Dispatch START_TOURNAMENT immediately to set state to 'tournament'
+      // This ensures the tournament state is set before individual matches start
+      dispatch({
+        type: 'START_TOURNAMENT',
+        payload: {
+          players,
+          boardSize: options.boardSize || 3,
+          rounds: [], // Will be populated by SSE events
+          timestamp: Date.now(),
+        },
+      });
+
       const requestBody = {
         players,
         ...options,
@@ -561,6 +629,65 @@ export const GameProvider = ({ children }) => {
     }
   };
 
+  // Player management functions
+  const discoverBots = useCallback(async () => {
+    try {
+      dispatch({ type: 'SET_BOT_DISCOVERY_STATUS', payload: 'discovering' });
+      const response = await fetch('/api/bots/available');
+      const data = await response.json();
+
+      if (data.bots) {
+        dispatch({ type: 'SET_AVAILABLE_BOTS', payload: data.bots });
+        dispatch({ type: 'SET_BOT_DISCOVERY_STATUS', payload: 'success' });
+      } else {
+        dispatch({ type: 'SET_BOT_DISCOVERY_STATUS', payload: 'error' });
+      }
+    } catch (error) {
+      console.error('[DEBUG][GameContext] Bot discovery failed:', error);
+      dispatch({ type: 'SET_BOT_DISCOVERY_STATUS', payload: 'error' });
+    }
+  }, []);
+
+  const populatePlayersForMode = useCallback((gameMode, config) => {
+    // Use refs to access current state, not stale closure values
+    const currentPlayers = playersRef.current;
+    const currentAvailableBots = availableBotsRef.current;
+
+    // Only populate if no human players are currently set
+    const hasHumanPlayers = currentPlayers.some(player => player.isHuman);
+
+    if (!hasHumanPlayers) {
+      console.log(
+        '[DEBUG][GameContext] populatePlayersForMode called - no human players detected'
+      );
+      const newPlayers = playerService.current.populatePlayersForMode(
+        gameMode,
+        currentAvailableBots,
+        config,
+        currentPlayers // Pass current players to preserve human settings
+      );
+      console.log(
+        '[DEBUG][GameContext] newPlayers after populatePlayersForMode:',
+        newPlayers
+      );
+      dispatch({ type: 'SET_PLAYERS', payload: newPlayers });
+    } else {
+      console.log(
+        '[DEBUG][GameContext] Skipping populatePlayersForMode - human players detected:',
+        currentPlayers
+      );
+    }
+  }, []); // Empty dependencies - using refs for current state
+
+  const updatePlayer = useCallback((index, field, value) => {
+    console.log('[DEBUG][GameContext] updatePlayer called:', {
+      index,
+      field,
+      value,
+    });
+    dispatch({ type: 'UPDATE_PLAYER', payload: { index, field, value } });
+  }, []);
+
   const value = {
     ...state,
     startMatch,
@@ -574,6 +701,10 @@ export const GameProvider = ({ children }) => {
     isProcessingMoves,
     removalQueue, // Infinity mode removal queue
     nextRemovalPosition, // Infinity mode pulsating effect
+    // Player management functions
+    discoverBots,
+    populatePlayersForMode,
+    updatePlayer,
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;

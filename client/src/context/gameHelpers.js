@@ -12,11 +12,11 @@
  */
 export function getDelayForSpeed(speed) {
   const delays = {
-    slow: 2000,
-    normal: 1000,
-    fast: 200,
+    slow: 3000, // 3 seconds - very visible
+    normal: 2000, // 2 seconds - clearly visible
+    fast: 1000, // 1 second - still visible
   };
-  return delays[speed] || 1000; // Default to normal speed
+  return delays[speed] || 2000; // Default to normal speed
 }
 
 /**

@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - UPDATE_BOARD action
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción UPDATE_BOARD
+ * Pruebas de funciones puras - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - UPDATE_BOARD', () => {
-  test('should update board with new state', () => {
+  test('debería actualizar tablero con nuevo estado', () => {
     const state = {
       ...initialState,
       board: Array(9).fill(0),
@@ -32,7 +32,7 @@ describe('gameReducer - UPDATE_BOARD', () => {
     expect(result.moveCount).toBe(1);
   });
 
-  test('should handle multiple moves', () => {
+  test('debería manejar múltiples movimientos', () => {
     const state = {
       ...initialState,
       board: [1, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -59,7 +59,7 @@ describe('gameReducer - UPDATE_BOARD', () => {
     expect(result.moveCount).toBe(2);
   });
 
-  test('should preserve other state properties', () => {
+  test('debería preservar otras propiedades del estado', () => {
     const state = {
       ...initialState,
       gameState: 'playing',

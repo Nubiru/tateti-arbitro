@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useGame } from '../context/GameContext';
 import { AnimatedButton } from '../components/ui';
 import styles from './ProgressScreen.module.css';
@@ -25,32 +25,12 @@ const ProgressScreen = ({
     moveCount,
     matchResult,
     currentMatch,
+    tournament,
     submitMove,
     resetGame,
   } = useGame();
 
-  // Direct display state (no throttling needed - backend handles delays)
-  const [displayedBoard, setDisplayedBoard] = useState(Array(9).fill(0));
-  const [displayedHistory, setDisplayedHistory] = useState([]);
-  const [displayedMoveCount, setDisplayedMoveCount] = useState(0);
-
-  // Handle real-time updates directly (backend controls timing)
-  useEffect(() => {
-    if (board && history && moveCount !== undefined) {
-      // DEBUG: Log board updates
-      if (process.env.LOG_LEVEL === 'debug') {
-        console.log('[DEBUG][ProgressScreen] Board updated:', {
-          moveCount,
-          boardState: board,
-          historyLength: history.length,
-        });
-      }
-
-      setDisplayedBoard([...board]);
-      setDisplayedHistory([...history]);
-      setDisplayedMoveCount(moveCount);
-    }
-  }, [board, history, moveCount]);
+  // Use GameContext state directly - move queue handles delays
 
   // Call onActivity on mount (no useEffect needed for sync operations)
   useEffect(() => {
@@ -73,14 +53,14 @@ const ProgressScreen = ({
 
   const isHumanPlayerTurn = () => {
     if (!currentMatch || !currentMatch.players) return false;
-    const currentPlayerIndex = displayedMoveCount % 2;
+    const currentPlayerIndex = moveCount % 2;
     const currentPlayer = currentMatch.players[currentPlayerIndex];
     return currentPlayer && currentPlayer.isHuman;
   };
 
   const handleCellClick = async position => {
     if (!isHumanPlayerTurn()) return;
-    if (displayedBoard[position] !== 0) return; // Cell already occupied
+    if (board[position] !== 0) return; // Cell already occupied
 
     try {
       await submitMove(position);
@@ -101,8 +81,8 @@ const ProgressScreen = ({
     const size = getBoardSize();
     const boardArray = Array(size).fill(0);
 
-    // Copiar estado actual del tablero (usar displayedBoard para throttling)
-    displayedBoard.forEach((cell, index) => {
+    // Use board state directly - move queue handles delays
+    board.forEach((cell, index) => {
       if (index < size) {
         boardArray[index] = cell;
       }
@@ -183,7 +163,7 @@ const ProgressScreen = ({
         </div>
         <div className={styles.infoCard}>
           <div className={styles.infoLabel}>Movimientos</div>
-          <div className={styles.infoValue}>{displayedMoveCount}</div>
+          <div className={styles.infoValue}>{moveCount}</div>
         </div>
       </div>
     );
@@ -237,8 +217,8 @@ const ProgressScreen = ({
       <div className={styles.moveHistory}>
         <h3>Historial de Movimientos</h3>
         <div className={styles.historyList}>
-          {displayedHistory && displayedHistory.length > 0 ? (
-            displayedHistory.map((move, index) => (
+          {history && history.length > 0 ? (
+            history.map((move, index) => (
               <div key={index} className={styles.historyItem}>
                 <span className={styles.moveNumber}>{index + 1}.</span>
                 <span className={styles.movePlayer}>
@@ -257,6 +237,32 @@ const ProgressScreen = ({
     );
   };
 
+  // Render tournament context header if in tournament mode
+  const renderTournamentContext = () => {
+    if (!tournament || !currentMatch) return null;
+
+    return (
+      <div className={styles.tournamentContext}>
+        <div className={styles.tournamentHeader}>
+          <h2 className={styles.tournamentTitle}>Torneo en Progreso</h2>
+          <div className={styles.matchInfo}>
+            <span className={styles.matchLabel}>Partida Actual:</span>
+            <span className={styles.matchPlayers}>
+              {currentMatch.players?.[0]?.name || 'Jugador 1'} vs{' '}
+              {currentMatch.players?.[1]?.name || 'Jugador 2'}
+            </span>
+          </div>
+          <button
+            onClick={onTournamentBracket}
+            className={`${styles.bracketButton} btn btn-secondary`}
+          >
+            Ver Bracket Completo
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={styles.progressScreen}>
       <div className={styles.progressContainer}>
@@ -264,7 +270,9 @@ const ProgressScreen = ({
           <button onClick={onBack} className="btn btn-secondary backButton">
             ← Volver
           </button>
-          <h1 className={styles.progressTitle}>Partida en Progreso</h1>
+          <h1 className={styles.progressTitle}>
+            {tournament ? 'Partida del Torneo' : 'Partida en Progreso'}
+          </h1>
           <AnimatedButton
             onClick={handleStopMatch}
             className={styles.stopButton}
@@ -273,6 +281,8 @@ const ProgressScreen = ({
             ⏹ Detener
           </AnimatedButton>
         </div>
+
+        {renderTournamentContext()}
 
         {renderGameInfo()}
 

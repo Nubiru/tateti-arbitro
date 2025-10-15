@@ -58,7 +58,7 @@ describe('Pruebas Unitarias de Reglas de Validación', () => {
       const result = validatePlayerShape(player, 'player1');
 
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('player1 debe tener name y port');
+      expect(result.error).toBe('player1 debe tener name y (port o url)');
     });
 
     test('debería rechazar jugador sin puerto', () => {
@@ -66,7 +66,7 @@ describe('Pruebas Unitarias de Reglas de Validación', () => {
       const result = validatePlayerShape(player, 'player1');
 
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('player1 debe tener name y port');
+      expect(result.error).toBe('player1 debe tener name y (port o url)');
     });
 
     test('debería rechazar jugador con nombre vacío', () => {
@@ -74,7 +74,7 @@ describe('Pruebas Unitarias de Reglas de Validación', () => {
       const result = validatePlayerShape(player, 'player1');
 
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('player1 debe tener name y port');
+      expect(result.error).toBe('player1 debe tener name y (port o url)');
     });
 
     test('debería rechazar jugador con puerto null', () => {
@@ -82,7 +82,7 @@ describe('Pruebas Unitarias de Reglas de Validación', () => {
       const result = validatePlayerShape(player, 'player1');
 
       expect(result.isValid).toBe(false);
-      expect(result.error).toBe('player1 debe tener name y port');
+      expect(result.error).toBe('player1 debe tener name y (port o url)');
     });
   });
 

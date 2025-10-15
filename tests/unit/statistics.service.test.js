@@ -1,6 +1,6 @@
 /**
- * Unit Tests for StatisticsService
- * Tests in-memory statistics tracking and aggregation
+ * Pruebas Unitarias para StatisticsService
+ * Pruebas de seguimiento y agregación de estadísticas en memoria
  * @lastModified 2025-10-07
  * @version 1.0.0
  */
@@ -19,7 +19,7 @@ describe('StatisticsService', () => {
   });
 
   describe('recordMatch()', () => {
-    test('should store match data correctly', () => {
+    test('debería almacenar datos de partida correctamente', () => {
       const matchData = createMockMatchData({
         winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
@@ -40,7 +40,7 @@ describe('StatisticsService', () => {
       expect(stats.averageDuration).toBe(2000);
     });
 
-    test('should handle draw matches', () => {
+    test('debería manejar partidas empatadas', () => {
       const matchData = createMockMatchData({
         winner: null,
         players: [
@@ -60,7 +60,7 @@ describe('StatisticsService', () => {
       expect(stats.winsByType.random).toBe(0);
     });
 
-    test('should handle multiple matches correctly', () => {
+    test('debería manejar múltiples partidas correctamente', () => {
       const match1 = createMockMatchData({
         winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
@@ -93,7 +93,7 @@ describe('StatisticsService', () => {
       expect(stats.averageDuration).toBe(1750); // (1000 + 2500) / 2
     });
 
-    test('should handle missing winner gracefully', () => {
+    test('debería manejar ganador faltante con gracia', () => {
       const matchData = createMockMatchData({
         winner: undefined,
         players: [
@@ -113,7 +113,7 @@ describe('StatisticsService', () => {
   });
 
   describe('getStats()', () => {
-    test('should return empty stats when no matches recorded', () => {
+    test('debería retornar estadísticas vacías cuando no hay partidas registradas', () => {
       const stats = StatisticsService.getStats();
 
       expect(stats).toEqual({
@@ -139,7 +139,7 @@ describe('StatisticsService', () => {
       });
     });
 
-    test('should calculate win rates correctly', () => {
+    test('debería calcular tasas de victoria correctamente', () => {
       const match1 = createMockMatchData({
         winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
@@ -185,7 +185,7 @@ describe('StatisticsService', () => {
       expect(stats.averageDuration).toBe(2000); // (1000 + 2000 + 3000) / 3
     });
 
-    test('should track games by board size and mode', () => {
+    test('debería rastrear juegos por tamaño de tablero y modo', () => {
       const match1 = createMockMatchData({
         winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
@@ -223,7 +223,7 @@ describe('StatisticsService', () => {
   });
 
   describe('resetStats()', () => {
-    test('should clear all statistics', () => {
+    test('debería limpiar todas las estadísticas', () => {
       const matchData = createMockMatchData({
         winner: createMockPlayer({ name: 'Bot1', type: 'algorithm' }),
         players: [
@@ -250,7 +250,7 @@ describe('StatisticsService', () => {
   });
 
   describe('Error Handling', () => {
-    test('should handle malformed match data gracefully', () => {
+    test('debería manejar datos de partida malformados con gracia', () => {
       const malformedData = {
         winner: 'invalid',
         players: 'not an array',
@@ -266,7 +266,7 @@ describe('StatisticsService', () => {
       expect(stats.totalGames).toBe(0);
     });
 
-    test('should handle empty match data', () => {
+    test('debería manejar datos de partida vacíos', () => {
       expect(() => {
         StatisticsService.recordMatch({});
       }).not.toThrow();
@@ -277,7 +277,7 @@ describe('StatisticsService', () => {
   });
 
   describe('Performance', () => {
-    test('should handle large number of matches efficiently', () => {
+    test('debería manejar gran número de partidas eficientemente', () => {
       const start = performance.now();
 
       for (let i = 0; i < 1000; i++) {
@@ -301,7 +301,7 @@ describe('StatisticsService', () => {
       const stats = StatisticsService.getStats();
 
       expect(stats.totalGames).toBe(1000);
-      expect(end - start).toBeLessThan(100); // Should be very fast
+      expect(end - start).toBeLessThan(100); // Debería ser muy rápido
     });
   });
 });

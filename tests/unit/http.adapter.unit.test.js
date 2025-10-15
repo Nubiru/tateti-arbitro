@@ -365,6 +365,72 @@ describe('Pruebas Unitarias de Funciones Puras', () => {
 
       expect(url).toBe('https://192.168.1.100:3001/api/move');
     });
+
+    // New tests for URL support
+    test('debería construir URL usando campo url para bots de Vercel', () => {
+      const player = {
+        name: 'VercelBot1',
+        url: 'https://ta-te-ti-bemg.vercel.app',
+      };
+      const endpoint = '/move';
+
+      const url = buildUrl(player, endpoint);
+
+      expect(url).toBe('https://ta-te-ti-bemg.vercel.app/move');
+    });
+
+    test('debería manejar URL con barra final', () => {
+      const player = {
+        name: 'VercelBot1',
+        url: 'https://ta-te-ti-bemg.vercel.app/',
+      };
+      const endpoint = '/move';
+
+      const url = buildUrl(player, endpoint);
+
+      expect(url).toBe('https://ta-te-ti-bemg.vercel.app/move');
+    });
+
+    test('debería usar lógica host:port cuando no hay campo url', () => {
+      const player = {
+        name: 'DockerBot1',
+        port: 3001,
+        host: 'localhost',
+        protocol: 'http',
+      };
+      const endpoint = '/health';
+
+      const url = buildUrl(player, endpoint);
+
+      expect(url).toBe('http://localhost:3001/health');
+    });
+
+    test('debería priorizar campo url sobre port/host', () => {
+      const player = {
+        name: 'MixedBot',
+        url: 'https://vercel-bot.vercel.app',
+        port: 3001,
+        host: 'localhost',
+        protocol: 'http',
+      };
+      const endpoint = '/move';
+
+      const url = buildUrl(player, endpoint);
+
+      expect(url).toBe('https://vercel-bot.vercel.app/move');
+    });
+
+    test('debería manejar diferentes endpoints con URL', () => {
+      const player = {
+        name: 'VercelBot1',
+        url: 'https://ta-te-ti-bemg.vercel.app',
+      };
+      const endpoint = '/api/health';
+
+      const url = buildUrl(player, endpoint);
+
+      expect(url).toBe('https://ta-te-ti-bemg.vercel.app/api/health');
+    });
   });
 
   describe('buildRequestData', () => {
@@ -624,7 +690,7 @@ describe('Pruebas Unitarias de Funciones Puras', () => {
       expect(result).toEqual({ error: 'Respuesta 500' });
     });
 
-    test('should handle connection refused error', () => {
+    test('debería manejar error de conexión rechazada', () => {
       const error = {
         code: 'ECONNREFUSED',
         message: 'Connection refused',

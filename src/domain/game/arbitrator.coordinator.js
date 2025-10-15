@@ -164,36 +164,6 @@ export class ArbitratorCoordinator {
 
       step.move = move;
 
-      // ROLLING WINDOW: Infinity Mode - Remove oldest move if threshold reached
-      if (noTie && shouldRemoveOldestMove(moveHistory)) {
-        const removalPosition = getRemovalPosition(moveHistory);
-        const removalPlayer = getRemovalPlayer(moveHistory, normalizedPlayers);
-
-        moveHistory.shift(); // Remove from history
-        board[removalPosition] = 0; // Clear from board
-
-        // Emit removal event for frontend visualization
-        this.eventsAdapter.broadcastMoveRemoval({
-          matchId: matchId,
-          position: removalPosition,
-          player: removalPlayer,
-          timestamp: this.clock.now().toISOString(),
-        });
-
-        logger.debug(
-          'ARBITRATOR',
-          'MATCH',
-          'MOVE_REMOVED',
-          'Infinity mode: Oldest move removed',
-          {
-            position: removalPosition,
-            playerId: removalPlayer.id,
-            turn: turn + 1,
-            historyLength: moveHistory.length,
-          }
-        );
-      }
-
       // Validar movimiento usando función pura
       if (!isValidMove(board, move)) {
         step.error = 'Movimiento inválido.';
@@ -226,8 +196,54 @@ export class ArbitratorCoordinator {
         turn: turn + 1,
       });
 
+      // Agregar movimiento al historial para ventana deslizante
+      moveHistory.push({
+        move,
+        playerId: currentPlayer.id,
+        turn: turn + 1,
+        timestamp: this.clock.now(),
+      });
+
+      // ROLLING WINDOW: Infinity Mode - Remove oldest move if threshold reached
+      // Check AFTER adding the current move to history
+      if (noTie && shouldRemoveOldestMove(moveHistory)) {
+        const removalPosition = getRemovalPosition(moveHistory);
+        const removalPlayer = getRemovalPlayer(moveHistory, normalizedPlayers);
+
+        moveHistory.shift(); // Remove from history
+        board[removalPosition] = 0; // Clear from board
+
+        // Emit removal event for frontend visualization
+        this.eventsAdapter.broadcastMoveRemoval({
+          matchId: matchId,
+          position: removalPosition,
+          player: removalPlayer,
+          timestamp: this.clock.now().toISOString(),
+        });
+
+        logger.debug(
+          'ARBITRATOR',
+          'MATCH',
+          'MOVE_REMOVED',
+          'Infinity mode: Oldest move removed',
+          {
+            position: removalPosition,
+            playerId: removalPlayer.id,
+            turn: turn + 1,
+            historyLength: moveHistory.length,
+          }
+        );
+      }
+
       // Emitir evento de movimiento usando adaptador de eventos
-      this.eventsAdapter.broadcastMatchMove({
+      console.log(
+        '🎮 ArbitratorCoordinator: A punto de emitir evento match:move'
+      );
+      console.log(
+        '🎮 ArbitratorCoordinator: EventsAdapter existe:',
+        !!this.eventsAdapter
+      );
+      console.log('🎮 ArbitratorCoordinator: Datos de movimiento:', {
         matchId: matchId,
         player: currentPlayer,
         move: move,
@@ -236,13 +252,23 @@ export class ArbitratorCoordinator {
         timestamp: this.clock.now().toISOString(),
       });
 
-      // Agregar movimiento al historial para ventana deslizante
-      moveHistory.push({
-        move,
-        playerId: currentPlayer.id,
-        turn: turn + 1,
-        timestamp: this.clock.now(),
-      });
+      if (this.eventsAdapter) {
+        this.eventsAdapter.broadcastMatchMove({
+          matchId: matchId,
+          player: currentPlayer,
+          move: move,
+          board: [...board],
+          turn: turn + 1,
+          timestamp: this.clock.now().toISOString(),
+        });
+        console.log(
+          '🎮 ArbitratorCoordinator: Emisión de evento match:move completada'
+        );
+      } else {
+        console.error(
+          '🎮 ArbitratorCoordinator: ¡EventsAdapter es null o undefined!'
+        );
+      }
 
       step.boardAfter = [...board];
       history.push(step);
@@ -292,7 +318,7 @@ export class ArbitratorCoordinator {
           timestamp: this.clock.now().toISOString(),
         });
       } else {
-        // This should never happen in properly implemented games
+        // Esto nunca debería suceder en juegos implementados correctamente
         message = 'La partida no finalizó correctamente.';
         logger.warn('ARBITRATOR', 'MATCH', 'INCOMPLETE', 'Partida incompleta', {
           turn: history.length,
@@ -331,12 +357,47 @@ export class ArbitratorCoordinator {
     // NOTE: We only send the board to the player.
     // Player apps are stateless and don't need to know their symbol.
     // The arbitrator tracks which player is which and places the correct symbol.
-    return await this.httpAdapter.requestMove(player, '/move', {
+
+    // Create a copy of the player with the correct host for Docker containers
+    const playerWithCorrectHost = this.getPlayerWithCorrectHost(player);
+    return await this.httpAdapter.requestMove(playerWithCorrectHost, '/move', {
       params: {
         board: JSON.stringify(board),
       },
       timeout: timeoutMs,
     });
+  }
+
+  /**
+   * Get player with correct host for Docker containers
+   * @param {Object} player - Player object
+   * @returns {Object} Player with correct host
+   */
+  getPlayerWithCorrectHost(player) {
+    // If DOCKER_DISCOVERY is enabled, use Docker service names
+    if (process.env.DOCKER_DISCOVERY === 'true') {
+      const portToService = {
+        3001: 'random-bot-1',
+        3002: 'random-bot-2',
+        3005: 'random-bot-3',
+        3006: 'smart-bot-2',
+        3007: 'algo-bot-1',
+        3008: 'algo-bot-2',
+        3009: 'algo-bot-3',
+        3010: 'algo-bot-4',
+      };
+
+      const serviceName = portToService[player.port];
+      if (serviceName) {
+        return {
+          ...player,
+          host: serviceName,
+        };
+      }
+    }
+
+    // Fallback to original player
+    return player;
   }
 
   /**

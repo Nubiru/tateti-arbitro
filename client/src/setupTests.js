@@ -12,9 +12,16 @@ const originalError = console.error;
 const originalWarn = console.warn;
 const originalLog = console.log;
 
-// Suppress console.error unless LOG_LEVEL=debug
+// Suppress console.error unless LOG_LEVEL=debug (only in test environment)
 console.error = (...args) => {
-  if (process.env.LOG_LEVEL === 'debug') {
+  // Only suppress in test environment (when NODE_ENV is test)
+  if (process.env.NODE_ENV === 'test') {
+    if (process.env.LOG_LEVEL === 'debug') {
+      originalError.call(console, ...args);
+      return;
+    }
+  } else {
+    // In browser/production, always show errors
     originalError.call(console, ...args);
     return;
   }
@@ -40,20 +47,32 @@ console.error = (...args) => {
   originalError.call(console, ...args);
 };
 
-// Suppress console.warn unless LOG_LEVEL=debug
+// Suppress console.warn unless LOG_LEVEL=debug (only in test environment)
 console.warn = (...args) => {
-  if (process.env.LOG_LEVEL === 'debug') {
+  // Only suppress in test environment (when NODE_ENV is test)
+  if (process.env.NODE_ENV === 'test') {
+    if (process.env.LOG_LEVEL === 'debug') {
+      originalWarn.call(console, ...args);
+    }
+    // Suppress all warnings in tests
+  } else {
+    // In browser/production, always show warnings
     originalWarn.call(console, ...args);
   }
-  // Suppress all warnings in tests
 };
 
-// Suppress console.log unless LOG_LEVEL=debug
+// Suppress console.log unless LOG_LEVEL=debug (only in test environment)
 console.log = (...args) => {
-  if (process.env.LOG_LEVEL === 'debug') {
+  // Only suppress in test environment (when NODE_ENV is test)
+  if (process.env.NODE_ENV === 'test') {
+    if (process.env.LOG_LEVEL === 'debug') {
+      originalLog.call(console, ...args);
+    }
+    // Suppress all logs in tests
+  } else {
+    // In browser/production, always show logs
     originalLog.call(console, ...args);
   }
-  // Suppress all logs in tests
 };
 
 // Configurar Testing Library

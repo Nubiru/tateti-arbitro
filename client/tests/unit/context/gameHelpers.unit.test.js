@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameHelpers - All helper functions
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameHelpers - Todas las funciones auxiliares
+ * Pruebas de funciones puras - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -14,91 +14,91 @@ import {
 } from '../../../src/context/gameHelpers';
 
 describe('getDelayForSpeed', () => {
-  test('should return 2000ms for slow', () => {
-    expect(getDelayForSpeed('slow')).toBe(2000);
+  test('debería retornar 3000ms para slow', () => {
+    expect(getDelayForSpeed('slow')).toBe(3000);
   });
 
-  test('should return 1000ms for normal', () => {
-    expect(getDelayForSpeed('normal')).toBe(1000);
+  test('debería retornar 2000ms para normal', () => {
+    expect(getDelayForSpeed('normal')).toBe(2000);
   });
 
-  test('should return 200ms for fast', () => {
-    expect(getDelayForSpeed('fast')).toBe(200);
+  test('debería retornar 1000ms para fast', () => {
+    expect(getDelayForSpeed('fast')).toBe(1000);
   });
 
-  test('should default to 1000ms for unknown speed', () => {
-    expect(getDelayForSpeed('unknown')).toBe(1000);
+  test('debería usar 2000ms por defecto para velocidad desconocida', () => {
+    expect(getDelayForSpeed('unknown')).toBe(2000);
   });
 
-  test('should default to 1000ms for null', () => {
-    expect(getDelayForSpeed(null)).toBe(1000);
+  test('debería usar 2000ms por defecto para null', () => {
+    expect(getDelayForSpeed(null)).toBe(2000);
   });
 
-  test('should default to 1000ms for undefined', () => {
-    expect(getDelayForSpeed(undefined)).toBe(1000);
+  test('debería usar 2000ms por defecto para undefined', () => {
+    expect(getDelayForSpeed(undefined)).toBe(2000);
   });
 
-  test('should default to 1000ms for empty string', () => {
-    expect(getDelayForSpeed('')).toBe(1000);
+  test('debería usar 2000ms por defecto para string vacío', () => {
+    expect(getDelayForSpeed('')).toBe(2000);
   });
 });
 
 describe('validateMoveRequest', () => {
-  test('should not throw for valid 3x3 move', () => {
+  test('no debería lanzar error para movimiento 3x3 válido', () => {
     expect(() => {
       validateMoveRequest('match-123', 4, 9);
     }).not.toThrow();
   });
 
-  test('should not throw for valid 5x5 move', () => {
+  test('no debería lanzar error para movimiento 5x5 válido', () => {
     expect(() => {
       validateMoveRequest('match-456', 12, 25);
     }).not.toThrow();
   });
 
-  test('should throw if matchId is null', () => {
+  test('debería lanzar error si matchId es null', () => {
     expect(() => {
       validateMoveRequest(null, 4, 9);
     }).toThrow('No active match found');
   });
 
-  test('should throw if matchId is undefined', () => {
+  test('debería lanzar error si matchId es undefined', () => {
     expect(() => {
       validateMoveRequest(undefined, 4, 9);
     }).toThrow('No active match found');
   });
 
-  test('should throw if matchId is empty string', () => {
+  test('debería lanzar error si matchId es string vacío', () => {
     expect(() => {
       validateMoveRequest('', 4, 9);
     }).toThrow('No active match found');
   });
 
-  test('should throw if position is not a number', () => {
+  test('debería lanzar error si position no es un número', () => {
     expect(() => {
       validateMoveRequest('match-123', '4', 9);
     }).toThrow('Invalid position: must be a number');
   });
 
-  test('should throw if position < 0', () => {
+  test('debería lanzar error si position < 0', () => {
     expect(() => {
       validateMoveRequest('match-123', -1, 9);
     }).toThrow('Invalid position: must be between 0 and 8');
   });
 
-  test('should throw if position >= boardSize', () => {
+  test('debería lanzar error si position >= boardSize', () => {
     expect(() => {
       validateMoveRequest('match-123', 9, 9);
     }).toThrow('Invalid position: must be between 0 and 8');
   });
 
-  test('should throw if position > 24 for 5x5 board', () => {
+  test('debería lanzar error si position > 24 para tablero 5x5', () => {
     expect(() => {
       validateMoveRequest('match-456', 25, 25);
     }).toThrow('Invalid position: must be between 0 and 24');
   });
 
-  test('should use default boardSize of 9', () => {
+  test('debería usar boardSize por defecto de 9', () => {
     expect(() => {
       validateMoveRequest('match-123', 8);
     }).not.toThrow();
@@ -106,7 +106,7 @@ describe('validateMoveRequest', () => {
 });
 
 describe('createMoveQueueItem', () => {
-  test('should create queue item with correct structure', () => {
+  test('debería crear elemento de cola con estructura correcta', () => {
     const data = {
       player: { name: 'Player1' },
       move: 4,
@@ -121,7 +121,7 @@ describe('createMoveQueueItem', () => {
     expect(typeof result.timestamp).toBe('number');
   });
 
-  test('should create unique timestamps for sequential calls', () => {
+  test('debería crear timestamps únicos para llamadas secuenciales', () => {
     const item1 = createMoveQueueItem({ move: 0 });
     const item2 = createMoveQueueItem({ move: 1 });
 
@@ -130,13 +130,13 @@ describe('createMoveQueueItem', () => {
 });
 
 describe('getPlayerIdForTurn', () => {
-  test('should return player1 for even moveCount', () => {
+  test('debería retornar player1 para moveCount par', () => {
     expect(getPlayerIdForTurn(0)).toBe('player1');
     expect(getPlayerIdForTurn(2)).toBe('player1');
     expect(getPlayerIdForTurn(4)).toBe('player1');
   });
 
-  test('should return player2 for odd moveCount', () => {
+  test('debería retornar player2 para moveCount impar', () => {
     expect(getPlayerIdForTurn(1)).toBe('player2');
     expect(getPlayerIdForTurn(3)).toBe('player2');
     expect(getPlayerIdForTurn(5)).toBe('player2');
@@ -144,7 +144,7 @@ describe('getPlayerIdForTurn', () => {
 });
 
 describe('formatGameConfig', () => {
-  test('should apply default values for empty options', () => {
+  test('debería aplicar valores por defecto para opciones vacías', () => {
     const result = formatGameConfig({});
 
     expect(result).toEqual({
@@ -154,7 +154,7 @@ describe('formatGameConfig', () => {
     });
   });
 
-  test('should apply default values for undefined', () => {
+  test('debería aplicar valores por defecto para undefined', () => {
     const result = formatGameConfig(undefined);
 
     expect(result).toEqual({
@@ -164,7 +164,7 @@ describe('formatGameConfig', () => {
     });
   });
 
-  test('should preserve provided values', () => {
+  test('debería preservar valores proporcionados', () => {
     const result = formatGameConfig({
       speed: 'slow',
       boardSize: '5x5',
@@ -178,7 +178,7 @@ describe('formatGameConfig', () => {
     });
   });
 
-  test('should mix provided and default values', () => {
+  test('debería mezclar valores proporcionados y por defecto', () => {
     const result = formatGameConfig({
       speed: 'fast',
     });

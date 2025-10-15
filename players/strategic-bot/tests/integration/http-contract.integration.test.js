@@ -1,19 +1,19 @@
 /**
- * StrategicBot HTTP Contract Integration Tests
- * TDD approach - tests written before implementation
+ * Pruebas de Integración de Contrato HTTP de StrategicBot
+ * Enfoque TDD - pruebas escritas antes de la implementación
  * @lastModified 2025-10-10
  */
 
 import request from 'supertest';
 import { app, server } from '../../index.js';
 
-describe('StrategicBot HTTP Contract', () => {
-  // Cleanup server after all tests
+describe('Contrato HTTP de StrategicBot', () => {
+  // Limpiar servidor después de todas las pruebas
   afterAll((done) => {
     server.close(done);
   });
-  describe('GET /move endpoint', () => {
-    test('should return center on first move (3x3)', async () => {
+  describe('endpoint GET /move', () => {
+    test('debería retornar centro en primer movimiento (3x3)', async () => {
       const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const response = await request(app)
         .get('/move')
@@ -23,7 +23,7 @@ describe('StrategicBot HTTP Contract', () => {
       expect(response.body.move).toBe(4);
     });
 
-    test('should return winning move when available (3x3)', async () => {
+    test('debería retornar movimiento ganador cuando esté disponible (3x3)', async () => {
       const board = [1, 1, 0, 0, 0, 0, 0, 0, 0];
       const response = await request(app)
         .get('/move')
@@ -33,7 +33,7 @@ describe('StrategicBot HTTP Contract', () => {
       expect(response.body.move).toBe(2);
     });
 
-    test('should return blocking move when opponent threatens (3x3)', async () => {
+    test('debería retornar movimiento de bloqueo cuando el oponente amenace (3x3)', async () => {
       const board = [0, 0, 0, 2, 2, 0, 1, 0, 0];
       const response = await request(app)
         .get('/move')
@@ -43,7 +43,7 @@ describe('StrategicBot HTTP Contract', () => {
       expect(response.body.move).toBe(5);
     });
 
-    test('should return center on first move (5x5)', async () => {
+    test('debería retornar centro en primer movimiento (5x5)', async () => {
       const board = Array(25).fill(0);
       const response = await request(app)
         .get('/move')
@@ -53,7 +53,7 @@ describe('StrategicBot HTTP Contract', () => {
       expect(response.body.move).toBe(12);
     });
 
-    test('should return valid move for partially filled 5x5 board', async () => {
+    test('debería retornar movimiento válido para tablero 5x5 parcialmente lleno', async () => {
       const board = Array(25).fill(0);
       board[0] = 1;
       board[12] = 2;
@@ -67,21 +67,21 @@ describe('StrategicBot HTTP Contract', () => {
       expect(board[response.body.move]).toBe(0);
     });
 
-    test('should return HTTP 400 for missing board parameter', async () => {
+    test('debería retornar HTTP 400 para parámetro board faltante', async () => {
       const response = await request(app).get('/move');
       expect(response.status).toBe(400);
       expect(response.body).toHaveProperty('error');
     });
 
-    test('should return HTTP 400 for invalid board format', async () => {
+    test('debería retornar HTTP 400 para formato de board inválido', async () => {
       const response = await request(app)
         .get('/move')
         .query({ board: 'not-json' });
       expect(response.status).toBe(400);
     });
 
-    test('should return HTTP 400 for wrong board size', async () => {
-      const board = [0, 0, 0, 0]; // Only 4 elements
+    test('debería retornar HTTP 400 para tamaño de board incorrecto', async () => {
+      const board = [0, 0, 0, 0]; // Solo 4 elementos
       const response = await request(app)
         .get('/move')
         .query({ board: JSON.stringify(board) });
@@ -89,8 +89,8 @@ describe('StrategicBot HTTP Contract', () => {
     });
   });
 
-  describe('GET /health endpoint', () => {
-    test('should return healthy status', async () => {
+  describe('endpoint GET /health', () => {
+    test('debería retornar estado saludable', async () => {
       const response = await request(app).get('/health');
       expect(response.status).toBe(200);
       expect(response.body.status).toBe('healthy');
@@ -98,8 +98,8 @@ describe('StrategicBot HTTP Contract', () => {
     });
   });
 
-  describe('GET /info endpoint', () => {
-    test('should return bot information', async () => {
+  describe('endpoint GET /info', () => {
+    test('debería retornar información del bot', async () => {
       const response = await request(app).get('/info');
       expect(response.status).toBe(200);
       expect(response.body.strategy).toBe('Strategic');

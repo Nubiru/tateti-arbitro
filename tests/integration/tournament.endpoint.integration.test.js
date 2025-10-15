@@ -1,6 +1,6 @@
 /**
- * Integration Tests for POST /api/tournament Endpoint
- * Tests full HTTP request flow: validation → execution → SSE
+ * Pruebas de Integración para el Endpoint POST /api/tournament
+ * Pruebas del flujo completo de solicitud HTTP: validación → ejecución → SSE
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
@@ -9,7 +9,7 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import { createApp } from '../../src/app/app.factory.js';
 
-describe('POST /api/tournament - Integration Tests', () => {
+describe('POST /api/tournament - Pruebas de Integración', () => {
   let app;
   let mockTournament;
   let mockEventBus;
@@ -17,7 +17,7 @@ describe('POST /api/tournament - Integration Tests', () => {
   let mockArbitrator;
   let originalEnv;
 
-  // Mock tournament result
+  // Resultado mock del torneo
   const mockTournamentResult = {
     players: [
       { name: 'Player1', port: 3001 },
@@ -58,10 +58,10 @@ describe('POST /api/tournament - Integration Tests', () => {
   };
 
   beforeEach(() => {
-    // Save original environment
+    // Guardar entorno original
     originalEnv = { ...process.env };
 
-    // Create mock dependencies
+    // Crear dependencias mock
     mockLogger = {
       info: jest.fn(),
       error: jest.fn(),
@@ -90,7 +90,7 @@ describe('POST /api/tournament - Integration Tests', () => {
       toISOString: () => new Date().toISOString(),
     };
 
-    // Create app with mocked dependencies
+    // Crear app con dependencias mock
     const { app: testApp } = createApp({
       logger: mockLogger,
       eventBus: mockEventBus,
@@ -103,24 +103,24 @@ describe('POST /api/tournament - Integration Tests', () => {
   });
 
   afterEach(() => {
-    // Restore environment
+    // Restaurar entorno
     process.env = originalEnv;
 
-    // Clear all mocks
+    // Limpiar todos los mocks
     jest.clearAllMocks();
 
-    // Clear all timers to prevent hanging
+    // Limpiar todos los temporizadores para evitar cuelgues
     jest.clearAllTimers();
     jest.useRealTimers();
   });
 
   afterAll(() => {
-    // Restore all mocks
+    // Restaurar todos los mocks
     jest.restoreAllMocks();
   });
 
-  describe('Validation', () => {
-    test('should return 400 for missing players', async () => {
+  describe('Validación', () => {
+    test('debería retornar 400 para jugadores faltantes', async () => {
       const response = await request(app).post('/api/tournament').send({
         boardSize: '3x3',
       });
@@ -129,7 +129,7 @@ describe('POST /api/tournament - Integration Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    test('should return 400 for non-array players', async () => {
+    test('debería retornar 400 para jugadores que no son array', async () => {
       const response = await request(app).post('/api/tournament').send({
         players: 'not-an-array',
         boardSize: '3x3',
@@ -139,7 +139,7 @@ describe('POST /api/tournament - Integration Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    test('should return 400 for single player', async () => {
+    test('debería retornar 400 para un solo jugador', async () => {
       const response = await request(app)
         .post('/api/tournament')
         .send({
@@ -151,7 +151,7 @@ describe('POST /api/tournament - Integration Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    test('should return 400 for empty players array', async () => {
+    test('debería retornar 400 para array de jugadores vacío', async () => {
       const response = await request(app).post('/api/tournament').send({
         players: [],
         boardSize: '3x3',
@@ -161,7 +161,7 @@ describe('POST /api/tournament - Integration Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    test('should accept 2+ players', async () => {
+    test('debería aceptar 2+ jugadores', async () => {
       const response = await request(app)
         .post('/api/tournament')
         .send({
@@ -176,8 +176,8 @@ describe('POST /api/tournament - Integration Tests', () => {
     });
   });
 
-  describe('Tournament Execution', () => {
-    test('should call tournament.runTournament with players and options', async () => {
+  describe('Ejecución del Torneo', () => {
+    test('debería llamar tournament.runTournament con jugadores y opciones', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -194,18 +194,18 @@ describe('POST /api/tournament - Integration Tests', () => {
 
       expect(response.status).toBe(200);
 
-      // Verify tournament.runTournament was called with correct arguments
+      // Verificar que tournament.runTournament fue llamado con argumentos correctos
       expect(mockTournament.runTournament).toHaveBeenCalledWith(
         players,
         expect.objectContaining({
-          boardSize: 5, // Converted from '5x5'
+          boardSize: 5, // Convertido de '5x5'
           timeoutMs: 5000,
           noTie: true,
         })
       );
     });
 
-    test('should convert boardSize string to number (3x3)', async () => {
+    test('debería convertir boardSize string a número (3x3)', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -224,7 +224,7 @@ describe('POST /api/tournament - Integration Tests', () => {
       );
     });
 
-    test('should convert boardSize string to number (5x5)', async () => {
+    test('debería convertir boardSize string a número (5x5)', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -243,7 +243,7 @@ describe('POST /api/tournament - Integration Tests', () => {
       );
     });
 
-    test('should use default boardSize when not provided', async () => {
+    test('debería usar boardSize por defecto cuando no se proporciona', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -256,12 +256,12 @@ describe('POST /api/tournament - Integration Tests', () => {
       expect(mockTournament.runTournament).toHaveBeenCalledWith(
         expect.any(Array),
         expect.objectContaining({
-          boardSize: 3, // Default
+          boardSize: 3, // Por defecto
         })
       );
     });
 
-    test('should use default timeoutMs when not provided', async () => {
+    test('debería usar timeoutMs por defecto cuando no se proporciona', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -274,12 +274,12 @@ describe('POST /api/tournament - Integration Tests', () => {
       expect(mockTournament.runTournament).toHaveBeenCalledWith(
         expect.any(Array),
         expect.objectContaining({
-          timeoutMs: 3000, // Default
+          timeoutMs: 3000, // Por defecto
         })
       );
     });
 
-    test('should use default noTie when not provided', async () => {
+    test('debería usar noTie por defecto cuando no se proporciona', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -292,12 +292,12 @@ describe('POST /api/tournament - Integration Tests', () => {
       expect(mockTournament.runTournament).toHaveBeenCalledWith(
         expect.any(Array),
         expect.objectContaining({
-          noTie: false, // Default
+          noTie: false, // Por defecto
         })
       );
     });
 
-    test('should return tournament result in response', async () => {
+    test('debería retornar resultado del torneo en la respuesta', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -315,9 +315,9 @@ describe('POST /api/tournament - Integration Tests', () => {
     });
   });
 
-  describe('Error Handling', () => {
-    test('should return 500 on tournament execution error', async () => {
-      // Mock tournament error
+  describe('Manejo de Errores', () => {
+    test('debería retornar 500 en error de ejecución del torneo', async () => {
+      // Mock error del torneo
       mockTournament.runTournament.mockRejectedValueOnce(
         new Error('Tournament execution failed')
       );
@@ -337,8 +337,8 @@ describe('POST /api/tournament - Integration Tests', () => {
     });
   });
 
-  describe('Multiple Players Support', () => {
-    test('should handle 4-player tournament', async () => {
+  describe('Soporte para Múltiples Jugadores', () => {
+    test('debería manejar torneo de 4 jugadores', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -358,7 +358,7 @@ describe('POST /api/tournament - Integration Tests', () => {
       );
     });
 
-    test('should handle 8-player tournament', async () => {
+    test('debería manejar torneo de 8 jugadores', async () => {
       const players = Array.from({ length: 8 }, (_, i) => ({
         name: `Player${i + 1}`,
         port: 3001 + i,

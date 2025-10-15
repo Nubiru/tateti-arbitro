@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useGame } from '../context/GameContext';
 import { PlayerService } from '../services/PlayerService';
 import styles from './ConfigScreen.module.css';
 import {
@@ -16,8 +17,6 @@ import {
  * @version 2.0.0
  */
 
-const defaultPlayerService = new PlayerService();
-
 const ConfigScreen = ({
   onBack,
   onStart,
@@ -25,8 +24,20 @@ const ConfigScreen = ({
   visualTheme = 'neon',
   onVisualThemeChange,
   initialConfig = {},
-  playerService = defaultPlayerService,
 }) => {
+  console.log('[🔍 COMPONENT] ConfigScreen rendering...');
+
+  // Use GameContext for player management
+  const {
+    players,
+    botDiscoveryStatus,
+    discoverBots,
+    populatePlayersForMode,
+    updatePlayer,
+  } = useGame();
+
+  console.log('[🔍 COMPONENT] useGame completed, players:', players);
+
   const [config, setConfig] = useState({
     gameMode: 'single',
     boardSize: 3,
@@ -43,56 +54,22 @@ const ConfigScreen = ({
   // Update config when initialConfig changes - REMOVED to prevent infinite loops
   // Config is initialized with initialConfig and updated via handleConfigChange
 
-  const initialPlayerCount = (() => {
-    if (initialConfig.players && initialConfig.players.length > 0) {
-      return initialConfig.players.length;
-    }
-    if (initialConfig.gameMode === 'tournament' && initialConfig.playerCount) {
-      return initialConfig.playerCount;
-    }
-    return 2;
-  })();
-
-  const [players, setPlayers] = useState(
-    initialConfig.players && initialConfig.players.length > 0
-      ? initialConfig.players
-      : playerService.generatePlayers(initialPlayerCount, [])
-  );
-
-  const [availableBots, setAvailableBots] = useState([]);
-  const [botDiscoveryStatus, setBotDiscoveryStatus] = useState('loading');
+  // Players, availableBots, and botDiscoveryStatus are now managed by GameContext
 
   // Local state for visual theme to handle radio button interactions
   const [localVisualTheme, setLocalVisualTheme] = useState(visualTheme);
 
   // Bot discovery on mount
   useEffect(() => {
-    const discoverBots = async () => {
-      setBotDiscoveryStatus('loading');
-      const result = await playerService.discoverBots();
-
-      if (result.success) {
-        setAvailableBots(result.bots);
-        setBotDiscoveryStatus('success');
-      } else {
-        setBotDiscoveryStatus('error');
-      }
-    };
-
     discoverBots();
-  }, [playerService]);
+  }, [discoverBots]);
 
   // Populate players when bot discovery completes or config changes
   useEffect(() => {
     if (botDiscoveryStatus === 'success') {
-      const newPlayers = playerService.populatePlayersForMode(
-        config.gameMode,
-        availableBots,
-        config
-      );
-      setPlayers(newPlayers);
+      populatePlayersForMode(config.gameMode, config);
     }
-  }, [botDiscoveryStatus, availableBots, config, playerService]);
+  }, [botDiscoveryStatus, config, populatePlayersForMode]);
 
   // Notify activity on mount
   useEffect(() => {
@@ -101,19 +78,14 @@ const ConfigScreen = ({
     }
   }, [onActivity]);
 
+  // Validation is now handled by useMemo - no need for useEffect
+
   // Sync local visual theme with prop
   useEffect(() => {
     setLocalVisualTheme(visualTheme);
   }, [visualTheme]);
 
-  // Update players if initialConfig.players changes
-  useEffect(() => {
-    if (initialConfig.players && initialConfig.players.length > 0) {
-      setPlayers(initialConfig.players);
-    }
-  }, [initialConfig.players]);
-
-  // Player population is now handled by the useEffect above that calls populatePlayersForMode
+  // Player management is now handled by GameContext
 
   const handleConfigChange = (key, value) => {
     setConfig(prev => {
@@ -133,19 +105,40 @@ const ConfigScreen = ({
     if (onActivity) onActivity();
   };
 
-  const updatePlayer = (index, field, value) => {
-    const newPlayers = playerService.updatePlayer(players, index, field, value);
-    setPlayers(newPlayers);
-    if (onActivity) onActivity();
-  };
+  // updatePlayer is now provided by GameContext
 
-  const isTournamentValid = () => {
+  // Memoize validation result to prevent unnecessary recalculations
+  const isGameValid = useMemo(() => {
+    console.log('[🔍 VALIDATION] isGameValid useMemo called - START');
+    console.log('[🔍 VALIDATION] Dependencies:', {
+      playersLength: players.length,
+      players: players.map(p => ({
+        name: p.name,
+        port: p.port,
+        isHuman: p.isHuman,
+      })),
+      gameMode: config.gameMode,
+    });
+
+    const playerService = new PlayerService();
     const validation = playerService.validatePlayerSelection(
       players,
       config.gameMode
     );
+
+    console.log('[🔍 VALIDATION] Result:', {
+      players: players.map(p => ({
+        name: p.name,
+        port: p.port,
+        isHuman: p.isHuman,
+      })),
+      gameMode: config.gameMode,
+      validation: validation,
+      isValid: validation.isValid,
+    });
+
     return validation.isValid;
-  };
+  }, [players, config.gameMode]);
 
   const handleStart = () => {
     if (onStart) {
@@ -176,7 +169,7 @@ const ConfigScreen = ({
 
           <AnimatedButton
             onClick={handleStart}
-            disabled={!isTournamentValid()}
+            disabled={!isGameValid}
             className={styles.headerStartButton}
             variant="primary"
           >
@@ -371,9 +364,11 @@ const ConfigScreen = ({
         </div>
 
         {/* Error Message */}
-        {!isTournamentValid() && (
+        {!isGameValid && (
           <div className={styles.errorMessage}>
-            El torneo requiere {tournamentSizes.join(', ')} jugadores
+            {config.gameMode === 'single'
+              ? 'El modo individual requiere exactamente 2 jugadores'
+              : `El torneo requiere ${tournamentSizes.join(', ')} jugadores`}
           </div>
         )}
       </div>

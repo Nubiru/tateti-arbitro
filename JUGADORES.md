@@ -94,6 +94,40 @@ npm run docker:8player
 
 ---
 
+## 🌐 Vercel Bots - Cloud Deployment
+
+### 🚀 StrategicBot Vercel - Estrategia Avanzada en la Nube
+
+**Descripción**: Bot estratégico desplegado en Vercel con lógica avanzada.
+
+**Características:**
+- Alojado en Vercel (serverless)
+- Misma lógica que StrategicBot local
+- Disponible globalmente
+- Escalabilidad automática
+
+**URL**: `https://ta-te-ti-bemg.vercel.app`
+
+**Endpoints:**
+- `GET /health` - Estado del bot
+- `GET /move?board=[...]` - Solicitar movimiento
+- `GET /info` - Información del bot
+
+**Configuración:**
+```bash
+# Variables de entorno
+VERCEL_BOTS_ENABLED=true
+VERCEL_BOT_URLS=https://ta-te-ti-bemg.vercel.app
+```
+
+**Uso en el Arbitrador:**
+- Se descubre automáticamente
+- Aparece en `/api/bots/available`
+- Compatible con Docker bots
+- Soporte para tableros 3x3 y 5x5
+
+---
+
 ## 🌐 API
 
 ### Endpoints

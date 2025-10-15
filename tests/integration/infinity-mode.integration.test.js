@@ -1,6 +1,6 @@
 /**
- * Integration Tests for Infinity Mode (No-Tie)
- * Tests rolling window mechanic with real dependencies
+ * Pruebas de Integración para Modo Infinito (Sin Empates)
+ * Pruebas de mecánica de ventana deslizante con dependencias reales
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
@@ -9,7 +9,7 @@ import { jest } from '@jest/globals';
 import { ArbitratorCoordinator } from '../../src/domain/game/arbitrator.coordinator.js';
 import { createMockArbitratorDependencies } from '../helpers/test-factories.js';
 
-describe('Infinity Mode - Integration Tests', () => {
+describe('Modo Infinito - Pruebas de Integración', () => {
   let coordinator;
   let mockDependencies;
 
@@ -24,8 +24,8 @@ describe('Infinity Mode - Integration Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('Full Match with Removals', () => {
-    test('should broadcast move:removed events after 6th move', async () => {
+  describe('Partida Completa con Eliminaciones', () => {
+    test('debería emitir eventos move:removed después del 6to movimiento', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -45,7 +45,7 @@ describe('Infinity Mode - Integration Tests', () => {
         noTie: true,
       });
 
-      // Verify removal events were broadcast (should happen from move 6 onwards)
+      // Verificar que se emitieron eventos de eliminación (debería suceder desde el movimiento 6 en adelante)
       expect(
         mockDependencies.eventsAdapter.broadcastMoveRemoval
       ).toHaveBeenCalled();
@@ -53,8 +53,8 @@ describe('Infinity Mode - Integration Tests', () => {
     });
   });
 
-  describe('Event Order Validation', () => {
-    test('should emit events in correct order', async () => {
+  describe('Validación de Orden de Eventos', () => {
+    test('debería emitir eventos en el orden correcto', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -96,8 +96,8 @@ describe('Infinity Mode - Integration Tests', () => {
     });
   });
 
-  describe('Board State Consistency', () => {
-    test('should maintain valid board state after removals', async () => {
+  describe('Consistencia del Estado del Tablero', () => {
+    test('debería mantener estado válido del tablero después de eliminaciones', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -116,14 +116,14 @@ describe('Infinity Mode - Integration Tests', () => {
         noTie: true,
       });
 
-      // Result should have valid final board
+      // El resultado debería tener un tablero final válido
       expect(result.finalBoard).toBeDefined();
       expect(Array.isArray(result.finalBoard)).toBe(true);
       expect(result.finalBoard.length).toBe(9);
       expect(result.result).toBe('win');
     });
 
-    test('should never have more than 6 marks on board during game', async () => {
+    test('debería nunca tener más de 6 marcas en el tablero durante el juego', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -154,8 +154,8 @@ describe('Infinity Mode - Integration Tests', () => {
     });
   });
 
-  describe('No Removal in Classic Mode', () => {
-    test('should NOT broadcast move:removed when noTie is false', async () => {
+  describe('Sin Eliminación en Modo Clásico', () => {
+    test('NO debería emitir move:removed cuando noTie es false', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -182,7 +182,7 @@ describe('Infinity Mode - Integration Tests', () => {
       expect(result.result).toBe('win');
     });
 
-    test('should allow draws in classic mode', async () => {
+    test('debería permitir empates en modo clásico', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },
@@ -203,7 +203,7 @@ describe('Infinity Mode - Integration Tests', () => {
         noTie: false,
       });
 
-      // Classic mode should allow draws
+      // El modo clásico debería permitir empates
       expect(result.result).toBe('draw');
       expect(
         mockDependencies.eventsAdapter.broadcastMoveRemoval
@@ -211,8 +211,8 @@ describe('Infinity Mode - Integration Tests', () => {
     });
   });
 
-  describe('Removal Event Structure', () => {
-    test('should broadcast removal with complete data structure', async () => {
+  describe('Estructura del Evento de Eliminación', () => {
+    test('debería emitir eliminación con estructura de datos completa', async () => {
       const players = [
         { name: 'Player1', port: 3001 },
         { name: 'Player2', port: 3002 },

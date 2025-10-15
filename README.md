@@ -52,27 +52,61 @@ Frontend (React 18) ◄──► Backend (Express 5) ◄──► Bots HTTP
      :5173/:4000              :4000                 :3001+
                                   │
                                   ▼
-                        Descubrimiento Dinámico
-                        (Docker API + Health)
+                        Descubrimiento Híbrido
+                        (Docker API + Vercel API)
 ```
 
 **Componentes:**
 - **Frontend**: React 18 con SSE para actualizaciones en tiempo real
-- **Backend**: Express 5 con arbitraje y descubrimiento de bots
-- **Bots**: 3 estrategias (Random, Smart, Strategic)
+- **Backend**: Express 5 con arbitraje y descubrimiento híbrido de bots
+- **Bots**: 3 estrategias (Random, Smart, Strategic) + Vercel bots
+- **Discovery**: Docker API + Vercel API para descubrimiento automático
 - **Services**: GameOptionsService y PlayerService para gestión centralizada
 
 ## 🤖 Jugadores
 
-| Bot | Estrategia | Uso |
-|-----|-----------|-----|
-| **RandomBot** | Movimientos aleatorios | Validación |
-| **SmartBot** | WIN→BLOCK→CENTER | Partidas balanceadas |
-| **StrategicBot** | Posicional por turnos | Torneos |
+| Bot | Estrategia | Uso | Despliegue |
+|-----|-----------|-----|-----------|
+| **RandomBot** | Movimientos aleatorios | Validación | Docker |
+| **SmartBot** | WIN→BLOCK→CENTER | Partidas balanceadas | Docker |
+| **StrategicBot** | Posicional por turnos | Torneos | Docker |
+| **StrategicBot Vercel** | Posicional por turnos | Torneos | Vercel |
 
 **Soporte**: Tableros 3x3 y 5x5
 
 > 📚 Ver [JUGADORES.md](./JUGADORES.md) para algoritmos y API
+
+## 🌐 Vercel Bot Support
+
+### Configuración
+
+```bash
+# Habilitar bots de Vercel
+VERCEL_BOTS_ENABLED=true
+VERCEL_BOT_URLS=https://ta-te-ti-bemg.vercel.app,https://another-bot.vercel.app
+```
+
+### Características
+
+- **Descubrimiento Automático**: Los bots de Vercel aparecen en `/api/bots/available`
+- **Compatibilidad Total**: Funciona junto con bots Docker
+- **Health Checks**: Verificación automática de disponibilidad
+- **Escalabilidad**: Sin límites de infraestructura local
+
+### Ejemplo de Uso
+
+```bash
+# Verificar bots disponibles (incluye Vercel)
+curl http://localhost:3000/api/bots/available
+
+# Crear partida con bot de Vercel
+curl -X POST http://localhost:3000/api/match \
+  -H "Content-Type: application/json" \
+  -d '{
+    "player1": {"name": "VercelBot", "url": "https://ta-te-ti-bemg.vercel.app"},
+    "player2": {"name": "DockerBot", "port": 3001}
+  }'
+```
 
 ## 🌐 API
 

@@ -1,6 +1,6 @@
 /**
- * Unit Tests: gameReducer - RESET_GAME action
- * Pure function tests - synchronous, instant execution
+ * Pruebas Unitarias: gameReducer - Acción RESET_GAME
+ * Pruebas de función pura - ejecución síncrona e instantánea
  * @lastModified 2025-10-10
  * @version 1.0.0
  */
@@ -8,7 +8,7 @@
 import { gameReducer, initialState } from '../../../src/context/gameReducer';
 
 describe('gameReducer - RESET_GAME', () => {
-  test('should reset game to idle state', () => {
+  test('debería reiniciar juego a estado idle', () => {
     const state = {
       ...initialState,
       gameState: 'completed',
@@ -40,7 +40,7 @@ describe('gameReducer - RESET_GAME', () => {
     expect(result.matchResult).toBeNull();
   });
 
-  test('should clear tournament data', () => {
+  test('debería limpiar datos de torneo', () => {
     const state = {
       ...initialState,
       gameState: 'completed',
@@ -61,7 +61,7 @@ describe('gameReducer - RESET_GAME', () => {
     expect(result.tournamentResult).toBeNull();
   });
 
-  test('should clear error state', () => {
+  test('debería limpiar estado de error', () => {
     const state = {
       ...initialState,
       gameState: 'error',
@@ -79,7 +79,7 @@ describe('gameReducer - RESET_GAME', () => {
     expect(result.error).toBeNull();
   });
 
-  test('should preserve config', () => {
+  test('debería preservar configuración', () => {
     const state = {
       ...initialState,
       gameState: 'completed',
@@ -96,7 +96,7 @@ describe('gameReducer - RESET_GAME', () => {
     expect(result.board).toEqual(Array(9).fill(0));
   });
 
-  test('should work from any game state', () => {
+  test('debería funcionar desde cualquier estado del juego', () => {
     const states = ['idle', 'playing', 'completed', 'tournament', 'error'];
 
     states.forEach(gameState => {
@@ -116,7 +116,7 @@ describe('gameReducer - RESET_GAME', () => {
     });
   });
 
-  test('should handle resetting a partially played game', () => {
+  test('debería manejar reinicio de juego parcialmente jugado', () => {
     const state = {
       ...initialState,
       gameState: 'playing',

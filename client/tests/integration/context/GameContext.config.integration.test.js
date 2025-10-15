@@ -1,6 +1,6 @@
 /**
- * Integration Tests: GameContext - Config & Speed
- * Tests config storage and game speed delays with full Context
+ * Pruebas de Integración: GameContext - Configuración y Velocidad
+ * Pruebas de almacenamiento de configuración y retrasos de velocidad del juego con Context completo
  * @lastModified 2025-10-10
  * @version 1.1.0
  * @testType integration
@@ -18,7 +18,7 @@ class MockEventSource {
     this.readyState = 0; // CONNECTING
     MockEventSource.instances.push(this);
 
-    // Simulate async connection
+    // Simular conexión asíncrona
     setTimeout(() => {
       this.readyState = 1; // OPEN
       if (this.onopen) {
@@ -56,7 +56,7 @@ class MockEventSource {
 global.EventSource = MockEventSource;
 global.fetch = jest.fn();
 
-describe('GameContext - Config Storage and Speed', () => {
+describe('GameContext - Almacenamiento de Configuración y Velocidad', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     MockEventSource.reset();
@@ -68,12 +68,12 @@ describe('GameContext - Config Storage and Speed', () => {
     jest.useRealTimers();
   });
 
-  describe('Config Storage', () => {
-    test('should store config before starting match', async () => {
+  describe('Almacenamiento de Configuración', () => {
+    test('debería almacenar configuración antes de iniciar partida', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Advance fake timers to allow EventSource connection
+      // Avanzar temporizadores falsos para permitir conexión EventSource
       act(() => {
         jest.advanceTimersByTime(0);
       });
@@ -87,7 +87,7 @@ describe('GameContext - Config Storage and Speed', () => {
         json: async () => ({ matchId: 'test-123' }),
       });
 
-      // Act: Start match with config
+      // Acto: Iniciar partida con configuración
       await act(async () => {
         await result.current.startMatch(
           { name: 'Player1', port: 3001 },
@@ -100,7 +100,7 @@ describe('GameContext - Config Storage and Speed', () => {
         );
       });
 
-      // Assert: Config should be stored in state
+      // Afirmar: La configuración debería estar almacenada en el estado
       expect(result.current.config).toEqual({
         speed: 'slow',
         boardSize: '3x3',
@@ -108,11 +108,11 @@ describe('GameContext - Config Storage and Speed', () => {
       });
     });
 
-    test('should use default config values if not provided', async () => {
+    test('debería usar valores de configuración por defecto si no se proporcionan', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Advance fake timers to allow EventSource connection
+      // Avanzar temporizadores falsos para permitir conexión EventSource
       act(() => {
         jest.advanceTimersByTime(0);
       });
@@ -130,11 +130,11 @@ describe('GameContext - Config Storage and Speed', () => {
         await result.current.startMatch(
           { name: 'Player1', port: 3001 },
           { name: 'Player2', port: 3002 },
-          {} // Empty options
+          {} // Opciones vacías
         );
       });
 
-      // Assert: Should have default values
+      // Afirmar: Debería tener valores por defecto
       expect(result.current.config).toEqual({
         speed: 'normal',
         boardSize: '3x3',
@@ -142,11 +142,11 @@ describe('GameContext - Config Storage and Speed', () => {
       });
     });
 
-    test('should have config available when processing move queue', async () => {
+    test('debería tener configuración disponible al procesar cola de movimientos', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Advance fake timers to allow EventSource connection
+      // Avanzar temporizadores falsos para permitir conexión EventSource
       act(() => {
         jest.advanceTimersByTime(0);
       });
@@ -160,7 +160,7 @@ describe('GameContext - Config Storage and Speed', () => {
         json: async () => ({ matchId: 'test-123' }),
       });
 
-      // Start match with specific speed
+      // Iniciar partida con velocidad específica
       await act(async () => {
         await result.current.startMatch(
           { name: 'Player1', port: 3001 },
@@ -169,14 +169,14 @@ describe('GameContext - Config Storage and Speed', () => {
         );
       });
 
-      // Wait for EventSource
+      // Esperar EventSource
       await waitFor(() => {
         expect(MockEventSource.instances.length).toBe(1);
       });
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger a move event
+      // Disparar un evento de movimiento
       act(() => {
         eventSource.trigger('match:move', {
           player: { name: 'Player1' },
@@ -186,17 +186,17 @@ describe('GameContext - Config Storage and Speed', () => {
         });
       });
 
-      // Assert: Config should be accessible during queue processing
+      // Afirmar: La configuración debería ser accesible durante el procesamiento de cola
       expect(result.current.config.speed).toBe('fast');
     });
   });
 
-  describe('Game Speed Delays', () => {
-    test('should apply slow speed delay (2000ms)', async () => {
+  describe('Retrasos de Velocidad del Juego', () => {
+    test('debería aplicar retraso de velocidad lenta (3000ms)', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Advance fake timers to allow EventSource connection
+      // Avanzar temporizadores falsos para permitir conexión EventSource
       act(() => {
         jest.advanceTimersByTime(0);
       });
@@ -210,7 +210,7 @@ describe('GameContext - Config Storage and Speed', () => {
         json: async () => ({ matchId: 'test-123' }),
       });
 
-      // Start with slow speed
+      // Iniciar con velocidad lenta
       await act(async () => {
         await result.current.startMatch(
           { name: 'Player1', port: 3001 },
@@ -225,7 +225,7 @@ describe('GameContext - Config Storage and Speed', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger move event
+      // Disparar evento de movimiento
       act(() => {
         eventSource.trigger('match:move', {
           move: 0,
@@ -233,27 +233,27 @@ describe('GameContext - Config Storage and Speed', () => {
         });
       });
 
-      // Assert: Board should NOT update immediately
+      // Afirmar: El tablero NO debería actualizarse inmediatamente
       expect(result.current.board).toEqual(Array(9).fill(0));
 
-      // Fast-forward 1999ms - should still not update
+      // Avance rápido 2999ms - aún no debería actualizarse
       act(() => {
-        jest.advanceTimersByTime(1999);
+        jest.advanceTimersByTime(2999);
       });
       expect(result.current.board).toEqual(Array(9).fill(0));
 
-      // Fast-forward 1ms more (total 2000ms) - should now update
+      // Avance rápido 1ms más (total 3000ms) - ahora debería actualizarse
       act(() => {
         jest.advanceTimersByTime(1);
       });
       expect(result.current.board).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0]);
     });
 
-    test('should apply normal speed delay (1000ms)', async () => {
+    test('debería aplicar retraso de velocidad normal (2000ms)', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Advance fake timers to allow EventSource connection
+      // Avanzar temporizadores falsos para permitir conexión EventSource
       act(() => {
         jest.advanceTimersByTime(0);
       });
@@ -288,18 +288,18 @@ describe('GameContext - Config Storage and Speed', () => {
         });
       });
 
-      // Fast-forward 1000ms
+      // Avance rápido 2000ms
       act(() => {
-        jest.advanceTimersByTime(1000);
+        jest.advanceTimersByTime(2000);
       });
       expect(result.current.board).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0]);
     });
 
-    test('should apply fast speed delay (200ms)', async () => {
+    test('debería aplicar retraso de velocidad rápida (1000ms)', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Advance fake timers to allow EventSource connection
+      // Avanzar temporizadores falsos para permitir conexión EventSource
       act(() => {
         jest.advanceTimersByTime(0);
       });
@@ -334,9 +334,9 @@ describe('GameContext - Config Storage and Speed', () => {
         });
       });
 
-      // Fast-forward 200ms
+      // Avance rápido 1000ms
       act(() => {
-        jest.advanceTimersByTime(200);
+        jest.advanceTimersByTime(1000);
       });
       expect(result.current.board).toEqual([1, 0, 0, 0, 0, 0, 0, 0, 0]);
     });

@@ -105,14 +105,21 @@ class EventBus {
     this.totalEvents++;
     this.eventCounts.set(event, (this.eventCounts.get(event) || 0) + 1);
 
+    console.log(
+      `📡 EventBus broadcasting ${event} to ${this.connections.size} connections`
+    );
+    console.log(`📡 EventBus data:`, data);
+
     const eventData = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
 
     this.connections.forEach(res => {
       if (!res.destroyed) {
         res.write(eventData);
+        console.log(`📡 EventBus sent ${event} to connection`);
       } else {
         // Limpiar conexiones destruidas
         this.connections.delete(res);
+        console.log(`📡 EventBus cleaned up destroyed connection`);
       }
     });
   }

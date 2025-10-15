@@ -1,6 +1,6 @@
 /**
- * Unit Tests for Infinity Mode Rules
- * Tests pure functions for rolling window mechanic
+ * Pruebas Unitarias para Reglas del Modo Infinito
+ * Pruebas de funciones puras para mecánica de ventana deslizante
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
@@ -12,19 +12,19 @@ import {
   getRemovalPlayer,
 } from '../../../../src/domain/game/rules/infinity.js';
 
-describe('Infinity Mode Rules - Unit Tests', () => {
-  describe('INFINITY_THRESHOLD constant', () => {
-    test('should be 6 (each player max 3 marks)', () => {
+describe('Reglas del Modo Infinito - Pruebas Unitarias', () => {
+  describe('constante INFINITY_THRESHOLD', () => {
+    test('debería ser 6 (cada jugador máximo 3 marcas)', () => {
       expect(INFINITY_THRESHOLD).toBe(6);
     });
   });
 
   describe('shouldRemoveOldestMove()', () => {
-    test('should return false for empty move history', () => {
+    test('debería retornar false para historial de movimientos vacío', () => {
       expect(shouldRemoveOldestMove([])).toBe(false);
     });
 
-    test('should return false for move history length < 6', () => {
+    test('debería retornar false para longitud de historial de movimientos < 6', () => {
       const history1 = [{ move: 0 }];
       const history2 = [{ move: 0 }, { move: 1 }];
       const history3 = [{ move: 0 }, { move: 1 }, { move: 2 }];
@@ -44,7 +44,7 @@ describe('Infinity Mode Rules - Unit Tests', () => {
       expect(shouldRemoveOldestMove(history5)).toBe(false);
     });
 
-    test('should return true for move history length >= 6', () => {
+    test('debería retornar true para longitud de historial de movimientos >= 6', () => {
       const history6 = [
         { move: 0 },
         { move: 1 },
@@ -69,18 +69,18 @@ describe('Infinity Mode Rules - Unit Tests', () => {
       expect(shouldRemoveOldestMove(history10)).toBe(true);
     });
 
-    test('should handle null or undefined input gracefully', () => {
+    test('debería manejar entrada null o undefined de forma elegante', () => {
       expect(shouldRemoveOldestMove(null)).toBe(false);
       expect(shouldRemoveOldestMove(undefined)).toBe(false);
     });
   });
 
   describe('getRemovalPosition()', () => {
-    test('should return null for empty move history', () => {
+    test('debería retornar null para historial de movimientos vacío', () => {
       expect(getRemovalPosition([])).toBeNull();
     });
 
-    test('should return null for move history length < 6', () => {
+    test('debería retornar null para longitud de historial de movimientos < 6', () => {
       const history = [
         { move: 0 },
         { move: 1 },
@@ -91,7 +91,7 @@ describe('Infinity Mode Rules - Unit Tests', () => {
       expect(getRemovalPosition(history)).toBeNull();
     });
 
-    test('should return oldest move position for history length >= 6', () => {
+    test('debería retornar posición del movimiento más antiguo para longitud de historial >= 6', () => {
       const history = [
         { move: 4 },
         { move: 2 },
@@ -100,10 +100,10 @@ describe('Infinity Mode Rules - Unit Tests', () => {
         { move: 8 },
         { move: 3 },
       ];
-      expect(getRemovalPosition(history)).toBe(4); // First move in history
+      expect(getRemovalPosition(history)).toBe(4); // Primer movimiento en el historial
     });
 
-    test('should return correct position even with many moves', () => {
+    test('debería retornar posición correcta incluso con muchos movimientos', () => {
       const history = [
         { move: 0 },
         { move: 1 },
@@ -115,15 +115,15 @@ describe('Infinity Mode Rules - Unit Tests', () => {
         { move: 7 },
         { move: 8 },
       ];
-      expect(getRemovalPosition(history)).toBe(0); // Oldest move
+      expect(getRemovalPosition(history)).toBe(0); // Movimiento más antiguo
     });
 
-    test('should handle null or undefined input gracefully', () => {
+    test('debería manejar entrada null o undefined de forma elegante', () => {
       expect(getRemovalPosition(null)).toBeNull();
       expect(getRemovalPosition(undefined)).toBeNull();
     });
 
-    test('should handle invalid move history format', () => {
+    test('debería manejar formato de historial de movimientos inválido', () => {
       const invalidHistory = [
         {},
         { move: 1 },
@@ -142,11 +142,11 @@ describe('Infinity Mode Rules - Unit Tests', () => {
       { id: 'O', name: 'Player2' },
     ];
 
-    test('should return null for empty move history', () => {
+    test('debería retornar null para historial de movimientos vacío', () => {
       expect(getRemovalPlayer([], players)).toBeNull();
     });
 
-    test('should return null for move history length < 6', () => {
+    test('debería retornar null para longitud de historial de movimientos < 6', () => {
       const history = [
         { move: 0, playerId: 'X' },
         { move: 1, playerId: 'O' },
@@ -157,7 +157,7 @@ describe('Infinity Mode Rules - Unit Tests', () => {
       expect(getRemovalPlayer(history, players)).toBeNull();
     });
 
-    test('should return correct player for Player1 (X)', () => {
+    test('debería retornar jugador correcto para Player1 (X)', () => {
       const history = [
         { move: 0, playerId: 'X' },
         { move: 1, playerId: 'O' },
@@ -170,7 +170,7 @@ describe('Infinity Mode Rules - Unit Tests', () => {
       expect(result).toEqual({ id: 'X', name: 'Player1' });
     });
 
-    test('should return correct player for Player2 (O)', () => {
+    test('debería retornar jugador correcto para Player2 (O)', () => {
       const history = [
         { move: 0, playerId: 'O' },
         { move: 1, playerId: 'X' },
@@ -183,12 +183,12 @@ describe('Infinity Mode Rules - Unit Tests', () => {
       expect(result).toEqual({ id: 'O', name: 'Player2' });
     });
 
-    test('should handle null or undefined history input', () => {
+    test('debería manejar entrada de historial null o undefined', () => {
       expect(getRemovalPlayer(null, players)).toBeNull();
       expect(getRemovalPlayer(undefined, players)).toBeNull();
     });
 
-    test('should handle null or undefined players input', () => {
+    test('debería manejar entrada de jugadores null o undefined', () => {
       const history = [
         { move: 0, playerId: 'X' },
         { move: 1, playerId: 'O' },
@@ -201,7 +201,7 @@ describe('Infinity Mode Rules - Unit Tests', () => {
       expect(getRemovalPlayer(history, undefined)).toBeNull();
     });
 
-    test('should handle invalid players array', () => {
+    test('debería manejar array de jugadores inválido', () => {
       const history = [
         { move: 0, playerId: 'X' },
         { move: 1, playerId: 'O' },
@@ -211,10 +211,10 @@ describe('Infinity Mode Rules - Unit Tests', () => {
         { move: 5, playerId: 'O' },
       ];
       expect(getRemovalPlayer(history, [])).toBeNull();
-      expect(getRemovalPlayer(history, [players[0]])).toBeNull(); // Only 1 player
+      expect(getRemovalPlayer(history, [players[0]])).toBeNull(); // Solo 1 jugador
     });
 
-    test('should handle invalid move history format', () => {
+    test('debería manejar formato de historial de movimientos inválido', () => {
       const invalidHistory = [
         {},
         { move: 1, playerId: 'O' },

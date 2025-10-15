@@ -1,97 +1,99 @@
 #!/bin/bash
-# Smoke Layer Verification Script
-# Tests all core functionality of the smoke deployment
+# Script de Verificación de Capa Smoke
+# Prueba toda la funcionalidad principal del despliegue smoke
 # @lastModified 2025-10-08
 # @version 1.0.0
 
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🧪 SMOKE LAYER VERIFICATION TESTS"
+echo "🧪 PRUEBAS DE VERIFICACIÓN DE CAPA SMOKE (4 BOTS)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Colors for output
+# Colores para salida
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Test counter
-PASSED=0
-FAILED=0
+# Contador de pruebas
+PASARON=0
+FALLARON=0
 
-# Helper function to test endpoint
+# Función auxiliar para probar endpoint
 test_endpoint() {
     local name="$1"
     local url="$2"
     local expected_status="$3"
     
-    echo -n "Testing ${name}... "
+    echo -n "Probando ${name}... "
     
     response=$(curl -s -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
     
     if [ "$response" == "$expected_status" ]; then
-        echo -e "${GREEN}✅ PASS${NC} (HTTP $response)"
-        ((PASSED++))
+        echo -e "${GREEN}✅ PASÓ${NC} (HTTP $response)"
+        ((PASARON++))
         return 0
     else
-        echo -e "${RED}❌ FAIL${NC} (HTTP $response, expected $expected_status)"
-        ((FAILED++))
+        echo -e "${RED}❌ FALLÓ${NC} (HTTP $response, esperado $expected_status)"
+        ((FALLARON++))
         return 1
     fi
 }
 
-# Test 1: Arbitrator Health
+# Prueba 1: Salud del Árbitro
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "TEST 1: ARBITRATOR HEALTH ENDPOINT"
+echo "PRUEBA 1: ENDPOINT DE SALUD DEL ÁRBITRO"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-test_endpoint "Arbitrator /api/health" "http://localhost:4000/api/health" "200"
+test_endpoint "Árbitro /api/health" "http://localhost:4000/api/health" "200"
 echo ""
 
-# Test 2: Bot Health Checks
+# Prueba 2: Verificaciones de Salud de Bots
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "TEST 2: BOT HEALTH ENDPOINTS"
+echo "PRUEBA 2: ENDPOINTS DE SALUD DE BOTS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 test_endpoint "RandomBot1 /health" "http://localhost:3001/health" "200"
 test_endpoint "RandomBot2 /health" "http://localhost:3002/health" "200"
+test_endpoint "SmartBot1 /health" "http://localhost:3003/health" "200"
+test_endpoint "StrategicBot1 /health" "http://localhost:3004/health" "200"
 echo ""
 
-# Test 3: Bot Discovery
+# Prueba 3: Descubrimiento de Bots
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "TEST 3: BOT DISCOVERY ENDPOINT"
+echo "PRUEBA 3: ENDPOINT DE DESCUBRIMIENTO DE BOTS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -n "Testing /api/bots/available... "
+echo -n "Probando /api/bots/available... "
 
 bots_response=$(curl -s "http://localhost:4000/api/bots/available" 2>/dev/null)
 
 if [ $? -eq 0 ]; then
     healthy_count=$(echo "$bots_response" | grep -o '"status":"healthy"' | wc -l)
-    total_count=$(echo "$bots_response" | grep -o '"name":"RandomBot' | wc -l)
+    total_count=$(echo "$bots_response" | grep -o '"name":"RandomBot\|SmartBot\|StrategicBot"' | wc -l)
     
-    if [ "$healthy_count" -ge 2 ] && [ "$total_count" -ge 2 ]; then
-        echo -e "${GREEN}✅ PASS${NC} (Found $healthy_count healthy bots out of $total_count)"
-        ((PASSED++))
+    if [ "$healthy_count" -ge 4 ] && [ "$total_count" -ge 4 ]; then
+        echo -e "${GREEN}✅ PASÓ${NC} (Encontrados $healthy_count bots saludables de $total_count)"
+        ((PASARON++))
     else
-        echo -e "${RED}❌ FAIL${NC} (Found $healthy_count healthy bots, expected 2)"
-        ((FAILED++))
+        echo -e "${RED}❌ FALLÓ${NC} (Encontrados $healthy_count bots saludables, esperados 4)"
+        ((FALLARON++))
     fi
 else
-    echo -e "${RED}❌ FAIL${NC} (Could not connect to endpoint)"
-    ((FAILED++))
+    echo -e "${RED}❌ FALLÓ${NC} (No se pudo conectar al endpoint)"
+    ((FALLARON++))
 fi
 echo ""
 
-# Test 4: SSE Stream Endpoint (SKIP - SSE keeps connection open)
+# Prueba 4: Endpoint de Stream SSE (OMITIR - SSE mantiene conexión abierta)
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "TEST 4: SSE STREAM ENDPOINT"
+echo "PRUEBA 4: ENDPOINT DE STREAM SSE"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -e "${YELLOW}⚠️  SKIPPED${NC} (SSE keeps connection open - tested in frontend)"
+echo -e "${YELLOW}⚠️  OMITIDO${NC} (SSE mantiene conexión abierta - probado en frontend)"
 echo ""
 
-# Test 5: Match Execution
+# Prueba 5: Ejecución de Partida
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "TEST 5: MATCH EXECUTION"
+echo "PRUEBA 5: EJECUCIÓN DE PARTIDA"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -n "Testing POST /api/match... "
+echo -n "Probando POST /api/match... "
 
 match_payload='{
   "player1": {"name": "RandomBot1", "port": 3001},
@@ -106,73 +108,75 @@ match_response=$(curl -s --max-time 30 -X POST "http://localhost:4000/api/match"
 if [ $? -eq 0 ]; then
     # Check if response contains expected fields
     if echo "$match_response" | grep -q '"result"' && echo "$match_response" | grep -q '"winner"'; then
-        echo -e "${GREEN}✅ PASS${NC}"
-        echo "   Match completed successfully"
+        echo -e "${GREEN}✅ PASÓ${NC}"
+        echo "   Partida completada exitosamente"
         winner=$(echo "$match_response" | grep -o '"name":"[^"]*"' | head -1)
         result=$(echo "$match_response" | grep -o '"result":"[^"]*"' | head -1)
-        echo "   Winner: $winner"
-        echo "   Result: $result"
-        ((PASSED++))
+        echo "   Ganador: $winner"
+        echo "   Resultado: $result"
+        ((PASARON++))
     else
-        echo -e "${RED}❌ FAIL${NC}"
-        echo "   Response missing expected fields"
-        echo "   Response: $match_response"
-        ((FAILED++))
+        echo -e "${RED}❌ FALLÓ${NC}"
+        echo "   Respuesta faltan campos esperados"
+        echo "   Respuesta: $match_response"
+        ((FALLARON++))
     fi
 else
-    echo -e "${RED}❌ FAIL${NC} (Could not connect to endpoint)"
-    ((FAILED++))
+    echo -e "${RED}❌ FALLÓ${NC} (No se pudo conectar al endpoint)"
+    ((FALLARON++))
 fi
 echo ""
 
-# Test 6: Container Status
+# Prueba 6: Estado de Contenedores
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "TEST 6: CONTAINER HEALTH STATUS"
+echo "PRUEBA 6: ESTADO DE SALUD DE CONTENEDORES"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 containers=(
     "tateti-arbitrator-smoke"
     "tateti-random-bot-1"
     "tateti-random-bot-2"
+    "tateti-smart-bot-1"
+    "tateti-strategic-bot-1"
 )
 
 for container in "${containers[@]}"; do
-    echo -n "Testing $container... "
+    echo -n "Probando $container... "
     
     status=$(docker inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null)
     
     if [ "$status" == "healthy" ]; then
-        echo -e "${GREEN}✅ PASS${NC} (healthy)"
-        ((PASSED++))
+        echo -e "${GREEN}✅ PASÓ${NC} (saludable)"
+        ((PASARON++))
     else
-        echo -e "${RED}❌ FAIL${NC} (status: $status)"
-        ((FAILED++))
+        echo -e "${RED}❌ FALLÓ${NC} (estado: $status)"
+        ((FALLARON++))
     fi
 done
 echo ""
 
-# Summary
+# Resumen
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "📊 TEST SUMMARY"
+echo "📊 RESUMEN DE PRUEBAS"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo -e "Total Tests: $((PASSED + FAILED))"
-echo -e "${GREEN}Passed: $PASSED${NC}"
-echo -e "${RED}Failed: $FAILED${NC}"
+echo -e "Total de Pruebas: $((PASARON + FALLARON))"
+echo -e "${GREEN}Pasaron: $PASARON${NC}"
+echo -e "${RED}Fallaron: $FALLARON${NC}"
 echo ""
 
-if [ $FAILED -eq 0 ]; then
+if [ $FALLARON -eq 0 ]; then
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${GREEN}✅ ALL TESTS PASSED - SMOKE LAYER READY${NC}"
+    echo -e "${GREEN}✅ TODAS LAS PRUEBAS PASARON - CAPA SMOKE (4 BOTS) LISTA${NC}"
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "🚀 Ready to proceed to next layer: 4-PLAYER TOURNAMENT"
-    echo "   Run: npm run deploy:4player"
+    echo "🚀 Listo para proceder a la siguiente capa: TORNEO DE 4 JUGADORES"
+    echo "   Ejecutar: npm run deploy:4player"
     exit 0
 else
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${RED}❌ SOME TESTS FAILED${NC}"
+    echo -e "${RED}❌ ALGUNAS PRUEBAS FALLARON${NC}"
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
-    echo "Please fix the failing tests before proceeding."
+    echo "Por favor corrige las pruebas fallidas antes de proceder."
     exit 1
 fi

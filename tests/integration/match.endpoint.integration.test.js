@@ -1,6 +1,6 @@
 /**
- * Integration Tests for POST /api/match Endpoint
- * Tests full HTTP request flow: validation → normalization → execution → SSE
+ * Pruebas de Integración para Endpoint POST /api/match
+ * Pruebas de flujo completo de solicitud HTTP: validación → normalización → ejecución → SSE
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
@@ -9,7 +9,7 @@ import { jest } from '@jest/globals';
 import request from 'supertest';
 import { createApp } from '../../src/app/app.factory.js';
 
-describe('POST /api/match - Integration Tests', () => {
+describe('POST /api/match - Pruebas de Integración', () => {
   let app;
   let mockArbitrator;
   let mockEventBus;
@@ -97,8 +97,8 @@ describe('POST /api/match - Integration Tests', () => {
     jest.restoreAllMocks();
   });
 
-  describe('Validation Integration', () => {
-    test('should return 400 for missing player1', async () => {
+  describe('Integración de Validación', () => {
+    test('debería retornar 400 para player1 faltante', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -110,7 +110,7 @@ describe('POST /api/match - Integration Tests', () => {
       expect(response.body.error).toContain('jugadores');
     });
 
-    test('should return 400 for missing player2', async () => {
+    test('debería retornar 400 para player2 faltante', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -122,7 +122,7 @@ describe('POST /api/match - Integration Tests', () => {
       expect(response.body.error).toContain('jugadores');
     });
 
-    test('should return 400 for invalid boardSize', async () => {
+    test('debería retornar 400 para boardSize inválido', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -135,7 +135,7 @@ describe('POST /api/match - Integration Tests', () => {
       expect(response.body.error).toBeDefined();
     });
 
-    test('should return 400 for invalid player port', async () => {
+    test('debería retornar 400 para puerto de jugador inválido', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -149,8 +149,8 @@ describe('POST /api/match - Integration Tests', () => {
     });
   });
 
-  describe('Player Normalization', () => {
-    test('should normalize player data correctly', async () => {
+  describe('Normalización de Jugadores', () => {
+    test('debería normalizar datos de jugadores correctamente', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -181,7 +181,7 @@ describe('POST /api/match - Integration Tests', () => {
       );
     });
 
-    test('should map Docker service names when DOCKER_DISCOVERY=true', async () => {
+    test('debería mapear nombres de servicios Docker cuando DOCKER_DISCOVERY=true', async () => {
       process.env.DOCKER_DISCOVERY = 'true';
 
       const response = await request(app)
@@ -212,7 +212,7 @@ describe('POST /api/match - Integration Tests', () => {
       );
     });
 
-    test('should use localhost when DOCKER_DISCOVERY=false', async () => {
+    test('debería usar localhost cuando DOCKER_DISCOVERY=false', async () => {
       process.env.DOCKER_DISCOVERY = 'false';
 
       const response = await request(app)
@@ -243,7 +243,7 @@ describe('POST /api/match - Integration Tests', () => {
       );
     });
 
-    test('should handle human player flag', async () => {
+    test('debería manejar bandera de jugador humano', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -270,7 +270,7 @@ describe('POST /api/match - Integration Tests', () => {
       );
     });
 
-    test('should default isHuman to false when not provided', async () => {
+    test('debería establecer isHuman como false por defecto cuando no se proporciona', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -292,8 +292,8 @@ describe('POST /api/match - Integration Tests', () => {
     });
   });
 
-  describe('Match Execution', () => {
-    test('should call arbitrator.runMatch with normalized players and options', async () => {
+  describe('Ejecución de Partida', () => {
+    test('debería llamar arbitrator.runMatch con jugadores normalizados y opciones', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -316,7 +316,7 @@ describe('POST /api/match - Integration Tests', () => {
       );
     });
 
-    test('should use default boardSize when not provided', async () => {
+    test('debería usar boardSize por defecto cuando no se proporciona', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -335,7 +335,7 @@ describe('POST /api/match - Integration Tests', () => {
       );
     });
 
-    test('should return match result in response', async () => {
+    test('debería retornar resultado de partida en la respuesta', async () => {
       const response = await request(app)
         .post('/api/match')
         .send({
@@ -350,7 +350,7 @@ describe('POST /api/match - Integration Tests', () => {
   });
 
   describe.skip('SSE Event Broadcasting', () => {
-    test('should broadcast match:start event', async () => {
+    test('debería transmitir evento match:start', async () => {
       await request(app)
         .post('/api/match')
         .send({
@@ -372,7 +372,7 @@ describe('POST /api/match - Integration Tests', () => {
       );
     });
 
-    test('should broadcast match:move events from history', async () => {
+    test('debería transmitir eventos match:move desde historial', async () => {
       await request(app)
         .post('/api/match')
         .send({
@@ -386,11 +386,11 @@ describe('POST /api/match - Integration Tests', () => {
         call => call[0] === 'match:move'
       );
 
-      // Should have 3 move broadcasts (from mockMatchResult.history)
+      // Debería tener 3 transmisiones de movimiento (desde mockMatchResult.history)
       expect(moveBroadcasts.length).toBe(3);
     });
 
-    test('should broadcast match:win on win result', async () => {
+    test('debería transmitir match:win en resultado de victoria', async () => {
       await request(app)
         .post('/api/match')
         .send({
@@ -410,7 +410,7 @@ describe('POST /api/match - Integration Tests', () => {
       );
     });
 
-    test('should broadcast match:draw on draw result', async () => {
+    test('debería transmitir match:draw en resultado de empate', async () => {
       // Mock draw result
       const drawResult = {
         ...mockMatchResult,
@@ -442,7 +442,7 @@ describe('POST /api/match - Integration Tests', () => {
   });
 
   describe('Error Handling', () => {
-    test('should return 500 on arbitrator execution error', async () => {
+    test('debería retornar 500 en error de ejecución del árbitro', async () => {
       // Mock arbitrator error
       mockArbitrator.runMatch.mockRejectedValueOnce(
         new Error('Bot timeout error')

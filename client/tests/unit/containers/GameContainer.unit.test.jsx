@@ -133,11 +133,23 @@ describe('Componente GameContainer', () => {
       connectionStatus: 'connected',
       moveQueue: [],
       isProcessingMoves: false,
+      // Player management properties
+      players: [],
+      availableBots: [],
+      botDiscoveryStatus: 'idle',
+      discoverBots: jest.fn(),
+      populatePlayersForMode: jest.fn(),
+      updatePlayer: jest.fn(),
+      // Game actions
+      startMatch: jest.fn(),
+      startTournament: jest.fn(),
       ...overrides,
     };
 
     mockUseGame.mockReturnValue(defaultContextValue);
-    return render(<GameContainer />);
+    return render(
+      <GameContainer visualTheme="neon" onVisualThemeChange={jest.fn()} />
+    );
   };
 
   describe('Renderizado Inicial', () => {
@@ -170,11 +182,14 @@ describe('Componente GameContainer', () => {
     test('debería transicionar a la pantalla de progreso cuando gameState es playing', () => {
       renderWithProvider('playing');
 
+      // El GameContainer debería mostrar la pantalla de progreso para el estado playing
+      // Esto debería funcionar inmediatamente ya que la lógica está en useEffect
       expect(screen.getByTestId('progress-screen')).toBeInTheDocument();
     });
 
     test('debería transicionar a la pantalla de celebración cuando gameState es completed', () => {
-      renderWithProvider('completed');
+      // For completed state without tournament, should show celebration
+      renderWithProvider('completed', { tournament: null });
 
       expect(screen.getByTestId('celebration-screen')).toBeInTheDocument();
     });
@@ -226,9 +241,18 @@ describe('Componente GameContainer', () => {
         connectionStatus: 'connected',
         moveQueue: [],
         isProcessingMoves: false,
+        // Player management properties
+        players: [],
+        availableBots: [],
+        botDiscoveryStatus: 'idle',
+        discoverBots: jest.fn(),
+        populatePlayersForMode: jest.fn(),
+        updatePlayer: jest.fn(),
       });
 
-      rerender(<GameContainer />);
+      rerender(
+        <GameContainer visualTheme="neon" onVisualThemeChange={jest.fn()} />
+      );
 
       // Debería seguir en la pantalla de configuración como caso por defecto
       expect(screen.getByTestId('config-screen')).toBeInTheDocument();
@@ -288,7 +312,8 @@ describe('Componente GameContainer', () => {
     });
 
     test('debería pasar el resultado del partido a CelebrationScreen', () => {
-      renderWithProvider('completed');
+      // For completed state without tournament, should show celebration
+      renderWithProvider('completed', { tournament: null });
 
       expect(screen.getByTestId('match-result')).toHaveTextContent(
         JSON.stringify(mockMatchResult)
@@ -336,7 +361,7 @@ describe('Componente GameContainer', () => {
     });
 
     test('debería manejar la actividad desde CelebrationScreen', () => {
-      renderWithProvider('completed');
+      renderWithProvider('completed', { tournament: null });
 
       // No debería lanzar error al hacer clic en el botón de actividad
       expect(() => {
@@ -361,7 +386,8 @@ describe('Componente GameContainer', () => {
     });
 
     test('debería manejar resultado de partido faltante', () => {
-      renderWithProvider('completed', { matchResult: null });
+      // For completed state without tournament, should show celebration
+      renderWithProvider('completed', { tournament: null, matchResult: null });
 
       expect(screen.getByTestId('celebration-screen')).toBeInTheDocument();
       expect(screen.getByTestId('match-result')).toHaveTextContent('null');
@@ -420,7 +446,9 @@ describe('Componente GameContainer', () => {
       ];
 
       screens.forEach(({ state, component }) => {
-        const { unmount } = renderWithProvider(state);
+        // For completed state, we need to ensure no tournament to show celebration
+        const overrides = state === 'completed' ? { tournament: null } : {};
+        const { unmount } = renderWithProvider(state, overrides);
 
         if (state === 'idle') {
           // Para el estado idle, necesitamos hacer clic en iniciar para ver la pantalla de configuración

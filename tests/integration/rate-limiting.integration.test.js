@@ -288,7 +288,7 @@ describe('Pruebas de Integración de Rate Limiting', () => {
         .get('/test')
         .set('X-Forwarded-For', '192.168.1.2');
 
-      // Both should succeed as they're from different IPs
+      // Ambos deberían tener éxito ya que son de IPs diferentes
       expect(response1.status).toBe(200);
       expect(response2.status).toBe(200);
     });
@@ -337,7 +337,7 @@ describe('Pruebas de Integración de Rate Limiting', () => {
 
       attachRateLimiter(customApp);
 
-      // Should not throw error
+      // No debería lanzar error
       expect(customApp).toBeDefined();
     });
 
@@ -350,7 +350,7 @@ describe('Pruebas de Integración de Rate Limiting', () => {
         message: 'Custom message',
       });
 
-      // Should not throw error
+      // No debería lanzar error
       expect(customApp).toBeDefined();
     });
 
@@ -360,7 +360,7 @@ describe('Pruebas de Integración de Rate Limiting', () => {
 
       attachRateLimiter(customApp, {});
 
-      // Should not throw error
+      // No debería lanzar error
       expect(customApp).toBeDefined();
     });
 
@@ -369,7 +369,7 @@ describe('Pruebas de Integración de Rate Limiting', () => {
 
       attachRateLimiter(customApp, undefined);
 
-      // Should not throw error
+      // No debería lanzar error
       expect(customApp).toBeDefined();
     });
   });

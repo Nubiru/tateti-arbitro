@@ -1,6 +1,6 @@
 /**
- * Unit Tests for EventsAdapter
- * Tests event broadcasting methods with mocked EventBus
+ * Pruebas Unitarias para EventsAdapter
+ * Pruebas de métodos de transmisión de eventos con EventBus simulado
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
@@ -35,7 +35,7 @@ describe('EventsAdapter', () => {
   });
 
   describe('broadcastMatchStart', () => {
-    test('should call eventBus.broadcast with match:start event', () => {
+    test('debería llamar eventBus.broadcast con evento match:start', () => {
       const payload = {
         players: [{ name: 'Player1' }, { name: 'Player2' }],
         boardSize: 3,
@@ -49,13 +49,13 @@ describe('EventsAdapter', () => {
       );
     });
 
-    test('should handle null payload', () => {
+    test('debería manejar payload null', () => {
       eventsAdapter.broadcastMatchStart(null);
 
       expect(mockEventBus.broadcast).toHaveBeenCalledWith('match:start', null);
     });
 
-    test('should handle empty payload', () => {
+    test('debería manejar payload vacío', () => {
       eventsAdapter.broadcastMatchStart({});
 
       expect(mockEventBus.broadcast).toHaveBeenCalledWith('match:start', {});
@@ -63,7 +63,7 @@ describe('EventsAdapter', () => {
   });
 
   describe('broadcastMatchMove', () => {
-    test('should call eventBus.broadcast with match:move event', () => {
+    test('debería llamar eventBus.broadcast con evento match:move', () => {
       const payload = {
         player: { name: 'Player1', id: 'X' },
         move: 0,
@@ -79,7 +79,7 @@ describe('EventsAdapter', () => {
       );
     });
 
-    test('should handle multiple moves', () => {
+    test('debería manejar múltiples movimientos', () => {
       const move1 = { player: { name: 'Player1' }, move: 0 };
       const move2 = { player: { name: 'Player2' }, move: 1 };
 
@@ -101,7 +101,7 @@ describe('EventsAdapter', () => {
   });
 
   describe('broadcastMatchWin', () => {
-    test('should call eventBus.broadcast with match:win event', () => {
+    test('debería llamar eventBus.broadcast con evento match:win', () => {
       const payload = {
         winner: { name: 'Player1', id: 'X' },
         winningLine: [0, 1, 2],
@@ -114,7 +114,7 @@ describe('EventsAdapter', () => {
       expect(mockEventBus.broadcast).toHaveBeenCalledWith('match:win', payload);
     });
 
-    test('should handle win with timestamp', () => {
+    test('debería manejar victoria con timestamp', () => {
       const payload = {
         winner: { name: 'Player1' },
         timestamp: '2025-10-09T10:00:00.000Z',
@@ -127,7 +127,7 @@ describe('EventsAdapter', () => {
   });
 
   describe('broadcastMatchDraw', () => {
-    test('should call eventBus.broadcast with match:draw event', () => {
+    test('debería llamar eventBus.broadcast con evento match:draw', () => {
       const payload = {
         finalBoard: ['X', 'O', 'X', 'O', 'X', 'O', 'O', 'X', 'O'],
         message: 'Empate.',
@@ -143,7 +143,7 @@ describe('EventsAdapter', () => {
   });
 
   describe('broadcastMatchError', () => {
-    test('should call eventBus.broadcast with match:error event', () => {
+    test('debería llamar eventBus.broadcast con evento match:error', () => {
       const payload = {
         error: 'Connection timeout',
         player: { name: 'Player1' },
@@ -158,7 +158,7 @@ describe('EventsAdapter', () => {
       );
     });
 
-    test('should handle error with details', () => {
+    test('debería manejar error con detalles', () => {
       const payload = {
         error: 'Invalid move',
         player: { name: 'Player2' },
@@ -176,7 +176,7 @@ describe('EventsAdapter', () => {
   });
 
   describe('broadcastTournamentStart', () => {
-    test('should call eventBus.broadcast with tournament:start event', () => {
+    test('debería llamar eventBus.broadcast con evento tournament:start', () => {
       const payload = {
         players: [
           { name: 'Player1' },
@@ -197,7 +197,7 @@ describe('EventsAdapter', () => {
   });
 
   describe('broadcastTournamentComplete', () => {
-    test('should call eventBus.broadcast with tournament:complete event', () => {
+    test('debería llamar eventBus.broadcast con evento tournament:complete', () => {
       const payload = {
         winner: { name: 'Player1' },
         totalMatches: 6,
@@ -214,7 +214,7 @@ describe('EventsAdapter', () => {
   });
 
   describe('EventBus Integration', () => {
-    test('should not throw if eventBus.broadcast is not a function', () => {
+    test('debería no lanzar error si eventBus.broadcast no es una función', () => {
       const brokenAdapter = new EventsAdapter({
         eventBus: {},
         logger: mockLogger,
@@ -225,7 +225,7 @@ describe('EventsAdapter', () => {
       }).toThrow();
     });
 
-    test('should call broadcast exactly once per method call', () => {
+    test('debería llamar broadcast exactamente una vez por llamada de método', () => {
       eventsAdapter.broadcastMatchStart({});
       eventsAdapter.broadcastMatchMove({});
       eventsAdapter.broadcastMatchWin({});

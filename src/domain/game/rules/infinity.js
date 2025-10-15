@@ -1,26 +1,26 @@
 /**
- * Infinity Mode Rule - Rolling Window Mechanic
- * Each player can only have 3 marks on board at any time.
- * When 6th move is played, oldest move is removed.
+ * Regla del Modo Infinito - Mecánica de Ventana Deslizante
+ * Cada jugador solo puede tener 3 marcas en el tablero en cualquier momento.
+ * Cuando se juega el 6to movimiento, se elimina el movimiento más antiguo.
  *
- * Inspired by "Tic Tac Infinity" variant that prevents draws
- * by automatically removing the oldest mark when board reaches 6 pieces.
+ * Inspirado en la variante "Tic Tac Infinity" que previene empates
+ * eliminando automáticamente la marca más antigua cuando el tablero alcanza 6 piezas.
  *
  * @lastModified 2025-10-09
  * @version 1.0.0
  */
 
 /**
- * Threshold for infinity mode - when to start removing moves
- * Each player can have maximum 3 marks (6 total on board)
+ * Umbral para modo infinito - cuándo comenzar a eliminar movimientos
+ * Cada jugador puede tener máximo 3 marcas (6 total en el tablero)
  * @constant {number}
  */
 export const INFINITY_THRESHOLD = 6;
 
 /**
- * Determines if the oldest move should be removed
- * @param {Array} moveHistory - Array of move history objects
- * @returns {boolean} True if moveHistory length >= INFINITY_THRESHOLD
+ * Determina si el movimiento más antiguo debe ser eliminado
+ * @param {Array} moveHistory - Array de objetos de historial de movimientos
+ * @returns {boolean} True si la longitud de moveHistory >= INFINITY_THRESHOLD
  */
 export function shouldRemoveOldestMove(moveHistory) {
   if (!moveHistory || !Array.isArray(moveHistory)) return false;
@@ -28,9 +28,9 @@ export function shouldRemoveOldestMove(moveHistory) {
 }
 
 /**
- * Gets the position of the oldest move to be removed
- * @param {Array} moveHistory - Array of move history objects with 'move' property
- * @returns {number|null} Position to remove, or null if no removal needed
+ * Obtiene la posición del movimiento más antiguo a ser eliminado
+ * @param {Array} moveHistory - Array de objetos de historial de movimientos con propiedad 'move'
+ * @returns {number|null} Posición a eliminar, o null si no se necesita eliminación
  */
 export function getRemovalPosition(moveHistory) {
   if (!shouldRemoveOldestMove(moveHistory)) return null;
@@ -39,10 +39,10 @@ export function getRemovalPosition(moveHistory) {
 }
 
 /**
- * Gets the player information for the move being removed
- * @param {Array} moveHistory - Array of move history objects with 'playerId' property
- * @param {Array} players - Array of player objects with 'id' and 'name' properties
- * @returns {Object|null} Player object with id and name, or null if no removal needed
+ * Obtiene la información del jugador para el movimiento que se está eliminando
+ * @param {Array} moveHistory - Array de objetos de historial de movimientos con propiedad 'playerId'
+ * @param {Array} players - Array de objetos de jugador con propiedades 'id' y 'name'
+ * @returns {Object|null} Objeto jugador con id y name, o null si no se necesita eliminación
  */
 export function getRemovalPlayer(moveHistory, players) {
   if (!shouldRemoveOldestMove(moveHistory)) return null;

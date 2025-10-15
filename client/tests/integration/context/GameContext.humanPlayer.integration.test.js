@@ -1,6 +1,6 @@
 /**
- * Integration Tests: GameContext - Human Player Flow
- * Tests full human player move submission with React Context and SSE
+ * Pruebas de Integración: GameContext - Flujo de Jugador Humano
+ * Pruebas de envío completo de movimientos de jugador humano con React Context y SSE
  * @lastModified 2025-10-10
  * @version 1.1.0
  * @testType integration
@@ -21,7 +21,7 @@ class MockEventSource {
     this.readyState = 0; // CONNECTING
     MockEventSource.instances.push(this);
 
-    // Simulate async connection
+    // Simular conexión asíncrona
     setTimeout(() => {
       this.readyState = 1; // OPEN
       if (this.onopen) {
@@ -42,7 +42,7 @@ class MockEventSource {
     this.listeners = {};
   }
 
-  // Helper to trigger events in tests
+  // Ayudante para disparar eventos en las pruebas
   trigger(event, data) {
     if (this.listeners[event]) {
       this.listeners[event].forEach(callback => {
@@ -59,7 +59,7 @@ class MockEventSource {
 
 global.EventSource = MockEventSource;
 
-describe('GameContext - Human Player Flow', () => {
+describe('GameContext - Flujo de Jugador Humano', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     MockEventSource.reset();
@@ -70,17 +70,17 @@ describe('GameContext - Human Player Flow', () => {
     jest.restoreAllMocks();
   });
 
-  describe('submitMove - Human Player', () => {
-    test('should submit human move without immediately updating board', async () => {
+  describe('submitMove - Jugador Humano', () => {
+    test('debería enviar movimiento humano sin actualizar tablero inmediatamente', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
 
-      // Setup: Start a match first
+      // Configuración: Iniciar una partida primero
       act(() => {
         result.current.dispatch({
           type: 'START_MATCH',
@@ -95,18 +95,18 @@ describe('GameContext - Human Player Flow', () => {
         });
       });
 
-      // Mock successful API response
+      // Mock respuesta exitosa de API
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true, move: 4 }),
       });
 
-      // Act: Submit human move
+      // Acto: Enviar movimiento humano
       await act(async () => {
         await result.current.submitMove(4);
       });
 
-      // Assert: API was called correctly
+      // Afirmar: API fue llamada correctamente
       expect(fetch).toHaveBeenCalledWith('/api/match/test-match-123/move', {
         method: 'POST',
         headers: {
@@ -118,16 +118,16 @@ describe('GameContext - Human Player Flow', () => {
         }),
       });
 
-      // Assert: Board was NOT updated immediately
-      // (Board should only update via SSE events)
+      // Afirmar: El tablero NO fue actualizado inmediatamente
+      // (El tablero solo debería actualizarse vía eventos SSE)
       expect(result.current.board).toEqual(Array(9).fill(0));
     });
 
-    test('should handle API error when submitting move', async () => {
+    test('debería manejar error de API al enviar movimiento', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -143,34 +143,34 @@ describe('GameContext - Human Player Flow', () => {
         });
       });
 
-      // Mock API error
+      // Mock error de API
       fetch.mockResolvedValueOnce({
         ok: false,
         json: async () => ({ error: 'Invalid move' }),
       });
 
-      // Act & Assert: Should throw error
+      // Acto y Afirmar: Debería lanzar error
       await act(async () => {
         await expect(result.current.submitMove(10)).rejects.toThrow(
           'Invalid move'
         );
       });
 
-      // Assert: Error state was set
+      // Afirmar: El estado de error fue establecido
       expect(result.current.gameState).toBe('error');
       expect(result.current.error).toBe('Invalid move');
     });
 
-    test('should throw error if no active match', async () => {
+    test('debería lanzar error si no hay partida activa', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
 
-      // Act & Assert: Should throw error without active match
+      // Acto y Afirmar: Debería lanzar error sin partida activa
       await act(async () => {
         await expect(result.current.submitMove(4)).rejects.toThrow(
           'No active match found'
@@ -178,11 +178,11 @@ describe('GameContext - Human Player Flow', () => {
       });
     });
 
-    test('should determine correct player ID based on move count', async () => {
+    test('debería determinar ID de jugador correcto basado en conteo de movimientos', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
@@ -201,7 +201,7 @@ describe('GameContext - Human Player Flow', () => {
         });
       });
 
-      // First move (moveCount = 0, should be player1)
+      // Primer movimiento (moveCount = 0, debería ser player1)
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
@@ -221,7 +221,7 @@ describe('GameContext - Human Player Flow', () => {
         })
       );
 
-      // Simulate move count update
+      // Simular actualización de conteo de movimientos
       act(() => {
         result.current.dispatch({
           type: 'UPDATE_BOARD',
@@ -233,7 +233,7 @@ describe('GameContext - Human Player Flow', () => {
         });
       });
 
-      // Second move (moveCount = 1, should be player2)
+      // Segundo movimiento (moveCount = 1, debería ser player2)
       fetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
@@ -255,22 +255,22 @@ describe('GameContext - Human Player Flow', () => {
     });
   });
 
-  describe('SSE Event Integration - Human Moves', () => {
-    test('should update board when SSE match:move event is received', async () => {
+  describe('Integración de Eventos SSE - Movimientos Humanos', () => {
+    test('debería actualizar tablero cuando se recibe evento SSE match:move', async () => {
       const wrapper = ({ children }) => <GameProvider>{children}</GameProvider>;
       const { result } = renderHook(() => useGame(), { wrapper });
 
-      // Wait for EventSource to connect
+      // Esperar a que EventSource se conecte
       await waitFor(() => {
         expect(result.current.connectionStatus).toBe('connected');
       });
 
-      // Wait for EventSource to be created
+      // Esperar a que EventSource sea creado
       await waitFor(() => {
         expect(MockEventSource.instances.length).toBe(1);
       });
 
-      // Initialize game state with config for moveQueue processor
+      // Inicializar estado del juego con configuración para procesador moveQueue
       act(() => {
         result.current.dispatch({
           type: 'SET_CONFIG',
@@ -288,7 +288,7 @@ describe('GameContext - Human Player Flow', () => {
 
       const eventSource = MockEventSource.instances[0];
 
-      // Trigger match:move event
+      // Disparar evento match:move
       act(() => {
         eventSource.trigger('match:move', {
           player: { name: 'Human1', id: 1 },
@@ -298,8 +298,8 @@ describe('GameContext - Human Player Flow', () => {
         });
       });
 
-      // Wait for moveQueue to be processed (with speed delay)
-      // Fast speed = 200ms, so 1000ms should be plenty
+      // Esperar a que moveQueue sea procesado (con retraso de velocidad)
+      // Velocidad rápida = 200ms, así que 1000ms debería ser suficiente
       await waitFor(
         () => {
           expect(result.current.board[4]).toBe(1);

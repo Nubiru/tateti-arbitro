@@ -20,6 +20,10 @@ export const initialState = {
   tournamentResult: null,
   error: null,
   nextRemovalPosition: null, // For infinity mode pulsating animation
+  // Player management state
+  players: [],
+  availableBots: [],
+  botDiscoveryStatus: 'idle', // 'idle', 'discovering', 'success', 'error'
 };
 
 /**
@@ -39,6 +43,10 @@ export const gameReducer = (state, action) => {
       };
 
     case 'START_MATCH':
+      console.log(
+        '[DEBUG][gameReducer][START_MATCH] Dispatching START_MATCH action:',
+        action.payload
+      );
       return {
         ...state,
         gameState: 'playing',
@@ -47,6 +55,15 @@ export const gameReducer = (state, action) => {
           action.payload.boardSize === 5 ? Array(25).fill(0) : Array(9).fill(0),
         history: [],
         moveCount: 0,
+      };
+
+    case 'UPDATE_MATCH_DATA':
+      return {
+        ...state,
+        currentMatch: {
+          ...state.currentMatch,
+          ...action.payload,
+        },
       };
 
     case 'UPDATE_BOARD':
@@ -124,6 +141,37 @@ export const gameReducer = (state, action) => {
           state.moveCount >= 5 ? state.history?.[0]?.move || null : null,
       };
     }
+
+    case 'SET_PLAYERS':
+      return {
+        ...state,
+        players: action.payload,
+      };
+
+    case 'UPDATE_PLAYER': {
+      const { index, field, value } = action.payload;
+      const updatedPlayers = [...state.players];
+      updatedPlayers[index] = {
+        ...updatedPlayers[index],
+        [field]: value,
+      };
+      return {
+        ...state,
+        players: updatedPlayers,
+      };
+    }
+
+    case 'SET_AVAILABLE_BOTS':
+      return {
+        ...state,
+        availableBots: action.payload,
+      };
+
+    case 'SET_BOT_DISCOVERY_STATUS':
+      return {
+        ...state,
+        botDiscoveryStatus: action.payload,
+      };
 
     default:
       return state;
